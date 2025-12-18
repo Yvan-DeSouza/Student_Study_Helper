@@ -2,6 +2,7 @@ from flask import Flask
 from .config import Config
 from .extensions import db, migrate, login_manager
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -22,5 +23,4 @@ def create_app():
     app.register_blueprint(assignment_routes.assignment)
     app.register_blueprint(study_routes.study)
     app.register_blueprint(dashboard_routes.dashboard)
-
     return app
