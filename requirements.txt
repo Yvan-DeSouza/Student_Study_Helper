@@ -2,7 +2,9 @@ flask
 flask-sqlalchemy
 flask-login
 flask-migrate
+SQLAlchemy
 psycopg2-binary
 pandas
 matplotlib
 numpy
+python-dotenv
