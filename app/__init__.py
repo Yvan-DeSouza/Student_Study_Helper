@@ -9,12 +9,18 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    from app.models.user import User
 
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    login_manager.login_view = "auth.login"
     from .routes import auth_routes, class_routes, assignment_routes, study_routes, dashboard_routes
-    app.register_blueprint(auth_routes.bp)
-    app.register_blueprint(class_routes.bp)
-    app.register_blueprint(assignment_routes.bp)
-    app.register_blueprint(study_routes.bp)
-    app.register_blueprint(dashboard_routes.bp)
+    app.register_blueprint(auth_routes.auth)
+    app.register_blueprint(class_routes.classes)
+    app.register_blueprint(assignment_routes.assignment)
+    app.register_blueprint(study_routes.study)
+    app.register_blueprint(dashboard_routes.dashboard)
 
     return app
