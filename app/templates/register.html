@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Register | Student Study Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <!-- Light/Dark toggle -->
+        <div class="theme-toggle">
+            <span class="toggle-icon" id="theme-icon">🌞</span>
+        </div>
+
+        <h1>Create Account</h1>
+        <p>Sign up to start your study planner</p>
+
+        <!-- Flash messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-item">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <form method="POST">
+            <div class="input-group">
+                <input type="text" name="name" placeholder="Full Name" required>
+            </div>
+
+            <div class="input-group">
+                <input type="email" name="email" placeholder="Email" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+            </div>
+
+            <button type="submit" class="login-btn">Register</button>
+        </form>
+
+        <p class="signup-text">Already have an account? 
+            <a href="{{ url_for('auth.login') }}">Log In</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}
