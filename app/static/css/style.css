@@ -1,0 +1,9 @@
+/* Dark mode background */
+html[data-theme="dark"] .login-container {
+    background: url('../images/dark_bg.png') no-repeat center center;
+    background-size: cover;
+}
+html[data-theme="dark"] .theme-toggle {
+    background-color: rgba(50,50,70,0.8);
+    color: #fff;
+}

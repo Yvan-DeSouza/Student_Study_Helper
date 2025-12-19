@@ -1,38 +1,59 @@
 {% extends "base.html" %}
+
+{% block title %}Login | Student Study Dashboard{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 {% endblock %}
-{% block title %}Login{% endblock %}
 
 {% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <!-- Light/Dark toggle -->
+        <div class="theme-toggle">
+            <span class="toggle-icon" id="theme-icon">🌞</span>
+        </div>
 
-<div class="login-page">
+        <h1>Welcome Back!</h1>
+        <p>Log in to your study planner</p>
 
-  <button class="theme-toggle">🌙</button>
+        <!-- Flash messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-item">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
 
-  <div class="login-card">
+        <form method="POST">
+            <div class="input-group">
+                <input type="email" name="email" placeholder="Email" required>
+            </div>
 
-    <h1>Welcome Back!</h1>
-    <p class="subtitle">Log in to your study planner</p>
+            <div class="input-group">
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
 
-    <form>
-      <label>Email</label>
-      <input type="email">
-
-      <label>Password</label>
-      <input type="password">
-
-      <div class="options">
-        <label><input type="checkbox"> Remember Me</label>
-        <a href="#">Forgot Password?</a>
-      </div>
-
-      <button class="login-btn">Log In</button>
-    </form>
-
-    <a class="signup-link" href="#">Sign Up</a>
-
-  </div>
+            <div class="options">
+    <label>
+        <input type="checkbox" name="remember">
+        Remember me
+    </label>
+    <a href="/forgot">Forgot password?</a>
 </div>
+            <button type="submit" class="login-btn">Log In</button>
+        </form>
 
+        <p class="signup-text">Don't have an account? 
+            <a href="{{ url_for('auth.register') }}">Sign Up</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 {% endblock %}

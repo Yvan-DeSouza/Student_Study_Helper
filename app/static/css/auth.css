@@ -1,55 +1,123 @@
-:root {
-  --bg-color: #fff3ea;
-  --card-bg: #ffffff;
-  --text: #333;
-  --border: #ddd;
-  --input-bg: #f9f9f9;
-  --primary: #f46c5e;
+/* Container with background image */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: url('../images/light_bg.png') no-repeat center center;
+    background-size: cover;
+    position: relative; /* for absolute positioning inside */
+    transition: background 0.3s ease;
 }
 
-[data-theme="dark"] {
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --text: #e5e7eb;
-  --border: #334155;
-  --input-bg: #0f172a;
-  --primary: #7c7cff;
+/* Dark mode background */
+html[data-theme="dark"] .login-container {
+    background: url('../images/dark_bg.png') no-repeat center center;
+    background-size: cover;
 }
 
-.login-page {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--bg-color);
-  font-family: system-ui, sans-serif;
-}
+/* Card */
 .login-card {
-  width: 380px;
-  padding: 2rem;
-  border-radius: 16px;
-  background: var(--card-bg);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-  text-align: center;
-}
-input {
-  width: 100%;
-  padding: 0.7rem;
-  margin-top: 0.4rem;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--text);
+    background-color: rgba(255, 255, 255, 0.9); 
+    border-radius: 20px;
+    padding: 40px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    transition: background-color 0.3s, color 0.3s;
 }
 
+/* Dark card style */
+html[data-theme="dark"] .login-card {
+    background-color: rgba(30, 30, 50, 0.9);
+    color: #fff;
+}
+
+/* Theme toggle */
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.8);
+    transition: background-color 0.3s, color 0.3s;
+}
+html[data-theme="dark"] .theme-toggle {
+    background-color: rgba(50,50,70,0.8);
+    color: #fff;
+}
+.toggle-icon {
+    font-size: 20px;
+}
+
+/* Inputs */
+.input-group {
+    margin: 15px 0;
+}
+.input-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+/* Options */
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0 20px 0;
+}
+.options label {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+.options label input {
+    margin-right: 5px;
+}
+.options a {
+    font-size: 14px;
+    text-decoration: none;
+    color: #007BFF;
+}
+
+/* Buttons */
 .login-btn {
-  width: 100%;
-  margin-top: 1rem;
-  padding: 0.8rem;
-  border-radius: 12px;
-  border: none;
-  background: var(--primary);
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #ff6a00, #ee0979);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.login-btn:hover {
+    opacity: 0.9;
+}
+
+/* Signup text */
+.signup-text {
+    margin-top: 15px;
+    font-size: 14px;
+}
+.signup-text a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+/* Flash messages */
+.flash-item {
+    background-color: #ffefc1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin: 5px 0;
 }

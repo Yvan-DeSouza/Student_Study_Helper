@@ -17,6 +17,19 @@
   <!-- Optional global navbar (future use) -->
   {% block navbar %}{% endblock %}
 
+  <!-- Flash messages -->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for message in messages %}
+            <li class="flash-item">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+  </div>
+
   <!-- Main page content -->
   <main>
     {% block content %}{% endblock %}
