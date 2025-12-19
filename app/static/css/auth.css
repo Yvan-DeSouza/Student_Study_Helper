@@ -1,0 +1,55 @@
+:root {
+  --bg-color: #fff3ea;
+  --card-bg: #ffffff;
+  --text: #333;
+  --border: #ddd;
+  --input-bg: #f9f9f9;
+  --primary: #f46c5e;
+}
+
+[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --text: #e5e7eb;
+  --border: #334155;
+  --input-bg: #0f172a;
+  --primary: #7c7cff;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-color);
+  font-family: system-ui, sans-serif;
+}
+.login-card {
+  width: 380px;
+  padding: 2rem;
+  border-radius: 16px;
+  background: var(--card-bg);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  text-align: center;
+}
+input {
+  width: 100%;
+  padding: 0.7rem;
+  margin-top: 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}

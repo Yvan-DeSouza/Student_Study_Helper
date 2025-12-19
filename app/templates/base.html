@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{% block title %}Student Study Dashboard{% endblock %}</title>
+
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <!-- Page-specific CSS -->
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Optional global navbar (future use) -->
+  {% block navbar %}{% endblock %}
+
+  <!-- Main page content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Global JS -->
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+  <!-- Page-specific JS -->
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

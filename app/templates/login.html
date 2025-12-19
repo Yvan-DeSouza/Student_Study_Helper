@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<div class="login-page">
+
+  <button class="theme-toggle">🌙</button>
+
+  <div class="login-card">
+
+    <h1>Welcome Back!</h1>
+    <p class="subtitle">Log in to your study planner</p>
+
+    <form>
+      <label>Email</label>
+      <input type="email">
+
+      <label>Password</label>
+      <input type="password">
+
+      <div class="options">
+        <label><input type="checkbox"> Remember Me</label>
+        <a href="#">Forgot Password?</a>
+      </div>
+
+      <button class="login-btn">Log In</button>
+    </form>
+
+    <a class="signup-link" href="#">Sign Up</a>
+
+  </div>
+</div>
+
+{% endblock %}
