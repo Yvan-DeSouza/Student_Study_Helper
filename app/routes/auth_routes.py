@@ -3,14 +3,12 @@ from app.models.user import User
 from app.extensions import db
 
 auth = Blueprint('auth', __name__)
-
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
-
         if User.query.filter_by(email=email).first():
             flash('Email already exists!')
             return redirect(url_for('auth.register'))
@@ -39,7 +37,7 @@ def login():
             flash('Invalid email or password')
             return redirect(url_for('auth.login'))
 
-        session['user_id'] = user.id
+        session['user_id'] = user.user_id
         session['username'] = user.username
         flash(f'Welcome back, {user.username}!')
         return redirect(url_for('dashboard.dashboard'))
