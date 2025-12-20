@@ -7,5 +7,5 @@ def study_sessions():
     return render_template("study.html")
 
 @study.route("/study/new")
-def new_study_session():
+def add_session():
     return render_template("new_study.html")

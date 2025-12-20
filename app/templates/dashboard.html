@@ -1,12 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-</head>
-<body>
-    <h1>Welcome, {{ username }}!</h1>
+{% extends "base.html" %}
 
-    <p>Total study time logged: {{ total_study_minutes }} minutes</p>
-</body>
-</html>
+{% block title %}Dashboard - {{ user.username }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+  <!-- Welcome card -->
+  <div class="card welcome-card">
+    <h1>Welcome, {{ user.username }}!</h1>
+    <p>Email: {{ user.email }}</p>
+  </div>
+
+  <!-- Study time card -->
+  <div class="card stats-card">
+    <h2>Total Study Time</h2>
+    <p>{{ user.total_study_time or 0 }} minutes</p>
+  </div>
+
+  <!-- Placeholder for chart -->
+  <div class="card chart-card">
+    <h2>Study Progress</h2>
+    <canvas id="studyChart" width="400" height="200"></canvas>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="card actions-card">
+    <h2>Quick Actions</h2>
+    <a href="{{ url_for('study.add_session') }}" class="btn">Log Study Session</a>
+    <a href="{{ url_for('assignment.add_assignment') }}" class="btn">View Assignments</a>
+    <a href="{{ url_for('auth.logout') }}" class="btn logout-btn">Logout</a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}
