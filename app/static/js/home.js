@@ -111,3 +111,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+const openBtn = document.getElementById("openAddClassModal");
+const closeBtn = document.getElementById("closeAddClassModal");
+const modal = document.getElementById("addClassModal");
+
+const classTypeSelect = document.getElementById("classTypeSelect");
+const colorInput = document.getElementById("classColor");
+
+const DEFAULT_COLORS = {
+    math: "#4f46e5",
+    science: "#16a34a",
+    language: "#f59e0b",
+    social_science: "#db2777",
+    art: "#9333ea",
+    engineering: "#0ea5e9",
+    technology: "#14b8a6",
+    finance: "#22c55e",
+    other: "#6b7280"
+};
+
+openBtn.addEventListener("click", () => {
+    modal.classList.add("active");
+    document.body.style.overflow = "hidden"; // prevent background scrolling
+});
+
+closeBtn.addEventListener("click", () => {
+    modal.classList.remove("active");
+    document.body.style.overflow = "auto"; // restore scrolling
+});
+
+
+classTypeSelect.addEventListener("change", () => {
+    const type = classTypeSelect.value;
+    if (DEFAULT_COLORS[type]) {
+        colorInput.value = DEFAULT_COLORS[type];
+    }
+});

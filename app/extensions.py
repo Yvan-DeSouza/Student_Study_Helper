@@ -8,3 +8,4 @@ migrate = Migrate()
 login_manager = LoginManager()
 login_manager.login_view = "main.login"  # redirect to login page if user is not logged in
 login_manager.login_message_category = "info"
+

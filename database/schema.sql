@@ -10,24 +10,29 @@ CREATE TABLE classes (
     class_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     class_name TEXT NOT NULL,
-    color TEXT,
+	class_type TEXT NOT NULL CHECK (
+        class_type IN ('math', 'science', 'language', 'social_science', 'art', 'engineering', 'technology', 'finance', 'other')
+    ), 
+	class_code TEXT NOT NULL,
+	color TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 );
 
+
 CREATE TABLE assignments (
     assignment_id SERIAL PRIMARY KEY,
     class_id INT NOT NULL,
     title TEXT NOT NULL,
-    assignment_type TEXT CHECK (
-        assignment_type IN ('homework', 'project', 'essay', 'test', 'exam' 'lab report', 'other')
+    assignment_type TEXT NOT NULL CHECK (
+        assignment_type IN ('homework', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
     ),
     due_date DATE NOT NULL,
     estimated_minutes INT CHECK (estimated_minutes > 0),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	completed BOOLEAN DEFAULT FALSE
+	completed BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
         ON DELETE CASCADE
 );
@@ -38,7 +43,7 @@ CREATE TABLE study_sessions (
     session_date DATE NOT NULL,
     duration_minutes INT NOT NULL,
     session_type TEXT CHECK (
-        session_type IN ('homework', 'project', 'essay', 'test', 'exam', 'lab report', 'other')
+        session_type IN ('homework', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
     ),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

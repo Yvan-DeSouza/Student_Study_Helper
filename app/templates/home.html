@@ -60,12 +60,18 @@
                     <select class="input-field">
                         <option>Session Type</option>
                         <option>Homework</option>
-                        <option>Study</option>
+                        <option>Project</option>
+                        <option>essay</option>
+                        <option>test</option>
+                        <option>exam</option>
+                        <option>lab_report</option>
+                        <option>other</option>
                     </select>
                     <select class="input-field">
                         <option>Class</option>
-                        <option>Math</option>
-                        <option>History</option>
+                        {% for c in classes %}
+                            <option value="{{ c.class_id }}">{{ c.class_name }}</option>
+                        {% endfor %}
                     </select>
                     <button class="btn full-btn">Log Session</button>
                     <a href="#" class="view-link">View All ></a>
@@ -77,6 +83,9 @@
                 <form>
                     <select class="input-field">
                         <option>Class</option>
+                        {% for c in classes %}
+                            <option value="{{ c.class_id }}">{{ c.class_name }}</option>
+                        {% endfor %}
                     </select>
                     <input type="text" class="input-field" placeholder="Assignment Name">
                     <div class="input-row">
@@ -153,7 +162,7 @@
             <div class="card widget chart-widget">
                 <div class="chart-header">
                     <h3>Time per Class</h3>
-                    <button class="btn-tiny">Add New Class</button>
+                    <button class="btn-tiny" id="openAddClassModal">Add New Class</button>
                 </div>
                 <div class="chart-area donut-chart-placeholder">
                     <canvas id="timeClassChart"></canvas>
@@ -189,11 +198,36 @@
                     </div>
                 </div>
                 <button class="btn pill-btn full-width-pill">Go to Calendar</button>
-            </div>
             
             <img src="{{ url_for('static', filename='images/book_calendar.png') }}" class="decoration-bottom-right" id="decor-right">
         </div>
 
+    </div>
+    <div class="modal-overlay" id="addClassModal">
+        <div class="modal card">
+            <h2>Add New Class</h2>
+            <form method="POST" action="{{ url_for('classes.add_class') }}">
+                <input type="text" name="class_name" placeholder="Class Name" required class="input-field">
+                <input type="text" name="class_code" placeholder="Class Code (e.g. MATH101)" required class="input-field">
+                <select name="class_type" id="classTypeSelect" required class="input-field">
+                    <option value="">Select Class Type</option>
+                    <option value="math">Math</option>
+                    <option value="science">Science</option>
+                    <option value="language">Language</option>
+                    <option value="social_science">Social Science</option>
+                    <option value="art">Art</option>
+                    <option value="engineering">Engineering</option>
+                    <option value="technology">Technology</option>
+                    <option value="finance">Finance</option>
+                    <option value="other">Other</option>
+                </select>
+                <input type="color" name="color" id="classColor" class="input-field">
+                <div class="modal-actions">
+                    <button type="submit" class="btn full-btn">Create Class</button>
+                    <button type="button" class="btn ghost-btn" id="closeAddClassModal">Cancel</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
