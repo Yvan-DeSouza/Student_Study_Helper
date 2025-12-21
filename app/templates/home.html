@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Home | StudyMate{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar card">
+    <div class="nav-left">
+        <img src="{{ url_for('static', filename='images/logo_icon.png') }}" alt="Logo" class="nav-logo">
+        <span class="brand-name">StudyMate</span>
+    </div>
+    <div class="nav-center">
+        <a href="{{ url_for('main.home') }}" class="nav-link active">Home</a>
+        <a href="{{ url_for('dashboard.graphs') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('calendar.home') }}" class="nav-link">Calendar</a>
+    </div>
+    <div class="nav-right">
+        <div class="user-avatar">
+            <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User">
+        </div>
+        <button class="theme-toggle" id="home-theme-btn">
+            <span class="toggle-icon">☀️</span>
+        </button>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    
+    <header class="hero-section">
+        <img src="{{ url_for('static', filename='images/computer.png') }}" class="floating-img left-img" alt="Laptop">
+        
+        <div class="hero-text">
+            <h1>Welcome, <span>{{ user.username }}</span></h1>
+            <p>Manage your study sessions, keep track of assignments, <br>and stay on top of your deadlines!</p>
+        </div>
+
+        <img src="{{ url_for('static', filename='images/hero_books.png') }}" class="floating-img right-img" alt="Books">
+    </header>
+
+    <div class="dashboard-grid">
+
+        <div class="col-left">
+            <div class="card widget">
+                <h3>Log Study Session</h3>
+                <form>
+                    <div class="input-row">
+                        <input type="number" placeholder="Estimated Time">
+                        <span class="unit">min</span>
+                    </div>
+                    <select class="input-field">
+                        <option>Session Type</option>
+                        <option>Homework</option>
+                        <option>Study</option>
+                    </select>
+                    <select class="input-field">
+                        <option>Class</option>
+                        <option>Math</option>
+                        <option>History</option>
+                    </select>
+                    <button class="btn full-btn">Log Session</button>
+                    <a href="#" class="view-link">View All ></a>
+                </form>
+            </div>
+
+            <div class="card widget">
+                <h3>Log New Assignment</h3>
+                <form>
+                    <select class="input-field">
+                        <option>Class</option>
+                    </select>
+                    <input type="text" class="input-field" placeholder="Assignment Name">
+                    <div class="input-row">
+                        <input type="number" placeholder="Estimated Time">
+                        <span class="unit">Minutes</span>
+                    </div>
+                    <button class="btn full-btn">Log New Assignment</button>
+                    <a href="#" class="view-link">View All ></a>
+                </form>
+            </div>
+            
+            <img src="{{ url_for('static', filename='images/dec_books_left.png') }}" class="decoration-bottom-left">
+        </div>
+
+        <div class="col-mid">
+            <div class="card widget">
+                <h3>Upcoming Deadlines</h3>
+                <ul class="task-list">
+                    <li>
+                        <div class="task-icon">📅</div>
+                        <div class="task-info">
+                            <span class="task-name">History Essay - Draft</span>
+                            <span class="task-date">Due Apr 3</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="task-icon">🧪</div>
+                        <div class="task-info">
+                            <span class="task-name">Physics Problem Set</span>
+                            <span class="task-date">Due Apr 5</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="task-icon">📐</div>
+                        <div class="task-info">
+                            <span class="task-name">Calculus II Quiz</span>
+                            <span class="task-date">Due Apr 8</span>
+                        </div>
+                    </li>
+                </ul>
+                <button class="btn pill-btn">View All</button>
+            </div>
+
+            <div class="card widget">
+                <h3>Recent Assignments</h3>
+                <ul class="task-list">
+                    <li>
+                        <div class="task-icon">📖</div>
+                        <div class="task-info">
+                            <span class="task-name">History Essay - Draft</span>
+                            <span class="task-date">Due Apr 3</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="task-icon">🧬</div>
+                        <div class="task-info">
+                            <span class="task-name">Physics Problem Set</span>
+                            <span class="task-date">Due Apr 5</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="task-icon">📝</div>
+                        <div class="task-info">
+                            <span class="task-name">Calculus II Quiz</span>
+                            <span class="task-date">Due Apr 8</span>
+                        </div>
+                    </li>
+                </ul>
+                <button class="btn pill-btn">View All</button>
+            </div>
+        </div>
+
+        <div class="col-right">
+            <div class="card widget chart-widget">
+                <div class="chart-header">
+                    <h3>Time per Class</h3>
+                    <button class="btn-tiny">Add New Class</button>
+                </div>
+                <div class="chart-area donut-chart-placeholder">
+                    <canvas id="timeClassChart"></canvas>
+                </div>
+            </div>
+
+            <div class="split-row">
+                <div class="card widget small-stat">
+                    <h3>Study time this week</h3>
+                    <img src="{{ url_for('static', filename='images/stat_person.png') }}" class="stat-img">
+                    <button class="btn pill-btn small">View All</button>
+                </div>
+                <div class="card widget small-stat">
+                    <h3>Weekly study hours</h3>
+                    <div class="chart-area bar-chart-tiny">
+                         <canvas id="tinyBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card widget performance-widget">
+                <h3>Performance Snapshot</h3>
+                <div class="perf-content">
+                    <div class="perf-chart">
+                        <span>Weekly study hours</span>
+                        <img src="{{ url_for('static', filename='images/calendar_grid_placeholder.png') }}" style="width:100%; opacity:0.7;">
+                    </div>
+                    <div class="perf-chart">
+                        <span>Study Trend</span>
+                        <div class="chart-area">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn pill-btn full-width-pill">Go to Calendar</button>
+            </div>
+            
+            <img src="{{ url_for('static', filename='images/dec_pencil_right.png') }}" class="decoration-bottom-right">
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
+{% endblock %}

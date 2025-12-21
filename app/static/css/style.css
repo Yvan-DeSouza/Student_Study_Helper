@@ -1,9 +1,66 @@
-/* Dark mode background */
-html[data-theme="dark"] .login-container {
-    background: url('../images/dark_bg.png') no-repeat center center;
+/* =================== VARIABLES =================== */
+:root {
+    --bg-color-light: #fdf6e3;
+    --bg-color-dark: #1b1b2f;
+    --card-color-light: #ffffff;
+    --card-color-dark: #252540;
+    --text-color-light: #111111;
+    --text-color-dark: #f0f0f0;
+    --primary-gradient: linear-gradient(90deg, #ff6a00, #ee0979);
+    --btn-text-color: #fff;
+}
+
+/* =================== GLOBAL THEME =================== */
+/* =================== VARIABLES =================== */
+:root {
+    /* ... your existing colors ... */
+    
+    /* Background Images */
+    --bg-image-light: url('../images/light_bg.png');
+    --bg-image-dark: url('../images/dark_bg.png');
+}
+
+/* Update the Global Theme Selectors */
+:root[data-theme="light"] body { 
+    background-image: var(--bg-image-light); 
+    background-color: var(--bg-color-light); /* Fallback */
+}
+
+:root[data-theme="dark"] body { 
+    background-image: var(--bg-image-dark); 
+    background-color: var(--bg-color-dark); /* Fallback */
+}
+
+/* Global Background Properties */
+body {
     background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Keeps bg still while scrolling */
+    background-repeat: no-repeat;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
 }
-html[data-theme="dark"] .theme-toggle {
-    background-color: rgba(50,50,70,0.8);
-    color: #fff;
-}
+
+/* =================== GLOBAL LAYOUT =================== */
+body, html { margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+a { text-decoration: none; color: inherit; }
+
+/* Flash messages */
+.flash-messages { padding: 1rem; }
+.flash-list { list-style:none; padding:0; margin:0; }
+.flash-item { padding:0.5rem 1rem; border-radius:0.5rem; margin-bottom:0.5rem; background-color: rgba(255,105,0,0.1); text-align:center;}
+
+/* Theme-aware cards */
+.card { border-radius: 1rem; padding: 1.5rem; box-shadow:0 8px 20px rgba(0,0,0,0.15); transition: background-color 0.3s, color 0.3s;}
+:root[data-theme="light"] .card { background-color: var(--card-color-light);}
+:root[data-theme="dark"] .card  { background-color: var(--card-color-dark);}
+
+/* Buttons */
+.btn { display:inline-block; padding:0.6rem 1.2rem; margin:0.3rem 0; border-radius:0.5rem; background:var(--primary-gradient); color:var(--btn-text-color); font-weight:600; transition: transform 0.2s, opacity 0.2s;}
+.btn:hover { transform: translateY(-2px); opacity:0.9; }
+
+/* Theme toggle button (global) */
+.theme-toggle { position: fixed; top: 1rem; right: 1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; z-index:1000; }
+.toggle-icon { pointer-events:none; }

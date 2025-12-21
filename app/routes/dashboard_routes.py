@@ -4,7 +4,7 @@ from flask_login import current_user
 dashboard = Blueprint("dashboard", __name__)
 @dashboard.route("/")
 @login_required
-def home():
+def graphs():
     return render_template(
         "dashboard.html",
         user=current_user

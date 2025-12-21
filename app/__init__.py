@@ -30,6 +30,8 @@ def create_app():
         assignment_routes,
         study_routes,
         dashboard_routes,
+        main_routes,
+        calendar_routes
     )
 
     app.register_blueprint(auth_routes.auth)
@@ -37,5 +39,8 @@ def create_app():
     app.register_blueprint(assignment_routes.assignment)
     app.register_blueprint(study_routes.study)
     app.register_blueprint(dashboard_routes.dashboard)
+    app.register_blueprint(main_routes.main)
+    app.register_blueprint(calendar_routes.calendar)
+
 
     return app

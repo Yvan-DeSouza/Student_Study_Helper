@@ -1,131 +1,138 @@
-:root {
-    /* Light mode colors */
-    --bg-color: rgba(255, 255, 255, 0.9);
-    --card-color: rgba(255, 255, 255, 0.9);
-    --text-color: #000;
-    --primary-color: #007BFF;
-    --button-gradient: linear-gradient(90deg, #ff6a00, #ee0979);
-    --flash-bg: #ffefc1;
-    --theme-toggle-bg: rgba(255,255,255,0.8);
-    --input-border: #ccc;
-}
-
-/* Dark mode overrides */
-html[data-theme="dark"] {
-    --card-color: rgba(30, 30, 50, 0.9);
-    --text-color: #fff;
-    --primary-color: #1e90ff;
-    --flash-bg: #44475a;
-    --theme-toggle-bg: rgba(50,50,70,0.8);
-    --input-border: #555;
-}
-
-/* Container */
+/* Layout */
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: url('../images/light_bg.png') no-repeat center center;
-    background-size: cover;
-    position: relative;
-    transition: background 0.3s ease;
-}
-html[data-theme="dark"] .login-container {
-    background: url('../images/dark_bg.png') no-repeat center center;
-    background-size: cover;
 }
 
-/* Card */
 .login-card {
-    background-color: var(--card-color);
-    color: var(--text-color);
-    border-radius: 20px;
-    padding: 40px;
-    width: 400px;
+    width: 100%;
+    max-width: 420px;
+    padding: 3rem;
+    border-radius: 2.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
     text-align: center;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    transition: background-color 0.3s, color 0.3s;
+    position: relative;
 }
 
-/* Theme toggle */
-.theme-toggle {
+/* Theme Toggle inside card */
+.theme-switch-wrapper {
     position: absolute;
     top: 20px;
-    right: 20px;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: var(--theme-toggle-bg);
-    color: var(--text-color);
-    transition: background-color 0.3s, color 0.3s;
+    right: 25px;
 }
-.toggle-icon {
-    font-size: 20px;
+
+.theme-toggle {
+    background: #eee;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+/* Typography */
+.welcome-text {
+    font-size: 2.4rem;
+    color: #f2714b; /* Orange */
+    margin: 0;
+}
+
+.welcome-text span {
+    color: #4b8df2; /* Blue */
+}
+
+.subtitle {
+    color: #777;
+    margin-bottom: 2rem;
 }
 
 /* Inputs */
 .input-group {
-    margin: 15px 0;
+    text-align: left;
+    margin-bottom: 1.2rem;
 }
+
+.input-group label {
+    display: block;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.3rem;
+    padding-left: 5px;
+}
+
 .input-group input {
     width: 100%;
-    padding: 12px 15px;
-    border-radius: 10px;
-    border: 1px solid var(--input-border);
+    padding: 14px;
+    border: 2px solid #eee;
+    border-radius: 15px;
+    box-sizing: border-box;
 }
 
-/* Options */
-.options {
+/* Row Styling */
+.options-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin: 15px 0 20px 0;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
 }
-.options label {
-    font-size: 14px;
+
+.remember-me {
+    color: #666;
     display: flex;
     align-items: center;
 }
-.options label input {
-    margin-right: 5px;
-}
-.options a,
-.signup-text a {
-    color: var(--primary-color);
+
+/* Link Colors */
+.forgot-link, .signup-link {
+    color: #4b8df2 !important; /* Forces blue */
     text-decoration: none;
+    font-weight: 700;
 }
 
-/* Buttons */
-.login-btn {
+.footer-link {
+    margin-top: 1rem;
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+}
+
+/* DYNAMIC BUTTONS */
+.auth-btn {
     width: 100%;
-    padding: 12px;
+    padding: 15px;
     border: none;
-    border-radius: 12px;
-    background: var(--button-gradient);
-    color: #fff;
-    font-weight: bold;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
     cursor: pointer;
     transition: 0.3s;
 }
-.login-btn:hover {
-    opacity: 0.9;
+
+/* Light Mode: Pink/Orange Button */
+html[data-theme="light"] .auth-btn {
+    background: linear-gradient(90deg, #f2714b, #e94e77);
+    box-shadow: 0 5px 15px rgba(233, 78, 119, 0.3);
 }
 
-/* Signup text */
-.signup-text {
-    margin-top: 15px;
-    font-size: 14px;
+/* Dark Mode: Pure Orange Button (as requested) */
+html[data-theme="dark"] .auth-btn {
+    background: #ff8c00; 
+    box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
 }
 
-/* Flash messages */
-.flash-item {
-    background-color: var(--flash-bg);
-    padding: 8px 12px;
-    border-radius: 8px;
-    margin: 5px 0;
+/* Dark Mode Adjustments */
+html[data-theme="dark"] .login-card {
+    background: rgba(35, 35, 60, 0.95);
+    color: white;
+}
+
+html[data-theme="dark"] .input-group label { color: #bbb; }
+html[data-theme="dark"] .input-group input { 
+    background: #2b2b45; 
+    border-color: #444; 
+    color: white;
 }

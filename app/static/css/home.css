@@ -1,0 +1,213 @@
+/* Container */
+.home-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+    position: relative;
+}
+
+/* Navbar overrides */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 2rem;
+    margin-top: 20px;
+    border-radius: 50px; /* Fully rounded pill navbar */
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+}
+
+.nav-logo { height: 30px; margin-right: 10px; }
+.brand-name { font-weight: 700; font-size: 1.2rem; color: #444; }
+
+.nav-center .nav-link {
+    margin: 0 15px;
+    font-weight: 600;
+    color: #666;
+    text-transform: capitalize;
+}
+.nav-center .nav-link.active { color: #f2714b; }
+
+.nav-right { display: flex; align-items: center; gap: 15px; }
+.user-avatar img { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #fff; }
+
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 40px 0;
+    position: relative;
+}
+
+.hero-text h1 {
+    font-size: 2.8rem;
+    color: #f2714b;
+    margin-bottom: 10px;
+}
+.hero-text h1 span { color: #4b8df2; }
+.hero-text p { color: #666; line-height: 1.5; font-size: 1.1rem; }
+
+/* Floating Images (Absolute Positioned) */
+.floating-img {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 250px; /* Adjust based on your image size */
+    opacity: 0.9;
+    z-index: -1;
+}
+.left-img { left: 0; }
+.right-img { right: 0; }
+
+/* DASHBOARD GRID - The Core Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr; /* Right column slightly wider */
+    gap: 25px;
+    align-items: start;
+}
+
+/* Card/Widget General Styling */
+.widget {
+    background: rgba(255, 255, 255, 0.75); /* Glass effect */
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.widget h3 {
+    color: #444;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* Inputs styling to match image */
+.input-field, .input-row input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0; /* Very light border */
+    border-radius: 10px;
+    background: #f9f9f9;
+    margin-bottom: 12px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.input-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.input-row input { margin-bottom: 0; padding-right: 50px; }
+.unit {
+    position: absolute;
+    right: 15px;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* Buttons */
+.btn {
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.2s;
+}
+.btn:hover { transform: scale(1.02); }
+
+.full-btn {
+    width: 100%;
+    background: linear-gradient(90deg, #ff9966, #ff5e62); /* Peach gradient */
+    color: white;
+    padding: 12px;
+    border-radius: 25px; /* Pill shape */
+    box-shadow: 0 4px 15px rgba(255, 94, 98, 0.3);
+}
+
+.pill-btn {
+    display: block;
+    margin: 10px auto 0;
+    background: #ff9966;
+    color: white;
+    padding: 8px 25px;
+    border-radius: 20px;
+}
+
+.view-link {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #ff5e62;
+    font-weight: 600;
+}
+
+/* List Styling (Deadlines) */
+.task-list { list-style: none; padding: 0; }
+.task-list li {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.task-list li:last-child { border-bottom: none; }
+
+.task-icon {
+    background: #fff;
+    width: 35px; height: 35px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.task-info { display: flex; flex-direction: column; width: 100%; }
+.task-name { font-weight: 600; color: #555; font-size: 0.95rem; }
+.task-date { font-size: 0.8rem; color: #999; }
+
+/* Right Column Specials */
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.btn-tiny { background: #f2714b; color: white; border: none; padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; }
+
+.split-row {
+    display: flex;
+    gap: 20px;
+}
+.small-stat { flex: 1; text-align: center; }
+.stat-img { width: 50px; margin: 10px auto; display: block; opacity: 0.8; }
+
+.performance-widget { margin-top: 0; }
+.perf-content { display: flex; gap: 20px; }
+.perf-chart { flex: 1; text-align: center; font-size: 0.9rem; color: #777; }
+.full-width-pill { width: 100%; margin-top: 15px; background: #e0e0e0; color: #555; }
+
+/* Decor Images */
+.decoration-bottom-left, .decoration-bottom-right {
+    position: relative;
+    width: 120px;
+    margin-top: -40px;
+    z-index: 10;
+}
+.decoration-bottom-left { float: left; }
+.decoration-bottom-right { float: right; }
+
+/* DARK MODE OVERRIDES */
+:root[data-theme="dark"] .navbar,
+:root[data-theme="dark"] .widget {
+    background: rgba(30, 30, 50, 0.85);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+:root[data-theme="dark"] .widget h3 { color: #e0e0e0; }
+:root[data-theme="dark"] .input-field, 
+:root[data-theme="dark"] .input-row input {
+    background: #2b2b45;
+    border-color: #444;
+    color: white;
+}
+:root[data-theme="dark"] .task-name { color: #ccc; }
+:root[data-theme="dark"] .task-icon { background: #2b2b45; color: white; }

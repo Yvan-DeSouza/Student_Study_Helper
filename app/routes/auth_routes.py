@@ -40,7 +40,7 @@ def login():
         session['user_id'] = user.user_id
         session['username'] = user.username
         flash(f'Welcome back, {user.username}!')
-        return redirect(url_for('dashboard.home'))
+        return redirect(url_for('main.home'))
 
     return render_template('login.html')
 

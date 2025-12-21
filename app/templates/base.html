@@ -13,7 +13,11 @@
   {% block extra_css %}{% endblock %}
 </head>
 <body>
-
+<script>
+  // Prevents theme flashing
+  const theme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+</script>
   <!-- Optional global navbar (future use) -->
   {% block navbar %}{% endblock %}
 

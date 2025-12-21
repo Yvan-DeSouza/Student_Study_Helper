@@ -9,52 +9,37 @@
 {% block content %}
 <div class="login-container">
     <div class="login-card">
-        <!-- Light/Dark toggle -->
-        <div class="theme-toggle">
-            <span class="toggle-icon" id="theme-icon">🌞</span>
+        <div class="theme-switch-wrapper">
+            <button class="theme-toggle" id="theme-btn">
+                <span class="toggle-icon">☀️</span>
+            </button>
         </div>
 
-        <h1>Create Account</h1>
-        <p>Sign up to start your study planner</p>
-
-        <!-- Flash messages -->
-        <div class="flash-messages">
-            {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="flash-item">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-            {% endwith %}
-        </div>
+        <h1 class="welcome-text">Join <span>Us!</span></h1>
+        <p class="subtitle">Create your study account</p>
 
         <form method="POST">
             <div class="input-group">
-                <input type="text" name="username" placeholder="Full Name" required>
+                <label>Username</label>
+                <input type="text" name="username" placeholder="StudentName" required>
             </div>
 
             <div class="input-group">
-                <input type="email" name="email" placeholder="Email" required>
+                <label>Email</label>
+                <input type="email" name="email" placeholder="email@example.com" required>
             </div>
 
             <div class="input-group">
-                <input type="password" name="password" placeholder="Password" required>
+                <label>Password</label>
+                <input type="password" name="password" placeholder="••••••••" required>
             </div>
 
-            <div class="input-group">
-                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-            </div>
-
-            <button type="submit" class="login-btn">Register</button>
+            <button type="submit" class="auth-btn">Register</button>
         </form>
 
-        <p class="signup-text">Already have an account? 
-            <a href="{{ url_for('auth.login') }}">Log In</a>
-        </p>
+        <div class="footer-link">
+            <a href="{{ url_for('auth.login') }}" class="signup-link">Back to Login</a>
+        </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 {% endblock %}
