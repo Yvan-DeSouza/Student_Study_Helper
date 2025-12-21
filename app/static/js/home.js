@@ -1,21 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- 1. IMAGE SWAPPER LOGIC ---
+    // Note: This relies on theme.js handling the actual localstorage/attribute change.
+    // We just listen for the click to swap images.
     
-    // Theme logic is already handled by theme.js in base.html
-    const homeThemeBtn = document.getElementById('home-theme-btn');
-    if(homeThemeBtn){
-        homeThemeBtn.addEventListener('click', () => {
-            // This button triggers the same logic as the global one
+    const themeBtn = document.getElementById('home-theme-btn');
+    
+    // Define your images here. 
+    // Key = ID in HTML, Value = base filename (without extension)
+    const toggleImages = {
+        'theme-img-logo': 'study_logo',
+        'theme-img-laptop': 'computer',
+        'theme-img-books': 'stack_books'
+    };
+
+    function updateImages() {
+        // Wait 50ms for the attribute to update in DOM
+        setTimeout(() => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            homeThemeBtn.querySelector('span').textContent = newTheme === 'dark' ? '🌙' : '☀️';
-        });
+            const suffix = currentTheme === 'dark' ? '_dark' : '';
+            
+            for (const [id, baseName] of Object.entries(toggleImages)) {
+                const img = document.getElementById(id);
+                if(img) {
+                    // This assumes you have images named "computer_dark.png", etc.
+                    // If the dark image doesn't exist, it might break, so ensure files exist.
+                    // Assuming path is static/images/
+                    img.src = `/static/images/${baseName}${suffix}.png`;
+                }
+            }
+        }, 50);
     }
 
-    // --- CHART.JS PLACEHOLDERS (To match the look) ---
+    if(themeBtn) {
+        themeBtn.addEventListener('click', updateImages);
+        // Run once on load to ensure correct images
+        updateImages();
+    }
 
-    // 1. Time per Class (Donut)
+
+    // --- 2. CHART.JS CONFIGURATION ---
+
+    // Time per Class (Donut)
     const ctx1 = document.getElementById('timeClassChart');
     if(ctx1) {
         new Chart(ctx1, {
@@ -30,14 +56,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }]
             },
             options: {
-                cutout: '65%',
-                plugins: { legend: { display: false } },
-                maintainAspectRatio: false
+                responsive: true,
+                maintainAspectRatio: false, // Important for the fixed height container
+                cutout: '70%',
+                plugins: { legend: { display: false } }
             }
         });
     }
 
-    // 2. Weekly Hours (Tiny Bar)
+    // Weekly Hours (Tiny Bar)
     const ctx2 = document.getElementById('tinyBarChart');
     if(ctx2) {
         new Chart(ctx2, {
@@ -51,14 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { display: false } },
-                maintainAspectRatio: false
+                scales: { x: { display: false }, y: { display: false } }
             }
         });
     }
 
-    // 3. Trend (Area)
+    // Trend (Area)
     const ctx3 = document.getElementById('trendChart');
     if(ctx3) {
         new Chart(ctx3, {
@@ -75,9 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { display: false } },
-                maintainAspectRatio: false
+                scales: { x: { display: false }, y: { display: false } }
             }
         });
     }

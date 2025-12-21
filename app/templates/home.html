@@ -9,18 +9,23 @@
 {% block navbar %}
 <nav class="navbar card">
     <div class="nav-left">
-        <img src="{{ url_for('static', filename='images/logo_icon.png') }}" alt="Logo" class="nav-logo">
+        <img src="{{ url_for('static', filename='images/study_logo.png') }}" alt="Logo" class="nav-logo" id="theme-img-logo">
         <span class="brand-name">StudyMate</span>
     </div>
+    
     <div class="nav-center">
         <a href="{{ url_for('main.home') }}" class="nav-link active">Home</a>
         <a href="{{ url_for('dashboard.graphs') }}" class="nav-link">Dashboard</a>
         <a href="{{ url_for('calendar.home') }}" class="nav-link">Calendar</a>
     </div>
+
     <div class="nav-right">
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+        
         <div class="user-avatar">
             <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User">
         </div>
+        
         <button class="theme-toggle" id="home-theme-btn">
             <span class="toggle-icon">☀️</span>
         </button>
@@ -32,14 +37,14 @@
 <div class="home-container">
     
     <header class="hero-section">
-        <img src="{{ url_for('static', filename='images/computer.png') }}" class="floating-img left-img" alt="Laptop">
+        <img src="{{ url_for('static', filename='images/computer.png') }}" class="floating-img left-img" alt="Laptop" id="theme-img-laptop">
         
         <div class="hero-text">
             <h1>Welcome, <span>{{ user.username }}</span></h1>
             <p>Manage your study sessions, keep track of assignments, <br>and stay on top of your deadlines!</p>
         </div>
 
-        <img src="{{ url_for('static', filename='images/hero_books.png') }}" class="floating-img right-img" alt="Books">
+        <img src="{{ url_for('static', filename='images/stack_books.png') }}" class="floating-img right-img" alt="Books" id="theme-img-books">
     </header>
 
     <div class="dashboard-grid">
@@ -83,7 +88,7 @@
                 </form>
             </div>
             
-            <img src="{{ url_for('static', filename='images/dec_books_left.png') }}" class="decoration-bottom-left">
+            <img src="{{ url_for('static', filename='images/book_calendar2.png') }}" class="decoration-bottom-left" id="decor-left">
         </div>
 
         <div class="col-mid">
@@ -157,12 +162,12 @@
 
             <div class="split-row">
                 <div class="card widget small-stat">
-                    <h3>Study time this week</h3>
+                    <h3>Study time</h3>
                     <img src="{{ url_for('static', filename='images/stat_person.png') }}" class="stat-img">
                     <button class="btn pill-btn small">View All</button>
                 </div>
                 <div class="card widget small-stat">
-                    <h3>Weekly study hours</h3>
+                    <h3>Weekly Hours</h3>
                     <div class="chart-area bar-chart-tiny">
                          <canvas id="tinyBarChart"></canvas>
                     </div>
@@ -174,7 +179,7 @@
                 <div class="perf-content">
                     <div class="perf-chart">
                         <span>Weekly study hours</span>
-                        <img src="{{ url_for('static', filename='images/calendar_grid_placeholder.png') }}" style="width:100%; opacity:0.7;">
+                        <img src="{{ url_for('static', filename='images/calendar.png') }}" style="width:100%; opacity:0.7;">
                     </div>
                     <div class="perf-chart">
                         <span>Study Trend</span>
@@ -186,7 +191,7 @@
                 <button class="btn pill-btn full-width-pill">Go to Calendar</button>
             </div>
             
-            <img src="{{ url_for('static', filename='images/dec_pencil_right.png') }}" class="decoration-bottom-right">
+            <img src="{{ url_for('static', filename='images/book_calendar.png') }}" class="decoration-bottom-right" id="decor-right">
         </div>
 
     </div>
