@@ -12,12 +12,22 @@ def list_classes():
 @classes.route("/classes/new", methods=["POST"])
 @login_required
 def add_class():
+    is_graded = "is_graded" in request.form
+
+    ponderation = None
+    if is_graded:
+        ponderation = request.form.get("ponderation")
+        if ponderation:
+            ponderation = int(ponderation)
+
     new_class = Class(
         user_id=current_user.user_id,
         class_name=request.form["class_name"],
         class_type=request.form["class_type"],
         class_code=request.form["class_code"],
-        color=request.form.get("color")
+        color=request.form.get("color"),
+        is_graded=is_graded,
+        ponderation=ponderation
     )
 
     db.session.add(new_class)
