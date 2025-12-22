@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}Home | StudyMate{% endblock %}
 
 {% block extra_css %}
@@ -9,10 +8,10 @@
 {% block navbar %}
 <nav class="navbar card">
     <div class="nav-left">
-        <img src="{{ url_for('static', filename='images/study_logo.png') }}" alt="Logo" class="nav-logo" id="theme-img-logo">
+        <img src="{{ url_for('static', filename='images/study_logo.png') }}" class="nav-logo" alt="StudyMate logo">
         <span class="brand-name">StudyMate</span>
     </div>
-    
+
     <div class="nav-center">
         <a href="{{ url_for('main.home') }}" class="nav-link active">Home</a>
         <a href="{{ url_for('dashboard.graphs') }}" class="nav-link">Dashboard</a>
@@ -21,12 +20,10 @@
 
     <div class="nav-right">
         <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
-        
         <div class="user-avatar">
-            <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User">
+            <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User avatar">
         </div>
-        
-        <button class="theme-toggle" id="home-theme-btn">
+        <button class="theme-toggle" id="home-theme-btn" aria-label="Toggle theme">
             <span class="toggle-icon">☀️</span>
         </button>
     </div>
@@ -35,199 +32,281 @@
 
 {% block content %}
 <div class="home-container">
-    
+
+    <!-- ================= HERO ================= -->
     <header class="hero-section">
-        <img src="{{ url_for('static', filename='images/computer.png') }}" class="floating-img left-img" alt="Laptop" id="theme-img-laptop">
-        
+        <img src="{{ url_for('static', filename='images/computer.png') }}" class="floating-img left-img" alt="">
         <div class="hero-text">
             <h1>Welcome, <span>{{ user.username }}</span></h1>
-            <p>Manage your study sessions, keep track of assignments, <br>and stay on top of your deadlines!</p>
+            <p>
+                Manage your study sessions, keep track of assignments,<br>
+                and stay on top of your deadlines!
+            </p>
         </div>
-
-        <img src="{{ url_for('static', filename='images/stack_books.png') }}" class="floating-img right-img" alt="Books" id="theme-img-books">
+        <img src="{{ url_for('static', filename='images/stack_books.png') }}" class="floating-img right-img" alt="">
     </header>
 
+    <!-- ================= GRID ================= -->
     <div class="dashboard-grid">
 
+        <!-- ===== LEFT COLUMN ===== -->
         <div class="col-left">
+
+            <!-- Log Study Session -->
             <div class="card widget">
                 <h3>Log Study Session</h3>
-                <form>
+                <form method="POST" action="{{ url_for('study.add_session') }}">
+
+                    <label for="study-class" class="input-label">Class</label>
+                    <select id="study-class" name="class_id" class="input-field" required>
+                        {% for c in classes %}
+                        <option value="{{ c.class_id }}">{{ c.class_name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="study-assignment" class="input-label">Assignment (optional)</label>
+                    <select id="study-assignment" name="assignment_id" class="input-field">
+                        <option value="">None</option>
+                        {% for a in assignments %}
+                        <option value="{{ a.assignment_id }}">{{ a.title }}</option>
+                        {% endfor %}
+                    </select>
+
+
+                    <label for="session-type" class="input-label">Session Type</label>
+                    <select id="session-type" name="session_type" class="input-field">
+                        <option value="homework">Homework</option>
+                        <option value="project">Project</option>
+                        <option value="essay">Essay</option>
+                        <option value="test">Test</option>
+                        <option value="exam">Exam</option>
+                        <option value="lab_report">Lab Report</option>
+                        <option value="other">Other</option>
+                    </select>
                     <div class="input-row">
-                        <input type="number" placeholder="Estimated Time">
+                        <label for="expected-duration" class="input-label">Expected Duration (optional)</label>
+                        <input
+                            id="expected-duration"
+                            type="number"
+                            name="expected_duration_minutes"
+                            class="input-field"
+                            min="0"
+                        >
                         <span class="unit">min</span>
                     </div>
-                    <select class="input-field">
-                        <option>Session Type</option>
-                        <option>Homework</option>
-                        <option>Project</option>
-                        <option>essay</option>
-                        <option>test</option>
-                        <option>exam</option>
-                        <option>lab_report</option>
-                        <option>other</option>
-                    </select>
-                    <select class="input-field">
-                        <option>Class</option>
-                        {% for c in classes %}
-                            <option value="{{ c.class_id }}">{{ c.class_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <button class="btn full-btn">Log Session</button>
-                    <a href="#" class="view-link">View All ></a>
+
+                    <button class="btn full-btn" type="submit">Log Session</button>
                 </form>
             </div>
 
+            <!-- Log Assignment -->
             <div class="card widget">
                 <h3>Log New Assignment</h3>
-                <form>
-                    <select class="input-field">
-                        <option>Class</option>
+
+                <form method="POST" action="{{ url_for('assignment.add_assignment') }}">
+
+                    <label for="assignment-class" class="input-label">Class</label>
+                    <select id="assignment-class" name="class_id" class="input-field" required>
                         {% for c in classes %}
-                            <option value="{{ c.class_id }}">{{ c.class_name }}</option>
+                        <option value="{{ c.class_id }}">{{ c.class_name }}</option>
                         {% endfor %}
                     </select>
-                    <input type="text" class="input-field" placeholder="Assignment Name">
+
+                    <label for="assignment-title" class="input-label">Assignment Name</label>
+                    <input
+                        id="assignment-title"
+                        type="text"
+                        name="title"
+                        class="input-field"
+                        required
+                    >
+
                     <div class="input-row">
-                        <input type="number" placeholder="Estimated Time">
-                        <span class="unit">Minutes</span>
+                        <label for="estimated-time" class="input-label">Estimated Time (optional)</label>
+                        <input
+                            id="estimated-time"
+                            type="number"
+                            name="estimated_minutes"
+                            class="input-field"
+                            min="0"
+                        >
+                        <span class="unit">min</span>
                     </div>
-                    <button class="btn full-btn">Log New Assignment</button>
-                    <a href="#" class="view-link">View All ></a>
+
+                    <!-- ===== GRADED CHECKBOX ===== -->
+                    <div class="checkbox-row">
+                        <input
+                            type="checkbox"
+                            id="is-graded"
+                            name="is_graded"
+                            class="checkbox-input"
+                            data-toggle-checkbox = "ponderation_container"
+                        >
+
+                        <label for="is-graded" class="checkbox-label">
+                            <span class="checkbox-box"></span>
+                            This assignment is graded
+                        </label>
+                    </div>
+
+
+                    <!-- ===== PONDERATION (CONDITIONAL) ===== -->
+                    <div id="ponderation-container" class="ponderation-box hidden">
+                        <label for="ponderation" class="input-label">
+                            Ponderation (1–5)
+                            <span class="hint">(relative weight of this assignment)</span>
+                        </label>
+
+                        <input
+                            id="ponderation"
+                            type="number"
+                            name="ponderation"
+                            class="input-field"
+                            min="1"
+                            max="5"
+                        >
+                    </div>
+
+                    <button class="btn full-btn" type="submit">Log Assignment</button>
                 </form>
             </div>
-            
-            <img src="{{ url_for('static', filename='images/book_calendar2.png') }}" class="decoration-bottom-left" id="decor-left">
+
         </div>
 
+        <!-- ===== MIDDLE COLUMN ===== -->
         <div class="col-mid">
+
             <div class="card widget">
                 <h3>Upcoming Deadlines</h3>
-                <ul class="task-list">
-                    <li>
-                        <div class="task-icon">📅</div>
-                        <div class="task-info">
-                            <span class="task-name">History Essay - Draft</span>
-                            <span class="task-date">Due Apr 3</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="task-icon">🧪</div>
-                        <div class="task-info">
-                            <span class="task-name">Physics Problem Set</span>
-                            <span class="task-date">Due Apr 5</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="task-icon">📐</div>
-                        <div class="task-info">
-                            <span class="task-name">Calculus II Quiz</span>
-                            <span class="task-date">Due Apr 8</span>
-                        </div>
-                    </li>
-                </ul>
-                <button class="btn pill-btn">View All</button>
+                <div class="chart-placeholder">
+                    <span>Upcoming deadlines will appear here</span>
+                </div>
             </div>
 
             <div class="card widget">
                 <h3>Recent Assignments</h3>
-                <ul class="task-list">
-                    <li>
-                        <div class="task-icon">📖</div>
-                        <div class="task-info">
-                            <span class="task-name">History Essay - Draft</span>
-                            <span class="task-date">Due Apr 3</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="task-icon">🧬</div>
-                        <div class="task-info">
-                            <span class="task-name">Physics Problem Set</span>
-                            <span class="task-date">Due Apr 5</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="task-icon">📝</div>
-                        <div class="task-info">
-                            <span class="task-name">Calculus II Quiz</span>
-                            <span class="task-date">Due Apr 8</span>
-                        </div>
-                    </li>
-                </ul>
-                <button class="btn pill-btn">View All</button>
+                <div class="chart-placeholder">
+                    <span>Recently added assignments will appear here</span>
+                </div>
             </div>
+
         </div>
 
+        <!-- ===== RIGHT COLUMN ===== -->
         <div class="col-right">
+
             <div class="card widget chart-widget">
                 <div class="chart-header">
                     <h3>Time per Class</h3>
-                    <button class="btn-tiny" id="openAddClassModal">Add New Class</button>
+                    <button class="btn-tiny" id="openAddClassModal" type="button">
+                        Add Class
+                    </button>
                 </div>
-                <div class="chart-area donut-chart-placeholder">
-                    <canvas id="timeClassChart"></canvas>
+                <div class="chart-placeholder">
+                    <span>Charts coming soon</span>
                 </div>
             </div>
 
             <div class="split-row">
                 <div class="card widget small-stat">
-                    <h3>Study time</h3>
-                    <img src="{{ url_for('static', filename='images/stat_person.png') }}" class="stat-img">
-                    <button class="btn pill-btn small">View All</button>
+                    <h3>Study Time</h3>
+                    <div class="chart-placeholder small">
+                        <span>—</span>
+                    </div>
                 </div>
+
                 <div class="card widget small-stat">
-                    <h3>Weekly Hours</h3>
-                    <div class="chart-area bar-chart-tiny">
-                         <canvas id="tinyBarChart"></canvas>
+                    <h3>Weekly Study Hours</h3>
+                    <div class="chart-placeholder small">
+                        <span>—</span>
                     </div>
                 </div>
             </div>
 
             <div class="card widget performance-widget">
                 <h3>Performance Snapshot</h3>
-                <div class="perf-content">
-                    <div class="perf-chart">
-                        <span>Weekly study hours</span>
-                        <img src="{{ url_for('static', filename='images/calendar.png') }}" style="width:100%; opacity:0.7;">
-                    </div>
-                    <div class="perf-chart">
-                        <span>Study Trend</span>
-                        <div class="chart-area">
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                    </div>
+                <div class="chart-placeholder">
+                    <span>Performance analytics coming soon</span>
                 </div>
-                <button class="btn pill-btn full-width-pill">Go to Calendar</button>
-            
-            <img src="{{ url_for('static', filename='images/book_calendar.png') }}" class="decoration-bottom-right" id="decor-right">
-        </div>
+                <button class="btn pill-btn full-width-pill" type="button">
+                    Go to Calendar
+                </button>
+            </div>
 
-    </div>
-    <div class="modal-overlay" id="addClassModal">
-        <div class="modal card">
-            <h2>Add New Class</h2>
-            <form method="POST" action="{{ url_for('classes.add_class') }}">
-                <input type="text" name="class_name" placeholder="Class Name" required class="input-field">
-                <input type="text" name="class_code" placeholder="Class Code (e.g. MATH101)" required class="input-field">
-                <select name="class_type" id="classTypeSelect" required class="input-field">
-                    <option value="">Select Class Type</option>
-                    <option value="math">Math</option>
-                    <option value="science">Science</option>
-                    <option value="language">Language</option>
-                    <option value="social_science">Social Science</option>
-                    <option value="art">Art</option>
-                    <option value="engineering">Engineering</option>
-                    <option value="technology">Technology</option>
-                    <option value="finance">Finance</option>
-                    <option value="other">Other</option>
-                </select>
-                <input type="color" name="color" id="classColor" class="input-field">
-                <div class="modal-actions">
-                    <button type="submit" class="btn full-btn">Create Class</button>
-                    <button type="button" class="btn ghost-btn" id="closeAddClassModal">Cancel</button>
-                </div>
-            </form>
         </div>
+    </div>
+</div>
+
+<!-- ================= ADD CLASS MODAL ================= -->
+<div class="modal-overlay" id="addClassModal">
+    <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="add-class-title">
+
+        <h2 id="add-class-title">Add New Class</h2>
+
+        <form method="POST" action="{{ url_for('classes.add_class') }}">
+
+            <label for="class-name" class="input-label">Class Name</label>
+            <input
+                id="class-name"
+                type="text"
+                name="class_name"
+                class="input-field"
+                required
+            >
+
+            <label for="class-code" class="input-label">Class Code</label>
+            <input
+                id="class-code"
+                type="text"
+                name="class_code"
+                class="input-field"
+                placeholder="e.g. MATH101"
+                required
+            >
+
+            <label for="classTypeSelect" class="input-label">Class Type</label>
+            <select id="classTypeSelect" name="class_type" class="input-field" required>
+                <option value="">Select Class Type</option>
+                <option value="math">Math</option>
+                <option value="science">Science</option>
+                <option value="language">Language</option>
+                <option value="social_science">Social Science</option>
+                <option value="art">Art</option>
+                <option value="engineering">Engineering</option>
+                <option value="technology">Technology</option>
+                <option value="finance">Finance</option>
+                <option value="other">Other</option>
+            </select>
+
+            <label for="importance" class="input-label">Importance of the class (Optional)</label>
+            <select id="importance" name="importance" class="input-field" required>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+            <label for="classColor" class="input-label">
+                Class Color
+                <span class="hint">(used for charts & calendar)</span>
+            </label>
+
+            <div class="color-picker-row">
+                <input
+                    id="classColor"
+                    type="color"
+                    name="color"
+                    class="color-input"
+                    value="#4f46e5"
+                >
+                <span class="color-preview-text">Click to choose a color</span>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn full-btn">Create Class</button>
+                <button type="button" class="btn ghost-btn" id="closeAddClassModal">
+                    Cancel
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

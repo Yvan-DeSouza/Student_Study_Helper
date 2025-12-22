@@ -221,6 +221,30 @@
 .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .btn-tiny { background: #f2714b; color: white; border: none; padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; }
 
+/* ================= CHART PLACEHOLDERS ================= */
+
+.chart-placeholder {
+    height: 180px;
+    width: 100%;
+    border-radius: 15px;
+    background: rgba(0,0,0,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.chart-placeholder.small {
+    height: 60px;
+}
+
+:root[data-theme="dark"] .chart-placeholder {
+    background: rgba(255,255,255,0.08);
+    color: #bbb;
+}
+
 .donut-chart-placeholder {
     height: 180px;
     width: 100%;
@@ -339,5 +363,26 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
+}
+
+/* ================= LABELS ================= */
+
+.input-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #444; /* ALWAYS neutral */
+}
+
+/* Dark mode labels */
+:root[data-theme="dark"] .input-label {
+    color: #ddd;
+}
+
+/* Ensure inputs don't affect label color */
+.input-field:focus,
+.input-row input:focus {
+    outline: none;
 }
 

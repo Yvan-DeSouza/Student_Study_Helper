@@ -64,3 +64,69 @@ a { text-decoration: none; color: inherit; }
 /* Theme toggle button (global) */
 .theme-toggle { position: fixed; top: 1rem; right: 1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; z-index:1000; }
 .toggle-icon { pointer-events:none; }
+/* ===== CHECKBOX WRAPPER ===== */
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    margin: 12px 0;
+}
+
+/* Hide native checkbox */
+.checkbox-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Label becomes clickable area */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    user-select: none;
+}
+
+/* Visual checkbox */
+.checkbox-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid #f2714b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    background: transparent;
+}
+
+/* Checkmark */
+.checkbox-box::after {
+    content: "✓";
+    font-size: 13px;
+    color: white;
+    display: none;
+}
+
+/* Checked state */
+.checkbox-input:checked + .checkbox-label .checkbox-box {
+    background: #f2714b;
+}
+
+.checkbox-input:checked + .checkbox-label .checkbox-box::after {
+    display: block;
+}
+
+/* Hover feedback */
+.checkbox-label:hover .checkbox-box {
+    border-color: #ff9966;
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .checkbox-box {
+    border-color: #ff9966;
+}
+.hidden {
+    display: none !important;
+}
