@@ -50,8 +50,9 @@ def add_session():
         db.session.add(session)
         db.session.commit()
 
-        # Redirect back to study sessions page
-        return redirect(url_for("study.study_sessions"))
+        # Redirect back to home page
+        return redirect(url_for("main.home"))
+
 
     # GET request: render form
     # Get all classes for the current user

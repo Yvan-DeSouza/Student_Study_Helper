@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect, url_for, render_template
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.assignment import Assignment
@@ -48,3 +48,9 @@ def add_assignment():
     db.session.add(assignment)
     db.session.commit()
     return redirect(url_for("main.home"))
+
+@assignment.route("/assignments")
+@login_required
+def list_assignments():
+    return render_template("assignments.html")
+
