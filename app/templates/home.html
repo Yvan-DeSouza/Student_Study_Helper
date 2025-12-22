@@ -71,7 +71,7 @@
                         <option value="{{ a.assignment_id }}" data-class="{{ a.class_id }}">{{ a.title }}</option>
                         {% endfor %}
                     </select>
-                    
+
                     <label for="session-type" class="input-label">Session Type</label>
                     <select id="session-type" name="session_type" class="input-field">
                         <option value="homework">Homework</option>
@@ -119,7 +119,7 @@
                         class="input-field"
                         required
                     >
-                    <label for="assignment-type" class="input-label">Session Type</label>
+                    <label for="assignment-type" class="input-label">Assignment Type</label>
                     <select id="assignment-type" name="assignment-type" class="input-field">
                         <option value="homework">Homework</option>
                         <option value="project">Project</option>
@@ -333,4 +333,5 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+<script src="{{ url_for('static', filename='js/assignment.js') }}"></script>
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect, url_for, render_template
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.study_session import StudySession
@@ -11,7 +11,7 @@ study = Blueprint("study", __name__)
 @study.route("/study")
 @login_required
 def study_sessions():
-    return render_template("study.html")
+    return redirect(url_for("main.home"))
 
 @study.route("/study/new", methods=["GET", "POST"])
 @login_required
@@ -54,6 +54,17 @@ def add_session():
         return redirect(url_for("study.study_sessions"))
 
     # GET request: render form
+    # Get all classes for the current user
     classes = Class.query.filter_by(user_id=current_user.user_id).all()
-    assignments = Assignment.query.filter_by(user_id=current_user.user_id).all()  # optional: filter by class if you want
-    return render_template("new_study.html", classes=classes, assignments=assignments)
+
+    # Get all assignments for these classes
+    assignments = Assignment.query.filter(
+        Assignment.class_id.in_([c.class_id for c in classes])
+    ).all()
+
+    # Render the form template and pass the data
+    return render_template(
+        "new_study.html",
+        classes=classes,
+        assignments=assignments
+    )

@@ -47,5 +47,4 @@ def add_assignment():
 
     db.session.add(assignment)
     db.session.commit()
-    print("User:", current_user.is_authenticated)
     return redirect(url_for("main.home"))
