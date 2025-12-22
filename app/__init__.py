@@ -12,6 +12,7 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.init_app(app)
 
+    from app import models
     # Import models (after db is initialized)
     from app.models.user import User
 

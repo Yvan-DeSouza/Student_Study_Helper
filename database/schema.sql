@@ -32,9 +32,9 @@ CREATE TABLE assignments (
     assignment_type TEXT NOT NULL CHECK (
         assignment_type IN ('homework', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
     ),
-    due_date DATE NOT NULL,
+    due_date DATE,
     estimated_minutes INT CHECK (estimated_minutes > 0),
-    graded BOOLEAN NOT NULL, -- mandatory
+    is_graded BOOLEAN NOT NULL, -- mandatory
     ponderation INT CHECK (ponderation >= 1 AND ponderation <= 5), -- optional, only relevant if graded
     completed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

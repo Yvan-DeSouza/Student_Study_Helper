@@ -68,11 +68,10 @@
                     <select id="study-assignment" name="assignment_id" class="input-field">
                         <option value="">None</option>
                         {% for a in assignments %}
-                        <option value="{{ a.assignment_id }}">{{ a.title }}</option>
+                        <option value="{{ a.assignment_id }}" data-class="{{ a.class_id }}">{{ a.title }}</option>
                         {% endfor %}
                     </select>
-
-
+                    
                     <label for="session-type" class="input-label">Session Type</label>
                     <select id="session-type" name="session_type" class="input-field">
                         <option value="homework">Homework</option>
@@ -116,22 +115,42 @@
                     <input
                         id="assignment-title"
                         type="text"
-                        name="title"
+                        name="assignment-title"
                         class="input-field"
                         required
                     >
-
+                    <label for="assignment-type" class="input-label">Session Type</label>
+                    <select id="assignment-type" name="assignment-type" class="input-field">
+                        <option value="homework">Homework</option>
+                        <option value="project">Project</option>
+                        <option value="essay">Essay</option>
+                        <option value="test">Test</option>
+                        <option value="exam">Exam</option>
+                        <option value="lab_report">Lab Report</option>
+                        <option value="other">Other</option>
+                    </select>
                     <div class="input-row">
-                        <label for="estimated-time" class="input-label">Estimated Time (optional)</label>
+                        <label for="estimated_minutes" class="input-label">Estimated Time (optional)</label>
                         <input
-                            id="estimated-time"
+                            id="estimated_minutes"
                             type="number"
                             name="estimated_minutes"
                             class="input-field"
-                            min="0"
+                            min="1"
                         >
                         <span class="unit">min</span>
                     </div>
+                    <label for="due_date" class="input-label">
+                        Due Date
+                        <span class="hint">(optional)</span>
+                    </label>
+
+                    <input
+                        id="due_date"
+                        type="date"
+                        name="due_date"
+                        class="input-field"
+                    >
 
                     <!-- ===== GRADED CHECKBOX ===== -->
                     <div class="checkbox-row">
