@@ -1,66 +1,307 @@
 /* =================== CSS VARIABLES =================== */
 :root {
-    --bg-color-light: #fdf6e3;
-    --bg-color-dark: #1b1b2f;
-
-    --bg-image-light: url("../images/light_bg.png");
-    --bg-image-dark: url("../images/dark_bg.png");
-
-    --card-light: rgba(255,255,255,0.9);
-    --card-dark: rgba(35,35,60,0.95);
-
-    --primary: #f2714b;
-    --secondary: #4b8df2;
+  --bg-color-light: #fdf6e3;
+  --bg-color-dark: #1b1b2f;
+  --bg-image-light: url("../images/light_bg.png");
+  --bg-image-dark: url("../images/dark_bg.png");
+  --card-light: rgba(255,255,255,0.9);
+  --card-dark: rgba(35,35,60,0.95);
+  --primary: #f2714b;
+  --secondary: #4b8df2;
 }
 
 /* =================== GLOBAL BACKGROUND =================== */
-html, body {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    font-family: "Segoe UI", sans-serif;
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
 }
 
 body {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Theme-based background */
 :root[data-theme="light"] body {
-    background-image: var(--bg-image-light);
-    background-color: var(--bg-color-light);
+  background-image: var(--bg-image-light);
+  background-color: var(--bg-color-light);
 }
 
 :root[data-theme="dark"] body {
-    background-image: var(--bg-image-dark);
-    background-color: var(--bg-color-dark);
+  background-image: var(--bg-image-dark);
+  background-color: var(--bg-color-dark);
 }
 
 /* =================== LINKS =================== */
 a {
-    text-decoration: none;
-    color: inherit;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* =================== GLOBAL THEME TOGGLE =================== */
 .theme-toggle {
-    background: #eee;
-    border: none;
-    border-radius: 20px;
-    padding: 5px 12px;
-    cursor: pointer;
-    font-size: 1.2rem;
+  background: #eee;
+  border: none;
+  border-radius: 20px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 1.2rem;
 }
 
 :root[data-theme="dark"] .theme-toggle {
-    background: #444;
-    color: white;
+  background: #444;
+  color: white;
 }
 
 /* =================== UTILITIES =================== */
 .hidden {
+  display: none;
+}
+.btn-tiny { background: #f2714b; color: white; border: none; padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; }
+.card {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+:root[data-theme="dark"] .card {
+    background: rgba(30, 30, 50, 0.85);
+}
+
+/* =================== NAVBAR (GLOBAL) =================== */
+.navbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0.8rem 2rem;
+    margin: 20px auto 30px;
+    max-width: 1400px;
+    border-radius: 50px;
+}
+
+/* LEFT */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-logo {
+    height: 40px;
+    width: auto;
+}
+
+.brand-name {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #444;
+}
+
+:root[data-theme="dark"] .brand-name {
+    color: #fff;
+}
+
+/* CENTER */
+.nav-center {
+    display: flex;
+    justify-content: center;
+    gap: 45px;
+}
+
+.nav-link {
+    font-weight: 600;
+    color: #666;
+    font-size: 1.05rem;
+    position: relative;
+}
+
+.nav-link.active {
+    color: var(--primary);
+}
+
+/* RIGHT */
+.nav-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 25px;
+}
+
+.logout-link {
+    font-weight: 700;
+    color: #ff5e62;
+}
+
+.user-avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* =================== INPUTS (GLOBAL) =================== */
+.input-field {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    background: #f9f9f9;
+    font-family: inherit;
+}
+/* Ensure inputs don't affect label color */
+.input-field:focus,
+.input-row input:focus {
+    outline: none;
+}
+
+:root[data-theme="dark"] .input-field {
+    background: #2b2b45;
+    border-color: #444;
+    color: white;
+}
+
+/* =================== BUTTONS (GLOBAL) =================== */
+.btn {
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    border-radius: 25px;
+}
+
+.full-btn {
+    background: linear-gradient(90deg, #ff9966, #ff5e62);
+    color: white;
+    padding: 12px;
+}
+
+.btn-tiny {
+    background: var(--primary);
+    color: white;
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    border-radius: 10px;
+}
+
+/* =================== MODAL (GLOBAL) =================== */
+
+
+/* Modal Buttons */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
     display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    overflow-y: auto;
+}
+
+
+.modal-overlay.active {
+    display: flex;
+}
+
+
+.modal {
+    position: relative;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px 40px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+}
+
+
+
+
+/* Make inputs bigger for better UX */
+.modal .input-field {
+    width: 100%;
+    padding: 15px 12px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+
+.btn.full-btn {
+    flex: 1;
+    background: linear-gradient(90deg, #ff9966, #ff5e62);
+    color: white;
+    border-radius: 25px;
+    padding: 12px;
+    font-size: 1rem;
+}
+
+
+.ghost-btn {
+    background: none;
+    border: 1px solid #ff5e62;
+    color: #ff5e62;
+    border-radius: 25px;
+    padding: 12px;
+    font-size: 1rem;
+}
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    overflow-y: auto;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    position: relative;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px 40px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+}
+
+
+/* Make inputs bigger for better UX */
+.modal .input-field {
+    width: 100%;
+    padding: 15px 12px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
 }

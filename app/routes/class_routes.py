@@ -7,6 +7,7 @@ classes = Blueprint("classes", __name__)
 
 @classes.route("/classes")
 def list_classes():
+    classes = Class.query.filter_by(user_id=current_user.user_id).all()
     return render_template("classes.html")
 
 @classes.route("/classes/new", methods=["POST"])

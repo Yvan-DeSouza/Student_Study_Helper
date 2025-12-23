@@ -72,7 +72,7 @@
                 </select>
             </div>
 
-            <button class="btn" id="openAddClassModal">+ Add Class</button>
+            <button class="btn-tiny" id="openAddClassModal">+ Add Class</button>
         </div>
     </header>
 
@@ -84,7 +84,7 @@
         <div class="card empty-state">
             <h2>No classes yet</h2>
             <p>Add your first class to start tracking study time and assignments.</p>
-            <button class="btn" id="openAddClassModalEmpty">+ Add Class</button>
+            <button class="btn-tiny" id="openAddClassModalEmpty">+ Add Class</button>
         </div>
         {% endif %}
 
@@ -97,7 +97,7 @@
             <div class="class-card-header">
                 <span
                     class="class-dot"
-                    data-colr="{{ c.color }}">
+                    data-color="{{ c.color }}">
                 </span>
 
                 <h3>{{ c.class_name }}</h3>
@@ -173,6 +173,78 @@
             <button class="btn ghost-btn" id="cancelDelete">Cancel</button>
             <button class="btn full-btn" id="confirmDelete" disabled>Delete</button>
         </div>
+    </div>
+</div>
+
+<!-- ================= ADD CLASS MODAL ================= -->
+<div class="modal-overlay" id="addClassModal">
+    <div class="modal card">
+        <h2>Add Class</h2>
+        <form method="POST" action="{{ url_for('classes.add_class') }}">
+
+            <label for="class-name" class="input-label">Class Name</label>
+            <input
+                id="class-name"
+                type="text"
+                name="class_name"
+                class="input-field"
+                required
+            >
+
+            <label for="class-code" class="input-label">Class Code</label>
+            <input
+                id="class-code"
+                type="text"
+                name="class_code"
+                class="input-field"
+                placeholder="e.g. MATH101"
+                required
+            >
+
+            <label for="classTypeSelect" class="input-label">Class Type</label>
+            <select id="classTypeSelect" name="class_type" class="input-field" required>
+                <option value="">Select Class Type</option>
+                <option value="math">Math</option>
+                <option value="science">Science</option>
+                <option value="language">Language</option>
+                <option value="social_science">Social Science</option>
+                <option value="art">Art</option>
+                <option value="engineering">Engineering</option>
+                <option value="technology">Technology</option>
+                <option value="finance">Finance</option>
+                <option value="other">Other</option>
+            </select>
+
+            <label for="importance" class="input-label">Importance of the class (Optional)</label>
+            <select id="importance" name="importance" class="input-field" required>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+            <label for="classColor" class="input-label">
+                Class Color
+                <span class="hint">(used for charts & calendar)</span>
+            </label>
+
+            <div class="color-picker-row">
+                <input
+                    id="classColor"
+                    type="color"
+                    name="color"
+                    class="color-input"
+                    value="#4f46e5"
+                >
+                <span class="color-preview-text">Click to choose a color</span>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn full-btn">Create Class</button>
+                <button type="button" class="btn ghost-btn" id="closeAddClassModal">
+                    Cancel
+                </button>
+            </div>
+        </form>
+
     </div>
 </div>
 
