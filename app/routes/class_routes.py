@@ -55,8 +55,40 @@ def edit_class(class_id):
     cls.class_type = request.form["class_type"]
     cls.importance = request.form.get("importance")
     cls.color = request.form.get("color")
-    cls.grade = request.form.get("grade") or None
+
+    if not cls.is_finished:
+        cls.grade = request.form.get("grade") or None
 
 
     db.session.commit()
     return redirect(url_for("classes.list_classes"))
+
+@classes.route("/classes/<int:class_id>/toggle-finished", methods=["POST"])
+@login_required
+def toggle_finished(class_id):
+    cls = Class.query.filter_by(
+        class_id=class_id,
+        user_id=current_user.user_id
+    ).first_or_404()
+
+    cls.is_finished = not cls.is_finished
+    db.session.commit()
+
+    return "", 204
+
+
+@classes.route("/classes/<int:class_id>/grade", methods=["POST"])
+@login_required
+def update_grade(class_id):
+    cls = Class.query.filter_by(
+        class_id=class_id,
+        user_id=current_user.user_id
+    ).first_or_404()
+
+    if cls.is_finished:
+        return "Class is finished", 400
+
+    cls.grade = request.form.get("grade") or None
+    db.session.commit()
+
+    return "", 204

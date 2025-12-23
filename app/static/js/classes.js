@@ -21,6 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
         classModalSubmit.textContent = "Create Class";
         classForm.action = "/classes/new";
         gradeInput.value = "";
+        gradeInput.disabled = false;
+        gradeInput.title = "";
 
         classForm.reset();
         colorInput.value = "#4f46e5";
@@ -28,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function openEditClassModal(btn) {
+        const isFinished = btn.dataset.finished === "True";
         classModalTitle.textContent = "Edit Class";
         classModalSubmit.textContent = "Save Changes";
 
@@ -37,7 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
         importanceSelect.value = btn.dataset.importance;
         colorInput.value = btn.dataset.color || "#4f46e5";
         gradeInput.value = btn.dataset.grade || "";
-
+        gradeInput.disabled = isFinished;
+        if (isFinished) {
+            gradeInput.title = "Grade cannot be changed once class is finished";
+        }
         classForm.action = `/classes/${btn.dataset.classId}/edit`;
 
         addModal.classList.add("active");
@@ -88,6 +94,31 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         previousClassType = newType;
+    });
+    document.querySelectorAll(".inline-grade-input").forEach(input => {
+        let timeout;
+
+        input.addEventListener("input", () => {
+            clearTimeout(timeout);
+
+            timeout = setTimeout(() => {
+                fetch(`/classes/${input.dataset.classId}/grade`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `grade=${encodeURIComponent(input.value)}`
+                });
+            }, 600);
+        });
+    });
+
+    document.querySelectorAll(".finish-checkbox").forEach(cb => {
+        cb.addEventListener("change", () => {
+            fetch(`/classes/${cb.dataset.classId}/toggle-finished`, {
+                method: "POST"
+            }).then(() => location.reload());
+        });
     });
 
     /* ======================================================
