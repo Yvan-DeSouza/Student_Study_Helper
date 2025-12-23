@@ -1,6 +1,8 @@
 from app.extensions import db
 from datetime import datetime, timezone
 from sqlalchemy import func, text
+from app.models.study_session import StudySession
+from app.models.assignment import Assignment
 class Class(db.Model):
     __tablename__ = "classes"
 
@@ -21,3 +23,29 @@ class Class(db.Model):
     user = db.relationship("User", back_populates="classes")
     assignments = db.relationship("Assignment", back_populates="class_", cascade="all, delete-orphan")
     study_sessions = db.relationship("StudySession", back_populates="class_", cascade="all, delete-orphan")
+
+    @property
+    def total_assignments(self):
+        return Assignment.query.filter_by(class_id=self.class_id).count()
+
+    @property
+    def completed_assignments(self):
+        return Assignment.query.filter_by(
+            class_id=self.class_id,
+            completed=True
+        ).count()
+
+    @property
+    def total_study_sessions(self):
+        return StudySession.query.filter_by(
+            class_id=self.class_id
+        ).count()
+
+    @property
+    def total_study_time(self):
+        # assumes duration_minutes exists
+        total = db.session.query(
+            db.func.coalesce(db.func.sum(StudySession.duration_minutes), 0)
+        ).filter_by(class_id=self.class_id).scalar()
+
+        return f"{total} min"

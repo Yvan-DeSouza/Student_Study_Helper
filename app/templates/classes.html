@@ -123,16 +123,29 @@
             </div>
 
             <div class="class-actions">
-                <button class="icon-btn edit-btn"
-                        data-class-id="{{ c.class_id }}">
+                <button
+                    class="icon-btn edit-btn"
+                    data-class-id="{{ c.class_id }}"
+                    data-name="{{ c.class_name }}"
+                    data-code="{{ c.class_code }}"
+                    data-type="{{ c.class_type }}"
+                    data-importance="{{ c.importance }}"
+                    data-color="{{ c.color }}"
+                >
                     ✏ Edit
                 </button>
 
-                <button class="icon-btn delete-btn"
-                        data-class-id="{{ c.class_id }}"
-                        data-class-name="{{ c.class_name }}">
+
+                <button
+                    class="icon-btn delete-btn"
+                    data-class-id="{{ c.class_id }}"
+                    data-class-name="{{ c.class_name }}"
+                    data-assignments="{{ c.total_assignments }}"
+                    data-sessions="{{ c.total_study_sessions }}"
+                >
                     🗑 Delete
                 </button>
+
             </div>
         </div>
         {% endfor %}
@@ -164,17 +177,58 @@
 <div class="modal-overlay" id="deleteClassModal">
     <div class="modal card">
         <h2>Delete Class</h2>
-        <p id="deleteWarningText"></p>
 
-        <label class="input-label">Type class name to confirm</label>
-        <input type="text" id="deleteConfirmInput" class="input-field">
+        <p id="deleteStepText"></p>
 
-        <div class="modal-actions">
-            <button class="btn ghost-btn" id="cancelDelete">Cancel</button>
-            <button class="btn full-btn" id="confirmDelete" disabled>Delete</button>
+        <div id="deleteImpactBox" class="hidden">
+            <ul>
+                <li><strong><span id="assignmentCount"></span></strong> assignments</li>
+                <li><strong><span id="sessionCount"></span></strong> study sessions</li>
+            </ul>
         </div>
+
+        <div id="deleteInputBox" class="hidden">
+            <label class="input-label">
+                Type class name to confirm
+            </label>
+            <input
+                type="text"
+                id="deleteConfirmInput"
+                class="input-field"
+            >
+        </div>
+
+        <form method="POST" id="deleteClassForm">
+            <div class="modal-actions">
+                <button
+                    type="button"
+                    class="btn ghost-btn"
+                    id="deleteBackBtn"
+                >
+                    Back
+                </button>
+
+                <button
+                    type="button"
+                    class="btn ghost-btn"
+                    id="cancelDelete"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn full-btn"
+                    id="confirmDelete"
+                    disabled
+                >
+                    Delete
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
 
 <!-- ================= ADD CLASS MODAL ================= -->
 <div class="modal-overlay" id="addClassModal">

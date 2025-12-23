@@ -3,7 +3,6 @@ from flask_login import current_user, login_required
 from app.models.course import Class
 from app.models.assignment import Assignment
 
-
 main = Blueprint("main", __name__)
 
 @main.route("/main")
