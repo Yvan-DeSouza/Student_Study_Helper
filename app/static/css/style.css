@@ -1,132 +1,66 @@
-/* =================== VARIABLES =================== */
+/* =================== CSS VARIABLES =================== */
 :root {
     --bg-color-light: #fdf6e3;
     --bg-color-dark: #1b1b2f;
-    --card-color-light: #ffffff;
-    --card-color-dark: #252540;
-    --text-color-light: #111111;
-    --text-color-dark: #f0f0f0;
-    --primary-gradient: linear-gradient(90deg, #ff6a00, #ee0979);
-    --btn-text-color: #fff;
+
+    --bg-image-light: url("../images/light_bg.png");
+    --bg-image-dark: url("../images/dark_bg.png");
+
+    --card-light: rgba(255,255,255,0.9);
+    --card-dark: rgba(35,35,60,0.95);
+
+    --primary: #f2714b;
+    --secondary: #4b8df2;
 }
 
-/* =================== GLOBAL THEME =================== */
-/* =================== VARIABLES =================== */
-:root {
-    /* ... your existing colors ... */
-    
-    /* Background Images */
-    --bg-image-light: url('../images/light_bg.png');
-    --bg-image-dark: url('../images/dark_bg.png');
+/* =================== GLOBAL BACKGROUND =================== */
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", sans-serif;
 }
 
-/* Update the Global Theme Selectors */
-:root[data-theme="light"] body { 
-    background-image: var(--bg-image-light); 
-    background-color: var(--bg-color-light); /* Fallback */
-}
-
-:root[data-theme="dark"] body { 
-    background-image: var(--bg-image-dark); 
-    background-color: var(--bg-color-dark); /* Fallback */
-}
-
-/* Global Background Properties */
 body {
     background-size: cover;
     background-position: center;
-    background-attachment: fixed; /* Keeps bg still while scrolling */
     background-repeat: no-repeat;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', sans-serif;
-    min-height: 100vh;
+    background-attachment: fixed;
 }
 
-/* =================== GLOBAL LAYOUT =================== */
-body, html { margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-a { text-decoration: none; color: inherit; }
-
-/* Flash messages */
-.flash-messages { padding: 1rem; }
-.flash-list { list-style:none; padding:0; margin:0; }
-.flash-item { padding:0.5rem 1rem; border-radius:0.5rem; margin-bottom:0.5rem; background-color: rgba(255,105,0,0.1); text-align:center;}
-
-/* Theme-aware cards */
-.card { border-radius: 1rem; padding: 1.5rem; box-shadow:0 8px 20px rgba(0,0,0,0.15); transition: background-color 0.3s, color 0.3s;}
-:root[data-theme="light"] .card { background-color: var(--card-color-light);}
-:root[data-theme="dark"] .card  { background-color: var(--card-color-dark);}
-
-/* Buttons */
-.btn { display:inline-block; padding:0.6rem 1.2rem; margin:0.3rem 0; border-radius:0.5rem; background:var(--primary-gradient); color:var(--btn-text-color); font-weight:600; transition: transform 0.2s, opacity 0.2s;}
-.btn:hover { transform: translateY(-2px); opacity:0.9; }
-
-/* Theme toggle button (global) */
-.theme-toggle { position: fixed; top: 1rem; right: 1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; z-index:1000; }
-.toggle-icon { pointer-events:none; }
-/* ===== CHECKBOX WRAPPER ===== */
-.checkbox-row {
-    display: flex;
-    align-items: center;
-    margin: 12px 0;
+/* Theme-based background */
+:root[data-theme="light"] body {
+    background-image: var(--bg-image-light);
+    background-color: var(--bg-color-light);
 }
 
-/* Hide native checkbox */
-.checkbox-input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+:root[data-theme="dark"] body {
+    background-image: var(--bg-image-dark);
+    background-color: var(--bg-color-dark);
 }
 
-/* Label becomes clickable area */
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+/* =================== LINKS =================== */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* =================== GLOBAL THEME TOGGLE =================== */
+.theme-toggle {
+    background: #eee;
+    border: none;
+    border-radius: 20px;
+    padding: 5px 12px;
     cursor: pointer;
-    font-size: 0.95rem;
-    user-select: none;
+    font-size: 1.2rem;
 }
 
-/* Visual checkbox */
-.checkbox-box {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    border: 2px solid #f2714b;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-    background: transparent;
-}
-
-/* Checkmark */
-.checkbox-box::after {
-    content: "✓";
-    font-size: 13px;
+:root[data-theme="dark"] .theme-toggle {
+    background: #444;
     color: white;
-    display: none;
 }
 
-/* Checked state */
-.checkbox-input:checked + .checkbox-label .checkbox-box {
-    background: #f2714b;
-}
-
-.checkbox-input:checked + .checkbox-label .checkbox-box::after {
-    display: block;
-}
-
-/* Hover feedback */
-.checkbox-label:hover .checkbox-box {
-    border-color: #ff9966;
-}
-
-/* Dark mode */
-:root[data-theme="dark"] .checkbox-box {
-    border-color: #ff9966;
-}
+/* =================== UTILITIES =================== */
 .hidden {
-    display: none !important;
+    display: none;
 }

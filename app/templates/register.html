@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -47,4 +48,7 @@
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

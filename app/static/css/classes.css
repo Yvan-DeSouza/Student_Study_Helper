@@ -1,0 +1,76 @@
+/* ================= HEADER ================= */
+.classes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.classes-controls {
+    display: flex;
+    gap: 15px;
+}
+
+/* ================= GRID ================= */
+.class-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 25px;
+}
+
+/* ================= CARD ================= */
+.class-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+.class-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.class-meta {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 10px;
+}
+
+/* ================= ACTIONS ================= */
+.class-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.class-actions button {
+    background: none;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* ================= DARK MODE ================= */
+:root[data-theme="dark"] .class-card {
+    background: rgba(35,35,60,0.9);
+}
+
+:root[data-theme="dark"] .class-meta {
+    color: #bbb;
+}
+.class-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #f2714b; /* fallback */
+}
+
+/* If data-color exists, override */
+.class-dot[data-color] {
+    background: attr(data-color color, #f2714b);
+}

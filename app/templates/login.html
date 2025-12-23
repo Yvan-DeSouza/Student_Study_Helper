@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -42,7 +43,11 @@
 
         <div class="footer-link">
             <a href="{{ url_for('auth.register') }}" class="signup-link">Sign Up</a>
+
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

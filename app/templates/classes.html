@@ -1,7 +1,185 @@
 {% extends "base.html" %}
 {% block title %}Classes | StudyMate{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/classes.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar card">
+    <div class="nav-left">
+        <!-- OPTIONAL IMAGE: study_logo.png -->
+        <img src="{{ url_for('static', filename='images/study_logo.png') }}"
+             class="nav-logo"
+             alt="StudyMate logo">
+        <span class="brand-name">StudyMate</span>
+    </div>
+
+    <div class="nav-center">
+        <a href="{{ url_for('main.home') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('classes.list_classes') }}" class="nav-link active">Classes</a>
+        <a href="{{ url_for('assignment.list_assignments') }}" class="nav-link">Assignments</a>
+        <a href="{{ url_for('study.study_sessions') }}" class="nav-link">Study Sessions</a>
+        <a href="{{ url_for('dashboard.graphs') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('calendar.home') }}" class="nav-link">Calendar</a>
+    </div>
+
+    <div class="nav-right">
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+
+        <!-- OPTIONAL IMAGE: user_avatar.png -->
+        <div class="user-avatar">
+            <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User avatar">
+        </div>
+
+        <button class="theme-toggle" aria-label="Toggle theme">
+            <span class="toggle-icon">☀️</span>
+        </button>
+    </div>
+</nav>
+{% endblock %}
+
 {% block content %}
-<h1>Classes Page</h1>
-<p>Placeholder: information about classes will appear here.</p>
+<div class="classes-container">
+
+    <!-- ================= HEADER ================= -->
+    <header class="classes-header card">
+        <h1>Your Classes</h1>
+
+        <div class="classes-controls">
+            <div class="controls-left">
+                <label class="input-label">Sort by</label>
+                <select id="sortSelect" class="input-field">
+                    <option value="name_asc">Name (A → Z)</option>
+                    <option value="name_desc">Name (Z → A)</option>
+                    <option value="importance_desc">Importance (High → Low)</option>
+                    <option value="importance_asc">Importance (Low → High)</option>
+                    <option value="grade_desc">Grade (High → Low)</option>
+                    <option value="grade_asc">Grade (Low → High)</option>
+                    <option value="created_desc">Creation Date (Newest)</option>
+                    <option value="created_asc">Creation Date (Oldest)</option>
+                </select>
+
+                <label class="input-label">Filter</label>
+                <select id="filterSelect" class="input-field">
+                    <option value="all">All</option>
+                    <option value="finished">Finished</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="high">High Importance</option>
+                    <option value="medium">Medium Importance</option>
+                    <option value="low">Low Importance</option>
+                </select>
+            </div>
+
+            <button class="btn" id="openAddClassModal">+ Add Class</button>
+        </div>
+    </header>
+
+    <!-- ================= CLASS GRID ================= -->
+    <section class="classes-grid">
+
+        {% if classes|length == 0 %}
+        <!-- EMPTY STATE -->
+        <div class="card empty-state">
+            <h2>No classes yet</h2>
+            <p>Add your first class to start tracking study time and assignments.</p>
+            <button class="btn" id="openAddClassModalEmpty">+ Add Class</button>
+        </div>
+        {% endif %}
+
+        {% for c in classes %}
+        <div class="card class-card"
+             data-importance="{{ c.importance }}"
+             data-finished="{{ c.is_finished }}"
+             data-name="{{ c.class_name }}">
+
+            <div class="class-card-header">
+                <span
+                    class="class-dot"
+                    data-colr="{{ c.color }}">
+                </span>
+
+                <h3>{{ c.class_name }}</h3>
+            </div>
+
+            <div class="class-meta">
+                <p><strong>Type:</strong> {{ c.class_type|capitalize }}</p>
+                <p><strong>Code:</strong> {{ c.class_code }}</p>
+                <p><strong>Importance:</strong> {{ c.importance|capitalize }}</p>
+                <p><strong>Grade:</strong> {{ c.grade if c.grade is not none else "—" }}</p>
+
+                <p>
+                    <strong>Status:</strong>
+                    {% if c.is_finished %}
+                        <span class="status finished">Finished ✓</span>
+                    {% else %}
+                        <span class="status in-progress">In Progress</span>
+                    {% endif %}
+                </p>
+
+                <p><strong>Assignments:</strong> {{ c.completed_assignments }} / {{ c.total_assignments }}</p>
+                <p><strong>Total Study Time:</strong> {{ c.total_study_time }}</p>
+            </div>
+
+            <div class="class-actions">
+                <button class="icon-btn edit-btn"
+                        data-class-id="{{ c.class_id }}">
+                    ✏ Edit
+                </button>
+
+                <button class="icon-btn delete-btn"
+                        data-class-id="{{ c.class_id }}"
+                        data-class-name="{{ c.class_name }}">
+                    🗑 Delete
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+
+    <!-- ================= ANALYTICS ================= -->
+    <section class="analytics-section">
+
+        <div class="card chart-card">
+            <div class="chart-header">
+                <h3>Study Time Distribution</h3>
+                <div class="chart-toggle">
+                    <button class="btn-tiny active" data-chart="pie">Pie</button>
+                    <button class="btn-tiny" data-chart="bar">Bar</button>
+                </div>
+            </div>
+
+            <canvas id="timePerClassChart"></canvas>
+        </div>
+
+        <div class="card chart-card">
+            <h3>Assignments per Class</h3>
+            <canvas id="assignmentsPerClassChart"></canvas>
+        </div>
+    </section>
+</div>
+
+<!-- ================= DELETE CONFIRM MODAL ================= -->
+<div class="modal-overlay" id="deleteClassModal">
+    <div class="modal card">
+        <h2>Delete Class</h2>
+        <p id="deleteWarningText"></p>
+
+        <label class="input-label">Type class name to confirm</label>
+        <input type="text" id="deleteConfirmInput" class="input-field">
+
+        <div class="modal-actions">
+            <button class="btn ghost-btn" id="cancelDelete">Cancel</button>
+            <button class="btn full-btn" id="confirmDelete" disabled>Delete</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/classes.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}
