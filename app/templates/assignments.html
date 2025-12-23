@@ -1,7 +1,206 @@
 {% extends "base.html" %}
 {% block title %}Assignments | StudyMate{% endblock %}
 
+{% block extra_css %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assignments.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+{% endblock %}
+
+{% block navbar %}
+
+<nav class="navbar card">
+    <div class="nav-left">
+        <img src="{{ url_for('static', filename='images/study_logo.png') }}" class="nav-logo" alt="StudyMate logo">
+        <span class="brand-name">StudyMate</span>
+    </div>
+
+
+<div class="nav-center">
+    <a href="{{ url_for('main.home') }}" class="nav-link">Home</a>
+    <a href="{{ url_for('classes.list_classes') }}" class="nav-link">Classes</a>
+    <a href="{{ url_for('assignment.list_assignments') }}" class="nav-link active">Assignments</a>
+    <a href="{{ url_for('study.study_sessions') }}" class="nav-link">Study Sessions</a>
+    <a href="{{ url_for('dashboard.graphs') }}" class="nav-link">Dashboard</a>
+    <a href="{{ url_for('calendar.home') }}" class="nav-link">Calendar</a>
+</div>
+
+<div class="nav-right">
+    <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+    <div class="user-avatar">
+        <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User avatar">
+    </div>
+    <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="toggle-icon">☀️</span>
+    </button>
+</div>
+
+</nav>
+{% endblock %}
+
 {% block content %}
-<h1>Assignments Page</h1>
-<p>Placeholder: information about assignments will appear here.</p>
+
+<div class="assignments-container">
+
+
+<!-- ================= TOP ACTIONS ================= -->
+<section class="assignments-top card">
+    <div class="top-left">
+        <h1>Your Assignments</h1>
+        <p class="muted">Track deadlines, grades, and completion</p>
+    </div>
+    <div class="top-right">
+        <button class="btn-tiny" id="openAddAssignmentModal">+ Add Assignment</button>
+    </div>
+</section>
+
+<!-- ================= REMINDERS ================= -->
+<section class="assignments-reminders">
+    <div class="card upcoming-deadlines">
+        <h3>Upcoming Deadlines</h3>
+        <ul class="deadline-list">
+            <!-- JS inject upcoming assignments -->
+            <li class="placeholder">No upcoming deadlines</li>
+        </ul>
+    </div>
+
+    <div class="card calendar-preview">
+        <h3>This Month</h3>
+        <div class="calendar-grid">
+            <!-- Calendar scaffold only -->
+        </div>
+    </div>
+</section>
+
+<!-- ================= FILTER PANEL ================= -->
+<section class="assignments-filters card">
+    <div class="filter-group">
+        <label class="input-label">Due Status</label>
+        <select id="dueFilter" class="input-field">
+            <option value="all">All</option>
+            <option value="overdue">Overdue</option>
+            <option value="not_due">Not Due</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label class="input-label">Completion</label>
+        <select id="completionFilter" class="input-field">
+            <option value="all">All</option>
+            <option value="completed">Completed</option>
+            <option value="uncompleted">Uncompleted</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label class="input-label">Graded</label>
+        <select id="gradedFilter" class="input-field">
+            <option value="all">All</option>
+            <option value="graded">Graded</option>
+            <option value="not_graded">Not Graded</option>
+        </select>
+    </div>
+
+    <div class="filter-group wide">
+        <label class="input-label">Assignment Type</label>
+        <div class="checkbox-row">
+            <!-- checkbox pills -->
+            <label><input type="checkbox" checked> Homework</label>
+            <label><input type="checkbox" checked> Test</label>
+            <label><input type="checkbox" checked> Project</label>
+            <label><input type="checkbox" checked> Lab report</label>
+            <label><input type="checkbox" checked> Essay</label>
+            <label><input type="checkbox" checked> Exam</label>
+            <label><input type="checkbox" checked> Other</label>
+        </div>
+    </div>
+
+    <div class="filter-group">
+        <label class="input-label">Table Mode</label>
+        <select id="tableMode" class="input-field">
+            <option value="single">Single Table</option>
+            <option value="per_class">One Table per Class</option>
+        </select>
+    </div>
+</section>
+
+<!-- ================= ASSIGNMENTS TABLE ================= -->
+<section class="assignments-table-wrapper">
+
+    <div class="table-actions">
+        <button class="btn-tiny" id="bulkEditBtn">✏ Edit</button>
+        <button class="btn-tiny danger" id="bulkDeleteBtn">🗑 Delete</button>
+    </div>
+
+    <div class="card assignments-table-card">
+        <table class="assignments-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Type</th>
+                    <th>Due Date</th>
+                    <th>Completed</th>
+                    <th>Grade</th>
+                    <th>Graded</th>
+                    <th>Ponderation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- JS renders rows -->
+                <tr class="placeholder-row">
+                    <td colspan="8">No assignments found</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ================= ANALYTICS ================= -->
+<section class="assignments-analytics">
+    <div class="card chart-card">
+        <h3>Completion Breakdown</h3>
+        <div class="chart-toggle">
+            <button class="btn-tiny active">Simple</button>
+            <button class="btn-tiny">Detailed</button>
+        </div>
+        <canvas id="assignmentCompletionChart"></canvas>
+    </div>
+
+    <div class="card chart-card">
+        <h3>Grade Distribution</h3>
+        <canvas id="assignmentGradeChart"></canvas>
+    </div>
+</section>
+
+
+</div>
+
+<!-- ================= ADD ASSIGNMENT MODAL (SCAFFOLD) ================= -->
+
+<div class="modal-overlay" id="addAssignmentModal">
+    <div class="modal card">
+        <h2>Add Assignment</h2>
+        <form method="POST">
+            <!-- fields wired later -->
+            <input class="input-field" placeholder="Assignment name">
+            <div class="modal-actions">
+                <button type="submit" class="btn full-btn">Save</button>
+                <button type="button" class="btn ghost-btn">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/constants.js') }}"></script>
+
 {% endblock %}

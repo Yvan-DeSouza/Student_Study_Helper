@@ -1,0 +1,254 @@
+/* ================= ASSIGNMENTS PAGE ================= */
+
+.assignments-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+}
+
+/* ================= TOP ACTIONS ================= */
+
+.assignments-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.assignments-top h1 {
+    margin: 0;
+}
+
+.muted {
+    color: #777;
+    font-size: 0.95rem;
+}
+
+:root[data-theme="dark"] .muted {
+    color: #bbb;
+}
+
+/* ================= REMINDERS ================= */
+
+.assignments-reminders {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 900px) {
+    .assignments-reminders {
+        grid-template-columns: 1fr;
+    }
+}
+
+.upcoming-deadlines ul {
+    padding-left: 18px;
+    margin: 10px 0 0;
+}
+
+.deadline-list li {
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+}
+
+.placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Calendar placeholder */
+.calendar-preview .calendar-grid {
+    height: 180px;
+    border-radius: 15px;
+    background: rgba(0,0,0,0.05);
+}
+
+/* ================= FILTER PANEL ================= */
+
+.assignments-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.filter-group.wide {
+    grid-column: span 2;
+}
+
+@media (max-width: 800px) {
+    .filter-group.wide {
+        grid-column: span 1;
+    }
+}
+
+/* Checkbox pills */
+.checkbox-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.checkbox-row label {
+    background: rgba(0,0,0,0.05);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+:root[data-theme="dark"] .checkbox-row label {
+    background: rgba(255,255,255,0.08);
+}
+
+/* ================= TABLE ================= */
+
+.assignments-table-wrapper {
+    margin-top: 10px;
+}
+
+.table-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.btn-tiny.danger {
+    background: rgba(244,67,54,0.15);
+    color: #f44336;
+}
+
+/* Table card */
+.assignments-table-card {
+    overflow-x: auto;
+    padding: 0;
+}
+
+/* Table */
+.assignments-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.assignments-table th,
+.assignments-table td {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+:root[data-theme="dark"] .assignments-table th,
+:root[data-theme="dark"] .assignments-table td {
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Header */
+.assignments-table thead {
+    background: rgba(0,0,0,0.03);
+}
+
+:root[data-theme="dark"] .assignments-table thead {
+    background: rgba(255,255,255,0.05);
+}
+
+.assignments-table th {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Placeholder row */
+.placeholder-row td {
+    text-align: center;
+    padding: 30px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Inline editable elements (future-proofing) */
+.assignments-table input[type="number"],
+.assignments-table input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* ================= ANALYTICS ================= */
+
+.assignments-analytics {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+}
+
+.chart-card {
+    position: relative;
+}
+
+.chart-card canvas {
+    height: 200px;
+    width: 100%;
+    margin-top: 10px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 15px;
+}
+
+:root[data-theme="dark"] .chart-card canvas {
+    background: rgba(255,255,255,0.06);
+}
+
+.chart-toggle {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* ================= NAVBAR FIX (Assignments Page) ================= */
+
+.navbar {
+    display: flex;              /* override grid */
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 2rem;
+    max-width: 1400px;
+    margin: 20px auto 30px;
+    border-radius: 50px;
+    flex-wrap: nowrap;          /* CRITICAL: prevent second row */
+}
+
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+
+.nav-center {
+    display: flex;
+    align-items: center;
+    gap: 35px;                  /* matches classes page feel */
+    flex: 1;
+    justify-content: center;
+    white-space: nowrap;        /* prevents wrapping */
+}
+
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.navbar * {
+    box-sizing: border-box;
+}
+
+
