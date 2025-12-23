@@ -75,15 +75,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const colorInput = document.getElementById("classColor");
 
     const DEFAULT_COLORS = {
-        math: "#4f46e5",
+        math: "#F50000",
         science: "#16a34a",
-        language: "#f59e0b",
+        language: "#FF7B00",
         social_science: "#db2777",
         art: "#9333ea",
-        engineering: "#0ea5e9",
-        technology: "#14b8a6",
-        finance: "#22c55e",
-        other: "#6b7280"
+        engineering: "#0011FF",
+        technology: "#00BFFF",
+        finance: "#D2B604",
+        other: "#6D6D69"
     };
 
     if (classTypeSelect && colorInput) {

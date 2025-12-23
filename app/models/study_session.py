@@ -1,6 +1,6 @@
 from app.extensions import db
-from datetime import datetime
-
+from datetime import datetime, timezone
+from sqlalchemy import func
 class StudySession(db.Model):
     __tablename__ = "study_sessions"
 
@@ -11,8 +11,8 @@ class StudySession(db.Model):
     duration_minutes = db.Column(db.Integer)
     expected_duration_minutes = db.Column(db.Integer)
     session_type = db.Column(db.Text)
-    session_end = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    session_end = db.Column(db.DateTime(timezone=True), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now())
 
     class_ = db.relationship("Class", back_populates="study_sessions")
     assignment = db.relationship("Assignment", back_populates="study_sessions")
