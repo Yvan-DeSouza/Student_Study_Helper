@@ -131,6 +131,7 @@
                     data-type="{{ c.class_type }}"
                     data-importance="{{ c.importance }}"
                     data-color="{{ c.color }}"
+                    data-grade="{{ c.grade }}"
                 >
                     ✏ Edit
                 </button>
@@ -233,7 +234,7 @@
 <!-- ================= ADD CLASS MODAL ================= -->
 <div class="modal-overlay" id="addClassModal">
     <div class="modal card">
-        <h2>Add Class</h2>
+        <h2 id="classModalTitle">Add Class</h2>
         <form method="POST" action="{{ url_for('classes.add_class') }}">
 
             <label for="class-name" class="input-label">Class Name</label>
@@ -275,6 +276,21 @@
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
             </select>
+            <label for="classGrade" class="input-label">
+                Grade
+                <span class="hint">(optional, %)</span>
+            </label>
+            <input
+                id="classGrade"
+                type="number"
+                name="grade"
+                class="input-field"
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="e.g. 87.5"
+            >
+
             <label for="classColor" class="input-label">
                 Class Color
                 <span class="hint">(used for charts & calendar)</span>
@@ -292,7 +308,9 @@
             </div>
 
             <div class="modal-actions">
-                <button type="submit" class="btn full-btn">Create Class</button>
+                <button type="submit" class="btn full-btn" id="classModalSubmit">
+                    Create Class
+                </button>
                 <button type="button" class="btn ghost-btn" id="closeAddClassModal">
                     Cancel
                 </button>
@@ -308,4 +326,5 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/classes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
+<script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 {% endblock %}

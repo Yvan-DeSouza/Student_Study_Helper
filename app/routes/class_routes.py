@@ -20,7 +20,7 @@ def add_class():
         class_type=request.form["class_type"],
         class_code=request.form["class_code"],
         color=request.form.get("color"),
-        grade=None,
+        grade=request.form.get("grade") or None,
         importance=request.form.get("importance")
     )
 
@@ -55,6 +55,8 @@ def edit_class(class_id):
     cls.class_type = request.form["class_type"]
     cls.importance = request.form.get("importance")
     cls.color = request.form.get("color")
+    cls.grade = request.form.get("grade") or None
+
 
     db.session.commit()
     return redirect(url_for("classes.list_classes"))
