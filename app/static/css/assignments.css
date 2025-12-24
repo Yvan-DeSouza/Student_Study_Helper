@@ -252,3 +252,28 @@
 }
 
 
+/* Assignment type badge */
+.assignment-type {
+    background: rgba(75, 141, 242, 0.15);
+    color: #4b8df2;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Inline grade input (visual only for now) */
+.inline-grade-input {
+    width: 70px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 0.85rem;
+}
+
+/* Disabled but still readable */
+.assignments-table input[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+

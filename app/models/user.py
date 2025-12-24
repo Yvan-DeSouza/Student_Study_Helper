@@ -21,3 +21,17 @@ class User(UserMixin, db.Model):
     
     def get_id(self):
         return str(self.user_id)
+
+
+class UserPreferences(db.Model):
+    __tablename__ = "user_preferences"
+
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
+    theme = db.Column(db.Text, default='system')
+    assignments_view = db.Column(db.Text, default='single_table')
+    show_completed_assignments = db.Column(db.Boolean, default=True, nullable=False)
+    default_upcoming_deadlines_count = db.Column(db.Integer, default=3)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
+
+    user = db.relationship("User", back_populates="preferences")
+

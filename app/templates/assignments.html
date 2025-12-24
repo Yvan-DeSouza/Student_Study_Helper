@@ -147,11 +147,96 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- JS renders rows -->
+            {% if assignments|length == 0 %}
                 <tr class="placeholder-row">
                     <td colspan="8">No assignments found</td>
                 </tr>
+            {% else %}
+                {% for a in assignments %}
+                <tr
+                    data-assignment-id="{{ a.assignment_id }}"
+                    data-class-id="{{ a.class_id }}"
+                    data-completed="{{ a.is_completed }}"
+                    data-graded="{{ a.is_graded }}"
+                >
+
+                    <!-- Name -->
+                    <td>
+                        <strong>{{ a.title }}</strong>
+                    </td>
+
+                    <!-- Class -->
+                    <td>
+                        {{ a.class_name }}
+                    </td>
+
+                    <!-- Type -->
+                    <td>
+                        <span class="assignment-type">
+                            {{ a.assignment_type|capitalize }}
+                        </span>
+                    </td>
+
+                    <!-- Due Date -->
+                    <td>
+                        {% if a.due_date %}
+                            {{ a.due_date.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <!-- Completed -->
+                    <td>
+                        <input
+                            type="checkbox"
+                            class="complete-checkbox"
+                            {% if a.is_completed %}checked{% endif %}
+                            disabled
+                        >
+                    </td>
+
+                    <!-- Grade -->
+                    <td>
+                        {% if a.is_completed %}
+                            <input
+                                type="number"
+                                class="inline-grade-input"
+                                value="{{ a.grade if a.grade is not none else '' }}"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                placeholder="—"
+                                disabled
+                            >
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    <!-- Graded -->
+                    <td>
+                        <input
+                            type="checkbox"
+                            {% if a.is_graded %}checked{% endif %}
+                            disabled
+                        >
+                    </td>
+
+                    <!-- Ponderation -->
+                    <td>
+                        {% if a.is_graded and a.ponderation %}
+                            {{ a.ponderation }}%
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+            {% endif %}
             </tbody>
+
         </table>
     </div>
 </section>
