@@ -85,3 +85,19 @@
     text-align: left;
 }
 
+/* Graded fields hidden by default */
+.graded-options {
+    display: none;
+    margin-top: 10px;
+    padding-left: 10px;
+    border-left: 2px solid var(--primary);
+}
+
+.graded-options input {
+    margin-bottom: 12px;
+}
+
+/* Show when active */
+.graded-options:not(.hidden) {
+    display: block;
+}

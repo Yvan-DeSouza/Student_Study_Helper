@@ -49,10 +49,11 @@ def add_assignment():
     db.session.commit()
     return redirect(url_for("main.home"))
 
+
 @assignment.route("/assignments")
 @login_required
 def list_assignments():
-
+    # Existing assignments query
     assignments = (
         db.session.query(
             Assignment,
@@ -80,9 +81,13 @@ def list_assignments():
             "class_name": class_name
         })
 
+    # <----- ADD THIS: fetch classes for modal dropdown
+    classes = Class.query.filter_by(user_id=current_user.user_id).all()
+
     return render_template(
         "assignments.html",
-        assignments=assignment_rows
+        assignments=assignment_rows,
+        classes=classes   # <--- pass to template
     )
 
 

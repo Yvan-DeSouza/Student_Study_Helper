@@ -50,7 +50,7 @@
         <p class="muted">Track deadlines, grades, and completion</p>
     </div>
     <div class="top-right">
-        <button class="btn-tiny" id="openAddAssignmentModal">+ Add Assignment</button>
+        <button class="btn-tiny" data-open-modal="addAssignmentModal">+ Add Assignment</button>
     </div>
 </section>
 
@@ -75,8 +75,8 @@
 <!-- ================= FILTER PANEL ================= -->
 <section class="assignments-filters card">
     <div class="filter-group">
-        <label class="input-label">Due Status</label>
-        <select id="dueFilter" class="input-field">
+        <label for="dueFilter" class="input-label">Due Status</label>
+        <select id="dueFilter" name="due_status" class="input-field">
             <option value="all">All</option>
             <option value="overdue">Overdue</option>
             <option value="not_due">Not Due</option>
@@ -84,8 +84,8 @@
     </div>
 
     <div class="filter-group">
-        <label class="input-label">Completion</label>
-        <select id="completionFilter" class="input-field">
+        <label for="completionFilter" class="input-label">Completion</label>
+        <select id="completionFilter" name="completion" class="input-field">
             <option value="all">All</option>
             <option value="completed">Completed</option>
             <option value="uncompleted">Uncompleted</option>
@@ -93,32 +93,66 @@
     </div>
 
     <div class="filter-group">
-        <label class="input-label">Graded</label>
-        <select id="gradedFilter" class="input-field">
+        <label for="gradedFilter" class="input-label">Graded</label>
+        <select id="gradedFilter" name="graded" class="input-field">
             <option value="all">All</option>
             <option value="graded">Graded</option>
             <option value="not_graded">Not Graded</option>
         </select>
     </div>
 
-    <div class="filter-group wide">
-        <label class="input-label">Assignment Type</label>
+    <fieldset class="filter-group wide">
+        <legend class="input-label">Assignment Type</legend>
+
         <div class="checkbox-row">
-            <!-- checkbox pills -->
-            <label><input type="checkbox" checked> Homework</label>
-            <label><input type="checkbox" checked> Test</label>
-            <label><input type="checkbox" checked> Quiz</label>
-            <label><input type="checkbox" checked> Project</label>
-            <label><input type="checkbox" checked> Lab report</label>
-            <label><input type="checkbox" checked> Essay</label>
-            <label><input type="checkbox" checked> Exam</label>
-            <label><input type="checkbox" checked> Other</label>
+
+            <label for="type-homework">
+                <input type="checkbox" id="type-homework" name="assignment_type" value="homework" checked>
+                Homework
+            </label>
+
+            <label for="type-test">
+                <input type="checkbox" id="type-test" name="assignment_type" value="test" checked>
+                Test
+            </label>
+
+            <label for="type-quiz">
+                <input type="checkbox" id="type-quiz" name="assignment_type" value="quiz" checked>
+                Quiz
+            </label>
+
+            <label for="type-project">
+                <input type="checkbox" id="type-project" name="assignment_type" value="project" checked>
+                Project
+            </label>
+
+            <label for="type-lab-report">
+                <input type="checkbox" id="type-lab-report" name="assignment_type" value="lab_report" checked>
+                Lab Report
+            </label>
+
+            <label for="type-essay">
+                <input type="checkbox" id="type-essay" name="assignment_type" value="essay" checked>
+                Essay
+            </label>
+
+            <label for="type-exam">
+                <input type="checkbox" id="type-exam" name="assignment_type" value="exam" checked>
+                Exam
+            </label>
+
+            <label for="type-other">
+                <input type="checkbox" id="type-other" name="assignment_type" value="other" checked>
+                Other
+            </label>
+
         </div>
-    </div>
+    </fieldset>
+
 
     <div class="filter-group">
-        <label class="input-label">Table Mode</label>
-        <select id="tableMode" class="input-field">
+        <label for="tableMode" class="input-label">Table Mode</label>
+        <select id="tableMode" name="table_mode" class="input-field">
             <option value="single">Single Table</option>
             <option value="per_class">One Table per Class</option>
         </select>
@@ -145,98 +179,42 @@
                     <th>Grade</th>
                     <th>Graded</th>
                     <th>Ponderation</th>
+                    <th>Pass Grade</th>
                 </tr>
             </thead>
             <tbody>
-            {% if assignments|length == 0 %}
-                <tr class="placeholder-row">
-                    <td colspan="8">No assignments found</td>
-                </tr>
-            {% else %}
-                {% for a in assignments %}
-                <tr
-                    data-assignment-id="{{ a.assignment_id }}"
-                    data-class-id="{{ a.class_id }}"
-                    data-completed="{{ a.is_completed }}"
-                    data-graded="{{ a.is_graded }}"
-                >
+            {% for a in assignments %}
+            <tr
+                data-assignment-id="{{ a.assignment_id }}"
+                data-class-id="{{ a.class_id }}"
+                data-completed="{{ a.is_completed }}"
+                data-graded="{{ a.is_graded }}"
+            >
+                <td>{{ a.title }}</td>
+                <td>{{ a.class_name }}</td>
+                <td>{{ a.assignment_type|capitalize }}</td>
+                <td>{% if a.due_date %}{{ a.due_date.strftime('%Y-%m-%d') }}{% else %}—{% endif %}</td>
+                <td><input type="checkbox" class="complete-checkbox" aria-label = "Assignment completed" {% if a.is_completed %}checked{% endif %} disabled></td>
 
-                    <!-- Name -->
-                    <td>
-                        <strong>{{ a.title }}</strong>
-                    </td>
+                <!-- Grade -->
+                <td>
+                    {% if a.is_completed %}
+                    <input type="number" class="inline-grade-input" aria-label="Assignment grade" value="{{ a.grade if a.grade is not none else '' }}" min="0" max="100" step="0.1" placeholder="—" disabled>
+                    {% else %}—{% endif %}
+                </td>
 
-                    <!-- Class -->
-                    <td>
-                        {{ a.class_name }}
-                    </td>
+                <!-- Graded Checkbox -->
+                <td><input type="checkbox" aria-label="Assignment graded" {% if a.is_graded %}checked{% endif %} disabled></td>
 
-                    <!-- Type -->
-                    <td>
-                        <span class="assignment-type">
-                            {{ a.assignment_type|capitalize }}
-                        </span>
-                    </td>
+                <!-- Ponderation -->
+                <td>{% if a.is_graded and a.ponderation %}{{ a.ponderation }}%{% else %}—{% endif %}</td>
 
-                    <!-- Due Date -->
-                    <td>
-                        {% if a.due_date %}
-                            {{ a.due_date.strftime('%Y-%m-%d') }}
-                        {% else %}
-                            —
-                        {% endif %}
-                    </td>
-
-                    <!-- Completed -->
-                    <td>
-                        <input
-                            type="checkbox"
-                            class="complete-checkbox"
-                            {% if a.is_completed %}checked{% endif %}
-                            disabled
-                        >
-                    </td>
-
-                    <!-- Grade -->
-                    <td>
-                        {% if a.is_completed %}
-                            <input
-                                type="number"
-                                class="inline-grade-input"
-                                value="{{ a.grade if a.grade is not none else '' }}"
-                                min="0"
-                                max="100"
-                                step="0.1"
-                                placeholder="—"
-                                disabled
-                            >
-                        {% else %}
-                            —
-                        {% endif %}
-                    </td>
-
-                    <!-- Graded -->
-                    <td>
-                        <input
-                            type="checkbox"
-                            {% if a.is_graded %}checked{% endif %}
-                            disabled
-                        >
-                    </td>
-
-                    <!-- Ponderation -->
-                    <td>
-                        {% if a.is_graded and a.ponderation %}
-                            {{ a.ponderation }}%
-                        {% else %}
-                            —
-                        {% endif %}
-                    </td>
-
-                </tr>
-                {% endfor %}
-            {% endif %}
+                <!-- Pass Grade -->
+                <td>{% if a.is_graded and a.pass_grade %}{{ a.pass_grade }}%{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
             </tbody>
+    
 
         </table>
     </div>
@@ -263,30 +241,78 @@
 </div>
 
 <!-- ================= ADD ASSIGNMENT MODAL (SCAFFOLD) ================= -->
-
-<div class="modal-overlay" id="addAssignmentModal">
+<div class="modal-overlay" id="addAssignmentModal" data-modal-class="visible">
     <div class="modal card">
         <h2>Add Assignment</h2>
-        <form method="POST">
-            <!-- fields wired later -->
-            <input class="input-field" placeholder="Assignment name">
+        <form method="POST" action="{{ url_for('assignment.add_assignment') }}">
+            <!-- Class selection -->
+            <label for="assignment-class" class="input-label">Class</label>
+            <select id="assignment-class" name="class_id" class="input-field" required>
+                {% for c in classes %}
+                <option value="{{ c.class_id }}">{{ c.class_name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Assignment title -->
+            <label for="assignment-title" class="input-label">Assignment Name</label>
+            <input
+                type="text"
+                id="assignment-title"
+                name="assignment-title"
+                class="input-field"
+                placeholder="Assignment name"
+                required
+            >
+
+            <!-- Assignment type -->
+            <label for="assignment-type" class="input-label">Type</label>
+            <select id="assignment-type" name="assignment-type" class="input-field" required>
+                <option value="homework">Homework</option>
+                <option value="project">Project</option>
+                <option value="quiz">Quiz</option>
+                <option value="essay">Essay</option>
+                <option value="test">Test</option>
+                <option value="exam">Exam</option>
+                <option value="lab_report">Lab Report</option>
+                <option value="other">Other</option>
+            </select>
+
+            <!-- Optional due date -->
+            <label for="due-date" class="input-label">Due Date</label>
+            <input type="date" name="due_date" id="due-date" class="input-field">
+
+            <!-- Graded checkbox -->
+            <label>
+                <input type="checkbox" name="is_graded">
+                Graded
+            </label>
+
+            <!-- Ponderation -->
+            <label for="ponderation">Ponderation (optional)</label>
+            <input type="number" id="ponderation" name="ponderation" min="1" max="100">
+
             <div class="modal-actions">
                 <button type="submit" class="btn full-btn">Save</button>
-                <button type="button" class="btn ghost-btn">Cancel</button>
+                <button type="button" class="btn ghost-btn" data-close-modal>Cancel</button>
             </div>
         </form>
     </div>
 </div>
+
+
+
+
+
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
-
-<script src="{{ url_for('static', filename='js/form.js') }}"></script>
-
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 
 {% endblock %}

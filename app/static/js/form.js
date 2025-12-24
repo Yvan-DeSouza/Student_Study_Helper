@@ -1,41 +1,38 @@
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll("[data-toggle-checkbox]").forEach(checkbox => {
-        const targetId = checkbox.dataset.toggleCheckbox;
-        const target = document.getElementById(targetId);
+document.addEventListener("DOMContentLoaded", () => {
 
+    // ================= GRADED CONDITIONAL FIELDS =================
+    document.querySelectorAll("[data-toggle-checkbox]").forEach(checkbox => {
+        const target = document.getElementById(checkbox.dataset.toggleCheckbox);
         if (!target) return;
 
-        const input = target.querySelector("input");
+        const inputs = target.querySelectorAll("input");
 
         const update = () => {
-            if (checkbox.checked) {
-                target.classList.remove("hidden");
-                if (input) input.required = true;
-            } else {
-                target.classList.add("hidden");
-                if (input) {
-                    input.required = false;
-                    input.value = "";
-                }
-            }
+            const active = checkbox.checked;
+            target.classList.toggle("hidden", !active);
+
+            inputs.forEach(input => {
+                input.required = active;
+                if (!active) input.value = "";
+            });
         };
 
         update();
         checkbox.addEventListener("change", update);
     });
 
-        const toggle = document.querySelector(".advanced-toggle");
-    const advanced = document.querySelector(".advanced-options");
+    // ================= ADVANCED OPTIONS =================
+    document.querySelectorAll(".advanced-toggle").forEach(toggle => {
+        const advanced = toggle.nextElementSibling;
+        if (!advanced) return;
 
-    if (!toggle || !advanced) return;
-
-    toggle.addEventListener("click", () => {
-        const isOpen = !advanced.classList.contains("hidden");
-
-        advanced.classList.toggle("hidden");
-        toggle.textContent = isOpen
-            ? "▸ Advanced options"
-            : "▾ Advanced options";
-        toggle.setAttribute("aria-expanded", String(!isOpen));
+        toggle.addEventListener("click", () => {
+            const open = !advanced.classList.contains("hidden");
+            advanced.classList.toggle("hidden");
+            toggle.textContent = open
+                ? "▸ Advanced options"
+                : "▾ Advanced options";
+            toggle.setAttribute("aria-expanded", String(!open));
+        });
     });
 });

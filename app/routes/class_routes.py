@@ -18,7 +18,7 @@ def add_class():
 
     if importance == "":
         importance = None
-    difficulty_raw = request.form.get("difficulty"),
+    difficulty_raw = request.form.get("difficulty")
     pass_grade_raw = request.form.get("pass_grade")
     new_class = Class(
         user_id=current_user.user_id,
@@ -28,7 +28,7 @@ def add_class():
         color=request.form.get("color"),
         
         importance= importance,
-        
+
         difficulty = int(difficulty_raw) if difficulty_raw else None,
         pass_grade = float(pass_grade_raw) if pass_grade_raw else None
     )
