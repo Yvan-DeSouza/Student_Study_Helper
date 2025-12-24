@@ -240,12 +240,13 @@
 
 </div>
 
-<!-- ================= ADD ASSIGNMENT MODAL (SCAFFOLD) ================= -->
+<!-- ================= ADD ASSIGNMENT MODAL ================= -->
 <div class="modal-overlay" id="addAssignmentModal" data-modal-class="visible">
     <div class="modal card">
         <h2>Add Assignment</h2>
         <form method="POST" action="{{ url_for('assignment.add_assignment') }}">
-            <!-- Class selection -->
+
+            <!-- Mandatory: Class & Assignment Name -->
             <label for="assignment-class" class="input-label">Class</label>
             <select id="assignment-class" name="class_id" class="input-field" required>
                 {% for c in classes %}
@@ -253,20 +254,18 @@
                 {% endfor %}
             </select>
 
-            <!-- Assignment title -->
             <label for="assignment-title" class="input-label">Assignment Name</label>
             <input
-                type="text"
                 id="assignment-title"
-                name="assignment-title"
+                type="text"
+                name="assignment_title"
                 class="input-field"
-                placeholder="Assignment name"
                 required
             >
 
-            <!-- Assignment type -->
-            <label for="assignment-type" class="input-label">Type</label>
-            <select id="assignment-type" name="assignment-type" class="input-field" required>
+            <!-- Mandatory: Assignment Type -->
+            <label for="assignment-type" class="input-label">Assignment Type</label>
+            <select id="assignment-type" name="assignment_type" class="input-field">
                 <option value="homework">Homework</option>
                 <option value="project">Project</option>
                 <option value="quiz">Quiz</option>
@@ -277,19 +276,90 @@
                 <option value="other">Other</option>
             </select>
 
-            <!-- Optional due date -->
-            <label for="due-date" class="input-label">Due Date</label>
-            <input type="date" name="due_date" id="due-date" class="input-field">
+            <!-- Optional: Due Date -->
+            <label for="due_date" class="input-label">Due Date <span class="hint">(optional)</span></label>
+            <input
+                id="due_date"
+                type="date"
+                name="due_date"
+                class="input-field"
+            >
 
-            <!-- Graded checkbox -->
-            <label>
-                <input type="checkbox" name="is_graded">
-                Graded
-            </label>
+            <!-- ===== GRADED CHECKBOX ===== -->
+            <div class="checkbox-row">
+                <input
+                    type="checkbox"
+                    id="is-graded"
+                    name="is_graded"
+                    class="checkbox-input"
+                    data-toggle-checkbox="graded-options-container"
+                >
+                <label for="is-graded" class="checkbox-label">
+                    <span class="checkbox-box"></span>
+                    This assignment is graded
+                </label>
+            </div>
 
-            <!-- Ponderation -->
-            <label for="ponderation">Ponderation (optional)</label>
-            <input type="number" id="ponderation" name="ponderation" min="1" max="100">
+            <!-- Advanced Options Toggle -->
+            <button type="button" class="advanced-toggle">▸ Advanced options</button>
+            <div class="advanced-options hidden"> 
+                <!-- Ponderation & Pass Grade (conditional) -->
+                <div id="graded-options-container" class="graded-options hidden">
+                    <label for="ponderation" class="input-label">
+                        Ponderation, from 1–5 (Optional)
+                        <span class="hint-icon" data-hint="What is the relative weight of this assignment compared to others.">?</span>
+                    </label>
+                    <input
+                        id="ponderation"
+                        type="number"
+                        name="ponderation"
+                        class="input-field"
+                        min="1"
+                        max="5"
+                    >
+
+                    <label for="pass_grade" class="input-label">
+                        Pass Grade in % (Optional)
+                        <span class="hint-icon" data-hint="Minimum grade considered passing.">?</span>
+                    </label>
+                    <input
+                        id="pass_grade"
+                        type="number"
+                        name="pass_grade"
+                        class="input-field"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                    >
+                </div>
+
+                <!-- Optional fields -->
+                <label for="difficulty" class="input-label">Difficulty (Optional)
+                    <span class="hint-icon" data-hint="How difficult this assignment is expected to be.">?</span>
+                </label>
+                <input
+                    type="number"
+                    name="difficulty"
+                    class="input-field"
+                    min="1"
+                    max="10"
+                    placeholder="1 (easy) – 10 (hard)"
+                > 
+
+                <div class="input-row">
+                    <label for="estimated_minutes" class="input-label">Estimated Time (optional)
+                        <span class="hint-icon" data-hint="Estimated time to complete this assignment.">?</span>
+                    </label>
+                    <input
+                        id="estimated_minutes"
+                        type="number"
+                        name="estimated_minutes"
+                        class="input-field"
+                        min="1"
+                        placeholder="e.g. 45"
+                    >
+                </div>
+            </div> 
 
             <div class="modal-actions">
                 <button type="submit" class="btn full-btn">Save</button>
@@ -298,6 +368,7 @@
         </form>
     </div>
 </div>
+
 
 
 

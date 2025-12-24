@@ -35,15 +35,25 @@ def add_assignment():
         int(estimated_minutes) if estimated_minutes else None
     )
 
+    difficulty = request.form.get("difficulty")
+    difficulty = int(difficulty) if difficulty else None
+
+    pass_grade = request.form.get("pass_grade")
+    pass_grade = float(pass_grade) if pass_grade else None
+
     assignment = Assignment(
-        estimated_minutes = estimated_minutes,
-        assignment_type = request.form["assignment-type"],
+        estimated_minutes=estimated_minutes,
+        assignment_type=request.form.get("assignment_type"),
         class_id=course.class_id,
-        title=request.form["assignment-title"],
+        title=request.form.get("assignment_title"),
         due_date=due_date,
         is_graded=is_graded,
-        ponderation=ponderation
+        ponderation=ponderation,
+        difficulty=difficulty,
+        pass_grade=pass_grade
     )
+
+
 
     db.session.add(assignment)
     db.session.commit()
