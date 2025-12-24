@@ -73,3 +73,15 @@
     border-color: #444;
     color: white;
 }
+
+.advanced-toggle {
+    background: none;
+    border: none;
+    padding: 8px 0;
+    margin: 10px 0;
+    font-weight: 600;
+    color: var(--secondary);
+    cursor: pointer;
+    text-align: left;
+}
+

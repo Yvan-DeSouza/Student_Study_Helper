@@ -305,3 +305,51 @@ a {
     border-radius: 10px;
     border: 1px solid #ccc;
 }
+
+
+/* =================== HINT / TOOLTIP =================== */
+
+.hint-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(0,0,0,0.1);
+    color: #555;
+    position: relative;
+}
+
+:root[data-theme="dark"] .hint-icon {
+    background: rgba(255,255,255,0.15);
+    color: #ddd;
+}
+
+/* Tooltip bubble */
+.hint-icon::after {
+    content: attr(data-hint);
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 220px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.9);
+    color: white;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.hint-icon:hover::after {
+    opacity: 1;
+}

@@ -277,3 +277,16 @@
     cursor: not-allowed;
 }
 
+
+#addAssignmentModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+#addAssignmentModal.visible {
+    display: flex;
+}

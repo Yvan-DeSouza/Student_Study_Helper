@@ -72,7 +72,7 @@ def list_assignments():
             "title": a.title,
             "assignment_type": a.assignment_type,
             "due_date": a.due_date,
-            "completed": a.completed,
+            "is_completed": a.is_completed,
             "grade": a.grade,
             "is_graded": a.is_graded,
             "ponderation": a.ponderation,

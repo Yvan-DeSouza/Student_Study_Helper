@@ -23,4 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
         update();
         checkbox.addEventListener("change", update);
     });
+
+        const toggle = document.querySelector(".advanced-toggle");
+    const advanced = document.querySelector(".advanced-options");
+
+    if (!toggle || !advanced) return;
+
+    toggle.addEventListener("click", () => {
+        const isOpen = !advanced.classList.contains("hidden");
+
+        advanced.classList.toggle("hidden");
+        toggle.textContent = isOpen
+            ? "▸ Advanced options"
+            : "▾ Advanced options";
+        toggle.setAttribute("aria-expanded", String(!isOpen));
+    });
 });

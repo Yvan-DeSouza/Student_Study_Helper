@@ -84,3 +84,11 @@
     background: rgba(35, 35, 60, 0.95);
     color: white;
 }
+
+.auth-actions {
+    margin-top: 1.5rem;
+}
+
+.auth-actions .btn {
+    width: 100%;
+}

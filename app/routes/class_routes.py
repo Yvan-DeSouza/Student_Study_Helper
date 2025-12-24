@@ -14,14 +14,23 @@ def list_classes():
 @classes.route("/classes/new", methods=["POST"])
 @login_required
 def add_class():
+    importance = request.form.get("importance")
+
+    if importance == "":
+        importance = None
+    difficulty_raw = request.form.get("difficulty"),
+    pass_grade_raw = request.form.get("pass_grade")
     new_class = Class(
         user_id=current_user.user_id,
         class_name=request.form["class_name"],
         class_type=request.form["class_type"],
         class_code=request.form["class_code"],
         color=request.form.get("color"),
-        grade=request.form.get("grade") or None,
-        importance=request.form.get("importance")
+        
+        importance= importance,
+        
+        difficulty = int(difficulty_raw) if difficulty_raw else None,
+        pass_grade = float(pass_grade_raw) if pass_grade_raw else None
     )
 
     db.session.add(new_class)

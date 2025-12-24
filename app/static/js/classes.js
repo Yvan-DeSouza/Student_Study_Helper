@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    let isEditMode = false;
 
     /* ======================================================
        ADD / EDIT CLASS MODAL
@@ -8,29 +9,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const classModalTitle = document.getElementById("classModalTitle");
     const classModalSubmit = document.getElementById("classModalSubmit");
     const classForm = addModal.querySelector("form");
-    const gradeInput = document.getElementById("classGrade");
 
     const nameInput = document.getElementById("class-name");
     const codeInput = document.getElementById("class-code");
     const typeSelect = document.getElementById("classTypeSelect");
     const importanceSelect = document.getElementById("importance");
     const colorInput = document.getElementById("classColor");
-
     function resetClassModal() {
         classModalTitle.textContent = "Add Class";
         classModalSubmit.textContent = "Create Class";
         classForm.action = "/classes/new";
-        gradeInput.value = "";
-        gradeInput.disabled = false;
-        gradeInput.title = "";
+
 
         classForm.reset();
         colorInput.value = "#4f46e5";
+        isEditMode = false;
         previousClassType = null;
     }
 
     function openEditClassModal(btn) {
-        const isFinished = btn.dataset.finished === "True";
+        isEditMode = true;
+
         classModalTitle.textContent = "Edit Class";
         classModalSubmit.textContent = "Save Changes";
 
@@ -39,16 +38,13 @@ document.addEventListener("DOMContentLoaded", () => {
         typeSelect.value = btn.dataset.type;
         importanceSelect.value = btn.dataset.importance;
         colorInput.value = btn.dataset.color || "#4f46e5";
-        gradeInput.value = btn.dataset.grade || "";
-        gradeInput.disabled = isFinished;
-        if (isFinished) {
-            gradeInput.title = "Grade cannot be changed once class is finished";
-        }
+
         classForm.action = `/classes/${btn.dataset.classId}/edit`;
 
         addModal.classList.add("active");
         previousClassType = btn.dataset.type;
     }
+
 
     // Open ADD modal
     document.querySelectorAll(
@@ -77,24 +73,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     typeSelect.addEventListener("change", () => {
         const newType = typeSelect.value;
-        const currentColor = colorInput.value.toUpperCase();
+        if (!newType || !DEFAULT_COLORS[newType]) return;
 
-        // If opening edit modal, remember original type
-        if (!previousClassType) {
-            previousClassType = newType;
+        // ADD MODE → always update
+        if (!isEditMode) {
+            colorInput.value = DEFAULT_COLORS[newType];
             return;
         }
 
+        // EDIT MODE → only update if user didn't customize color
+        const currentColor = colorInput.value.toUpperCase();
         const previousDefault = DEFAULT_COLORS[previousClassType];
-        const newDefault = DEFAULT_COLORS[newType];
 
-        // Only auto-update color if user hasn't customized it
         if (previousDefault && currentColor === previousDefault.toUpperCase()) {
-            colorInput.value = newDefault || colorInput.value;
+            colorInput.value = DEFAULT_COLORS[newType];
         }
 
         previousClassType = newType;
     });
+
+
+
     document.querySelectorAll(".inline-grade-input").forEach(input => {
         let timeout;
 

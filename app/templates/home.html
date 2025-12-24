@@ -80,6 +80,7 @@
                     <select id="session-type" name="session_type" class="input-field">
                         <option value="homework">Homework</option>
                         <option value="project">Project</option>
+                        <option value="quiz">Quiz</option>
                         <option value="essay">Essay</option>
                         <option value="test">Test</option>
                         <option value="exam">Exam</option>
@@ -127,6 +128,7 @@
                     <select id="assignment-type" name="assignment-type" class="input-field">
                         <option value="homework">Homework</option>
                         <option value="project">Project</option>
+                        <option value="quiz">Quiz</option>
                         <option value="essay">Essay</option>
                         <option value="test">Test</option>
                         <option value="exam">Exam</option>
@@ -301,12 +303,6 @@
                 <option value="other">Other</option>
             </select>
 
-            <label for="importance" class="input-label">Importance of the class (Optional)</label>
-            <select id="importance" name="importance" class="input-field" required>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-            </select>
             <label for="classColor" class="input-label">
                 Class Color
                 <span class="hint">(used for charts & calendar)</span>
@@ -322,6 +318,58 @@
                 >
                 <span class="color-preview-text">Click to choose a color</span>
             </div>
+            <!-- ===== ADVANCED OPTIONS TOGGLE ===== -->
+            <button
+                type="button"
+                class="advanced-toggle"
+                aria-expanded="false"
+            >
+                ▸ Advanced options
+            </button>
+
+            <div class="advanced-options hidden">
+                <!-- Importance -->
+                <label class="input-label">
+                    Importance
+                    <span class="hint-icon" data-hint="How important this class is compared to your others. Used for prioritization and analytics.">?</span>
+                </label>
+                <select name="importance" class="input-field">
+                    <option value="">Not set</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+
+                <!-- Difficulty -->
+                <label class="input-label">
+                    Difficulty
+                    <span class="hint-icon" data-hint="How hard this class feels to you overall. You can change this later.">?</span>
+                </label>
+                <input
+                    type="number"
+                    name="difficulty"
+                    class="input-field"
+                    min="1"
+                    max="10"
+                    placeholder="1 (easy) – 10 (very hard)"
+                >
+
+                <!-- Pass Grade -->
+                <label class="input-label">
+                    Pass Grade (%)
+                    <span class="hint-icon" data-hint="The minimum grade you personally consider a passing grade for this class.">?</span>
+                </label>
+                <input
+                    type="number"
+                    name="pass_grade"
+                    class="input-field"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="e.g. 60"
+                >
+            </div>
+
 
             <div class="modal-actions">
                 <button type="submit" class="btn full-btn">Create Class</button>
