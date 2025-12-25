@@ -10,38 +10,34 @@
 {% block content %}
 <div class="login-container">
     <div class="login-card">
-        <div class="theme-switch-wrapper">
-            <button class="theme-toggle" id="theme-btn">
-                <span class="toggle-icon">☀️</span>
-            </button>
-        </div>
-
         <h1 class="welcome-text">Join <span>Us!</span></h1>
         <p class="subtitle">Create your study account</p>
 
         <form method="POST">
+            {{ form.hidden_tag() }}
+
             <div class="input-group">
-                <label>Username</label>
-                <input type="text" name="username" placeholder="StudentName" required>
+                {{ form.username.label }}
+                {{ form.username(class_="form-input", placeholder="StudentName") }}
             </div>
 
             <div class="input-group">
-                <label>Email</label>
-                <input type="email" name="email" placeholder="email@example.com" required>
+                {{ form.email.label }}
+                {{ form.email(class_="form-input", placeholder="email@example.com") }}
             </div>
 
             <div class="input-group">
-                <label>Password</label>
-                <input type="password" name="password" placeholder="••••••••" required>
-            </div>
-            <div class="input-group">
-                <label>Confirm Password</label>
-                <input type="password" name="confirm_password" placeholder="••••••••" required>
+                {{ form.password.label }}
+                {{ form.password(class_="form-input", placeholder="••••••••") }}
             </div>
 
+            <div class="input-group">
+                {{ form.confirm_password.label }}
+                {{ form.confirm_password(class_="form-input", placeholder="••••••••") }}
+            </div>
 
             <div class="auth-actions">
-                <button type="submit" class="btn full-btn">Create Account</button>
+                {{ form.submit(class_="btn full-btn") }}
             </div>
         </form>
 

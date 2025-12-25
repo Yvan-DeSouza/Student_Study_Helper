@@ -1,0 +1,90 @@
+/* ================= ACTIVE SESSION STICKY BAR ================= */
+
+.active-session-bar {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 10px 20px;
+  gap: 15px;
+
+  background: linear-gradient(90deg, #4b8df2, #6f9cff);
+  color: white;
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+/* Ensure navbar stays above */
+.navbar {
+  position: relative;
+  z-index: 1000;
+}
+
+/* LEFT */
+.session-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.session-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2ee59d;
+  box-shadow: 0 0 0 4px rgba(46, 229, 157, 0.3);
+}
+
+/* CENTER */
+.session-bar-center {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* RIGHT */
+.session-bar-right {
+  display: flex;
+  align-items: center;
+}
+
+.end-session-btn {
+  background: rgba(244, 0, 0, 0.808);
+  color: white;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 20px;
+  padding: 6px 14px;
+
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+}
+
+.end-session-btn:hover {
+  background: rgb(255, 0, 0);
+  transform: scale(1.1);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .active-session-bar {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .session-bar-left,
+  .session-bar-center,
+  .session-bar-right {
+    justify-content: center;
+  }
+}

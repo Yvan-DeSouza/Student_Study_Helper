@@ -1,64 +1,54 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from flask_login import login_user, logout_user, login_required, current_user
+from flask import Blueprint, render_template, redirect, url_for, flash
+from flask_login import login_user, logout_user, login_required
 from app.models.user import User
 from app.extensions import db
+from app.forms import RegisterForm, LoginForm
 
 auth = Blueprint('auth', __name__)
+
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        if password != confirm_password:
-            flash('Passwords do not match!')
-            return redirect(url_for('auth.register'))
-        
-        if User.query.filter_by(email=email).first():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        if User.query.filter_by(email=form.email.data).first():
             flash('Email already exists!')
             return redirect(url_for('auth.register'))
 
-        new_user = User(username=username, email=email, user_type = 'student')
-        new_user.set_password(password)
-
+        new_user = User(
+            username=form.username.data,
+            email=form.email.data,
+            user_type='student'
+        )
+        new_user.set_password(form.password.data)
         db.session.add(new_user)
         db.session.commit()
 
         login_user(new_user)
-
-        flash(f'Welcome, {new_user.username}! Your accont has been created.')
+        flash(f'Welcome, {new_user.username}! Your account has been created.')
         return redirect(url_for('main.home'))
 
-    return render_template('register.html')
+    return render_template('register.html', form=form)
 
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-
-        user = User.query.filter_by(email=email).first()
-
-        if not user or not user.check_password(password):
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if not user or not user.check_password(form.password.data):
             flash('Invalid email or password')
             return redirect(url_for('auth.login'))
 
-        # Log in the user using Flask-Login
-        login_user(user, remember=bool(request.form.get('remember')))
+        login_user(user, remember=form.remember.data)
         flash(f'Welcome back, {user.username}!')
-
-        # Redirect to home page
         return redirect(url_for('main.home'))
 
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 
 @auth.route('/logout')
 @login_required
 def logout():
-    logout_user()  # <- Flask-Login handles session cleanup
+    logout_user()
     flash('You have been logged out.')
     return redirect(url_for('auth.login'))
-

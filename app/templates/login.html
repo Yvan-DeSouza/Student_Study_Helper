@@ -10,40 +10,35 @@
 {% block content %}
 <div class="login-container">
     <div class="login-card">
-        <div class="theme-switch-wrapper">
-            <button class="theme-toggle" id="theme-btn">
-                <span class="toggle-icon">☀️</span>
-            </button>
-        </div>
-
         <h1 class="welcome-text">Welcome <span>Back!</span></h1>
         <p class="subtitle">Log in to your study planner</p>
 
         <form method="POST">
+            {{ form.hidden_tag() }}
+
             <div class="input-group">
-                <label>Email</label>
-                <input type="email" name="email" placeholder="email@example.com" required>
+                {{ form.email.label }}
+                {{ form.email(class_="form-input", placeholder="email@example.com") }}
             </div>
 
             <div class="input-group">
-                <label>Password</label>
-                <input type="password" name="password" placeholder="••••••••" required>
+                {{ form.password.label }}
+                {{ form.password(class_="form-input", placeholder="••••••••") }}
             </div>
 
             <div class="options-row">
                 <label class="remember-me">
-                    <input type="checkbox" name="remember">
+                    {{ form.remember() }}
                     <span>Remember me</span>
                 </label>
                 <a href="/forgot" class="forgot-link">Forgot Password?</a>
             </div>
 
-            <button type="submit" class="auth-btn">Log In</button>
+            {{ form.submit(class_="auth-btn") }}
         </form>
 
         <div class="footer-link">
             <a href="{{ url_for('auth.register') }}" class="signup-link">Sign Up</a>
-
         </div>
     </div>
 </div>
