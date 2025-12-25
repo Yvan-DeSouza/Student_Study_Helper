@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models.study_session import StudySession
 from app.models.course import Class
 from app.models.assignment import Assignment
-from datetime import datetime
+from datetime import datetime, timezone
 
 study = Blueprint("study", __name__)
 
@@ -16,14 +16,14 @@ def study_sessions():
 @study.route("/study/new", methods=["GET", "POST"])
 @login_required
 def add_session():
-    from flask import render_template
-
     if request.method == "POST":
         class_id = request.form.get("class_id")
         assignment_id = request.form.get("assignment_id") or None
         session_type = request.form.get("session_type")
         expected_duration = request.form.get("expected_duration_minutes") or None
         expected_duration = int(expected_duration) if expected_duration else None
+        start_now = request.form.get("start_now") == "true"
+        started_at_input = request.form.get("started_at")
 
         # 🔐 Security: class must belong to current user
         course = Class.query.filter_by(class_id=class_id, user_id=current_user.user_id).first_or_404()
@@ -36,15 +36,23 @@ def add_session():
             ).first_or_404()
             assignment_id = assignment.assignment_id
 
-        # session_date: default to today
-        session_date = datetime.utcnow().date()
+        if start_now:
+            started_at = datetime.now(timezone.utc)
+        else:
+            if not started_at_input:
+                return "Started at is require for future sessions", 400
+            started_at = datetime.fromisoformat(started_at_input).astimezone(timezone.utc)
+
+
 
         session = StudySession(
+            user_id=current_user.user_id,
             class_id=course.class_id,
             assignment_id=assignment_id,
+            title=request.form.get("title"),
             session_type=session_type,
             expected_duration_minutes=expected_duration,
-            session_date=session_date
+            started_at=started_at
         )
 
         db.session.add(session)
@@ -69,3 +77,58 @@ def add_session():
         classes=classes,
         assignments=assignments
     )
+
+
+
+@study.route("/study/<int:session_id>/end", methods=["POST"])
+@login_required
+def end_session(session_id):
+    session = StudySession.query.filter_by(session_id=session_id, user_id=current_user.user_id).first_or_404()
+    
+    if session.session_end:
+        return {"error": "Session already ended"}, 400
+
+    # For form submission:
+    session_end_input = request.form.get("session_end")
+
+    # Or to support either form or JSON:
+    if request.is_json:
+        session_end_input = request.json.get("session_end")
+    else:
+        session_end_input = request.form.get("session_end")
+
+    if session_end_input:
+        session.session_end = datetime.fromisoformat(session_end_input).astimezone(timezone.utc)
+    else:
+        session.session_end = datetime.now(timezone.utc)
+
+    session.duration_minutes = int((session.session_end - session.started_at).total_seconds() / 60)
+    session.is_completed = True
+
+    db.session.commit()
+    return {"success": True, "duration_minutes": session.duration_minutes}
+
+
+
+
+@study.route("/study/active", methods=["GET"])
+@login_required
+def active_session():
+    session = StudySession.query.filter_by(user_id=current_user.user_id, session_end=None).first()
+    if not session:
+        return {"active": False, "session": None}
+
+    elapsed_minutes = int((datetime.now(timezone.utc) - session.started_at).total_seconds() / 60)
+    return {
+        "active": True,
+        "session": {
+            "session_id": session.session_id,
+            "title": session.title,
+            "class_id": session.class_id,
+            "assignment_id": session.assignment_id,
+            "session_type": session.session_type,
+            "started_at": session.started_at.isoformat(),
+            "expected_duration_minutes": session.expected_duration_minutes,
+            "elapsed_minutes": elapsed_minutes
+        }
+    }

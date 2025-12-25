@@ -7,22 +7,30 @@ class StudySession(db.Model):
 
     session_id = db.Column(db.Integer, primary_key=True)
     class_id = db.Column(db.Integer, db.ForeignKey("classes.class_id"), nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id"),
+        nullable=False
+    )
+
+
     assignment_id = db.Column(db.Integer, db.ForeignKey("assignments.assignment_id"), nullable=True)
     
-    session_date = db.Column(db.Date, nullable=False)
+    title = db.Column(db.Text, nullable=False)
+
     duration_minutes = db.Column(db.Integer)  # total time
     expected_duration_minutes = db.Column(db.Integer)
-    session_type = db.Column(db.Text)  # homework, project, etc.
+    session_type = db.Column(db.Text, nullable=False)  # homework, project, etc.
 
     is_completed = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
-    started_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    started_at = db.Column(db.DateTime(timezone=True), nullable=False)
     session_end = db.Column(db.DateTime(timezone=True), nullable=True)
 
     # Relationships
     class_ = db.relationship("Class", back_populates="study_sessions")
     assignment = db.relationship("Assignment", back_populates="study_sessions")
-
+    user = db.relationship("User")
     # Optional properties for convenience
     @property
     def total_time(self):
@@ -44,3 +52,6 @@ class StudySession(db.Model):
         if (self.started_at is None and self.session_end is not None) or (self.started_at is not None and self.session_end is None):
             return False
         return True
+    @property
+    def session_date(self):
+        return self.started_at.date() if self.started_at else None

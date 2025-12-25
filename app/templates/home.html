@@ -67,6 +67,15 @@
                         <option value="{{ c.class_id }}">{{ c.class_name }}</option>
                         {% endfor %}
                     </select>
+                    <label for="session-title" class="input-label">Session Title</label>
+                    <input
+                        id="session-title"
+                        type="text"
+                        name="title"
+                        class="input-field"
+                        placeholder="e.g. Calculus practice, Exam review"
+                        required
+                    >
 
                     <label for="study-assignment" class="input-label">Assignment (optional)</label>
                     <select id="study-assignment" name="assignment_id" class="input-field">
@@ -170,6 +179,8 @@
                     <!-- Advanced Options Toggle -->
                     <button type="button" class="advanced-toggle">▸ Advanced options</button>
                     <div class="advanced-options hidden"> 
+
+
                         <!-- Ponderation & Pass Grade (conditional) -->
                         <div id="graded-options-container" class="graded-options hidden">
                             <label for="ponderation" class="input-label">
@@ -363,6 +374,19 @@
             </button>
 
             <div class="advanced-options hidden">
+                <label class="input-label">
+                    Teacher Name
+                    <span class="hint-icon"
+                        data-hint="Optional. Helps you remember who teaches this class, especially if you have multiple classes with similar names.">
+                        ?
+                    </span>
+                    </label>
+                    <input
+                        type="text"
+                        name="teacher_name"
+                        class="input-field"
+                        placeholder="e.g. Mr. Smith"
+                    />
                 <!-- Importance -->
                 <label class="input-label">
                     Importance

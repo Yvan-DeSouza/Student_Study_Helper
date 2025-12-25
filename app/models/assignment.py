@@ -7,6 +7,13 @@ class Assignment(db.Model):
 
     assignment_id = db.Column(db.Integer, primary_key=True)
     class_id = db.Column(db.Integer, db.ForeignKey("classes.class_id"), nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id"),
+        nullable=False
+    )
+
+
     title = db.Column(db.Text, nullable=False)
     assignment_type = db.Column(db.Text, nullable=False)
     due_date = db.Column(db.Date, nullable=True)
@@ -27,6 +34,7 @@ class Assignment(db.Model):
     )
     expected_grades = db.relationship("AssignmentExpectedGrade", back_populates="assignment", cascade="all, delete-orphan")
 
+    user = db.relationship("User")
 class AssignmentExpectedGrade(db.Model):
     __tablename__ = "assignment_expected_grades"
 

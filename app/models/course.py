@@ -9,8 +9,8 @@ class Class(db.Model):
 
     class_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
-
     class_name = db.Column(db.Text, nullable=False)
+    teacher_name = db.Column(db.Text)
     class_type = db.Column(db.Text, nullable=False)
     class_code = db.Column(db.Text, nullable=False)
     color = db.Column(db.Text, nullable=False)

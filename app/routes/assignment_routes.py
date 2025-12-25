@@ -12,6 +12,7 @@ assignment = Blueprint("assignment", __name__)
 def add_assignment():
     class_id = request.form.get("class_id")
 
+
     # 🔐 Security check: class must belong to current user
     course = Class.query.filter_by(
         class_id=class_id,
@@ -42,6 +43,7 @@ def add_assignment():
     pass_grade = float(pass_grade) if pass_grade else None
 
     assignment = Assignment(
+        user_id=current_user.user_id,
         estimated_minutes=estimated_minutes,
         assignment_type=request.form.get("assignment_type"),
         class_id=course.class_id,

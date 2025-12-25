@@ -104,6 +104,9 @@
             </div>
 
             <div class="class-meta">
+                {% if c.teacher_name %}
+                <p><strong>Teacher:</strong> {{ c.teacher_name }}</p>
+                {% endif %}
                 <p><strong>Type:</strong> {{ c.class_type|capitalize }}</p>
                 <p><strong>Code:</strong> {{ c.class_code }}</p>
                 <p><strong>Importance:</strong> {{ c.importance|capitalize }}</p>
@@ -322,6 +325,21 @@
             </button>
 
             <div class="advanced-options hidden">
+                <!-- Teacher Name -->
+                <label class="input-label">
+                    Teacher Name
+                    <span class="hint-icon"
+                        data-hint="Optional. Helps you remember who teaches this class, especially if you have multiple classes with similar names.">
+                        ?
+                    </span>
+                </label>
+                <input
+                    type="text"
+                    name="teacher_name"
+                    class="input-field"
+                    placeholder="e.g. Mr. Smith"
+                />
+
                 <!-- Importance -->
                 <label class="input-label">
                     Importance

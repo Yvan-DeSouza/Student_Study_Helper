@@ -22,6 +22,7 @@ def add_class():
     pass_grade_raw = request.form.get("pass_grade")
     new_class = Class(
         user_id=current_user.user_id,
+        teacher_name=request.form.get("teacher_name") or None,
         class_name=request.form["class_name"],
         class_type=request.form["class_type"],
         class_code=request.form["class_code"],
