@@ -17,13 +17,20 @@ def study_sessions():
 @login_required
 def add_session():
     if request.method == "POST":
+        existing_active = StudySession.query.filter_by(
+            user_id=current_user.user_id,
+            is_active=True
+        ).first()
+
+        if existing_active:
+            return "You already have an active study session", 400
+  
         class_id = request.form.get("class_id")
         assignment_id = request.form.get("assignment_id") or None
         session_type = request.form.get("session_type")
         expected_duration = request.form.get("expected_duration_minutes") or None
         expected_duration = int(expected_duration) if expected_duration else None
-        start_now = request.form.get("start_now") == "true"
-        started_at_input = request.form.get("started_at")
+
 
         # 🔐 Security: class must belong to current user
         course = Class.query.filter_by(class_id=class_id, user_id=current_user.user_id).first_or_404()
@@ -36,12 +43,19 @@ def add_session():
             ).first_or_404()
             assignment_id = assignment.assignment_id
 
-        if start_now:
-            started_at = datetime.now(timezone.utc)
-        else:
+        start_option = request.form.get("start_option")  # "now" or "later"
+        started_at_input = request.form.get("started_at")
+        now = datetime.now(timezone.utc)
+
+        if start_option == "now":
+            started_at = now
+            is_active = True
+        elif start_option == "later":
             if not started_at_input:
-                return "Started at is require for future sessions", 400
+                return "Started at is required for future sessions", 400
             started_at = datetime.fromisoformat(started_at_input).astimezone(timezone.utc)
+            is_active = False
+
 
 
 
@@ -52,7 +66,8 @@ def add_session():
             title=request.form.get("title"),
             session_type=session_type,
             expected_duration_minutes=expected_duration,
-            started_at=started_at
+            started_at=started_at,
+            is_active=is_active
         )
 
         db.session.add(session)
@@ -79,34 +94,46 @@ def add_session():
     )
 
 
-
 @study.route("/study/<int:session_id>/end", methods=["POST"])
 @login_required
 def end_session(session_id):
-    session = StudySession.query.filter_by(session_id=session_id, user_id=current_user.user_id).first_or_404()
-    
-    if session.session_end:
+    session = StudySession.query.filter_by(
+        session_id=session_id,
+        user_id=current_user.user_id,
+        is_active=True
+    ).first_or_404()
+
+    # Safety check (should never happen if is_active=True, but defensive)
+    if session.is_completed:
         return {"error": "Session already ended"}, 400
 
-    # For form submission:
-    session_end_input = request.form.get("session_end")
-
-    # Or to support either form or JSON:
+    # Accept session_end from JSON or form (optional)
     if request.is_json:
         session_end_input = request.json.get("session_end")
     else:
         session_end_input = request.form.get("session_end")
 
     if session_end_input:
-        session.session_end = datetime.fromisoformat(session_end_input).astimezone(timezone.utc)
+        session_end = datetime.fromisoformat(session_end_input).astimezone(timezone.utc)
     else:
-        session.session_end = datetime.now(timezone.utc)
+        session_end = datetime.now(timezone.utc)
 
-    session.duration_minutes = int((session.session_end - session.started_at).total_seconds() / 60)
+    # Finalize session
+    session.session_end = session_end
+    session.duration_minutes = int(
+        (session.session_end - session.started_at).total_seconds() / 60
+    )
+    session.is_active = False
     session.is_completed = True
 
     db.session.commit()
-    return {"success": True, "duration_minutes": session.duration_minutes}
+
+    return {
+        "success": True,
+        "duration_minutes": session.duration_minutes
+    }
+
+
 
 
 

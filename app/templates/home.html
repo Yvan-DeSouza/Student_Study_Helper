@@ -59,57 +59,89 @@
             <!-- Log Study Session -->
             <div class="card widget">
                 <h3>Log Study Session</h3>
-                <form method="POST" action="{{ url_for('study.add_session') }}">
+                <form
+                    method="POST"
+                    action="{{ url_for('study.add_session') }}"
+                    id="study-session-form"
+                    data-active="{{ 'true' if active_session else 'false' }}"
+                >
 
-                    <label for="study-class" class="input-label">Class</label>
-                    <select id="study-class" name="class_id" class="input-field" required>
-                        {% for c in classes %}
-                        <option value="{{ c.class_id }}">{{ c.class_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <label for="session-title" class="input-label">Session Title</label>
-                    <input
-                        id="session-title"
-                        type="text"
-                        name="title"
-                        class="input-field"
-                        placeholder="e.g. Calculus practice, Exam review"
-                        required
-                    >
-
-                    <label for="study-assignment" class="input-label">Assignment (optional)</label>
-                    <select id="study-assignment" name="assignment_id" class="input-field">
-                        <option value="">None</option>
-                        {% for a in assignments %}
-                        <option value="{{ a.assignment_id }}" data-class="{{ a.class_id }}">{{ a.title }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <label for="session-type" class="input-label">Session Type</label>
-                    <select id="session-type" name="session_type" class="input-field">
-                        <option value="homework">Homework</option>
-                        <option value="project">Project</option>
-                        <option value="quiz">Quiz</option>
-                        <option value="essay">Essay</option>
-                        <option value="test">Test</option>
-                        <option value="exam">Exam</option>
-                        <option value="lab_report">Lab Report</option>
-                        <option value="other">Other</option>
-                    </select>
-                    <div class="input-row">
-                        <label for="expected-duration" class="input-label">Expected Duration (optional)</label>
-                        <input
-                            id="expected-duration"
-                            type="number"
-                            name="expected_duration_minutes"
-                            class="input-field"
-                            min="0"
-                        >
-                        <span class="unit">min</span>
+                    <!-- Overlay message (hidden by default) -->
+                    <div class="form-overlay hidden">
+                        <p>
+                            There is an ongoing study session.<br>
+                            Only one session is allowed at a time.
+                        </p>
                     </div>
 
-                    <button class="btn full-btn" type="submit">Log Session</button>
+                    <div class="form-body">
+                        <!-- Start Now / Start Later -->
+                        <div class="input-group">
+                            <div class="radio-group-title">Start Time</div>
+
+                            <div class="radio-row">
+                                <label class="radio-option">
+                                    <input type="radio" name="start_option" value="now" checked>
+                                    <span>Start Now</span>
+                                </label>
+
+                                <label class="radio-option">
+                                    <input type="radio" name="start_option" value="later">
+                                    <span>Start Later</span>
+                                </label>
+                            </div>
+                        </div>
+
+
+                        <!-- Started At (only required if 'later') -->
+                        <div class="input-group" id="started-at-group" style="display: none;">
+                            <label for="started-at" class="input-label">Start Date & Time</label>
+                            <input type="datetime-local" id="started-at" name="started_at" class="input-field">
+                        </div>
+
+                        <!-- Class, Title, Session Type -->
+                        <label for="study-class" class="input-label">Class</label>
+                        <select id="study-class" name="class_id" class="input-field" required>
+                            {% for c in classes %}
+                            <option value="{{ c.class_id }}">{{ c.class_name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <label for="session-title" class="input-label">Session Title</label>
+                        <input type="text" id="session-title" name="title" class="input-field" placeholder="e.g. Calculus practice" required>
+
+                        <label for="session-type" class="input-label">Session Type</label>
+                        <select id="session-type" name="session_type" class="input-field" required>
+                            <option value="homework">Homework</option>
+                            <option value="project">Project</option>
+                            <option value="quiz">Quiz</option>
+                            <option value="essay">Essay</option>
+                            <option value="test">Test</option>
+                            <option value="exam">Exam</option>
+                            <option value="lab_report">Lab Report</option>
+                            <option value="other">Other</option>
+                        </select>
+
+                        <!-- Assignment (optional) -->
+                        <label for="study-assignment" class="input-label">Assignment (optional)</label>
+                        <select id="study-assignment" name="assignment_id" class="input-field">
+                            <option value="">None</option>
+                            {% for a in assignments %}
+                            <option value="{{ a.assignment_id }}" data-class="{{ a.class_id }}">{{ a.title }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Expected Duration (optional) -->
+                        <div class="input-row">
+                            <label for="expected-duration" class="input-label">Expected Duration (optional)</label>
+                            <input type="number" id="expected-duration" name="expected_duration_minutes" class="input-field" min="0">
+                            <span class="unit">min</span>
+                        </div>
+
+                        <button class="btn full-btn" type="submit" id="session-submit-btn">Start Session</button>
+                    </div>
                 </form>
+                
             </div>
 
             <!-- Log Assignment -->
@@ -443,7 +475,8 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- <script src="{{ url_for('static', filename='js/home.js') }}"></script> -->
+<script src="{{ url_for('static', filename='js/form_lock.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
 <script src="{{ url_for('static', filename='js/study_sessions.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>

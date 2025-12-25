@@ -22,8 +22,10 @@ class StudySession(db.Model):
     expected_duration_minutes = db.Column(db.Integer)
     session_type = db.Column(db.Text, nullable=False)  # homework, project, etc.
 
+
+    is_active = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
     is_completed = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
     started_at = db.Column(db.DateTime(timezone=True), nullable=False)
     session_end = db.Column(db.DateTime(timezone=True), nullable=True)
 
@@ -35,23 +37,20 @@ class StudySession(db.Model):
     @property
     def total_time(self):
         """Returns the duration in minutes if available."""
-        return self.duration_minutes or 0
+        return self.duration_minutes
 
-    @property
-    def is_active(self):
-        """True if session has started but not ended yet."""
-        return self.started_at is not None and self.session_end is None
 
     # Optional: consistency check
     def is_valid(self):
-        """Checks the logical consistency of the session."""
-        if self.is_completed and (self.session_end is None or self.duration_minutes is None):
+        if self.is_active and self.is_completed:
             return False
-        if not self.is_completed and (self.session_end is not None or self.duration_minutes is not None):
-            return False
-        if (self.started_at is None and self.session_end is not None) or (self.started_at is not None and self.session_end is None):
-            return False
-        return True
+
+        if self.is_completed:
+            return self.session_end is not None and self.duration_minutes is not None
+
+        # not completed
+        return self.session_end is None and self.duration_minutes is None
+
     @property
     def session_date(self):
         return self.started_at.date() if self.started_at else None

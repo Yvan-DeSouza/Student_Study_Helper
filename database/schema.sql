@@ -4,7 +4,7 @@ CREATE TABLE users (
 	user_type TEXT NOT NULL CHECK (
 		user_type in ('student', 'teacher', 'director', 'admin', 'other')
 	) DEFAULT 'student',
-    username TEXT UNIQUE NOT NULL,
+    username TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -97,7 +97,6 @@ CREATE TABLE assignments (
 CREATE TABLE study_sessions (
     session_id SERIAL PRIMARY KEY,
 	title TEXT NOT NULL,
-	is_completed BOOLEAN NOT NULL DEFAULT FALSE,
     class_id INT NOT NULL,
 	user_id INT NOT NULL,
     assignment_id INT, -- optional: NULL if not tied to an assignment
@@ -109,17 +108,24 @@ CREATE TABLE study_sessions (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	started_at TIMESTAMPTZ NOT NULL,
 	session_end TIMESTAMPTZ,
+
+	is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+	is_active BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
         ON DELETE CASCADE,
     FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
         ON DELETE SET NULL, 
 	FOREIGN KEY (user_id) REFERENCES users(user_id) 
 		ON DELETE CASCADE,
-	CHECK (
-        (is_completed = FALSE AND session_end IS NULL AND duration_minutes IS NULL)
+
+    CHECK (
+        (is_active = TRUE AND is_completed = FALSE AND session_end IS NULL)
         OR
-        (is_completed = TRUE AND session_end IS NOT NULL AND duration_minutes IS NOT NULL)
+        (is_active = FALSE AND is_completed = FALSE AND session_end IS NULL)
+        OR
+        (is_active = FALSE AND is_completed = TRUE AND session_end IS NOT NULL AND duration_minutes IS NOT NULL)
     ),
+	
 	CHECK (
 	    session_end IS NULL OR started_at <= session_end
 	) 	
@@ -127,7 +133,7 @@ CREATE TABLE study_sessions (
 
 CREATE UNIQUE INDEX one_active_session_per_user
 ON study_sessions(user_id)
-WHERE session_end IS NULL;
+WHERE is_active IS NULL;
 
 CREATE TABLE class_expected_grades (
     id SERIAL PRIMARY KEY,
@@ -148,6 +154,11 @@ CREATE TABLE assignment_expected_grades (
     FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
         ON DELETE CASCADE
 );
+
+
+
+
+
 
 
 

@@ -101,3 +101,94 @@
 .graded-options:not(.hidden) {
     display: block;
 }
+
+/* ================= RADIO GROUP (START TIME) ================= */
+
+.radio-group-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+:root[data-theme="dark"] .radio-group-title {
+    color: #eee;
+}
+
+.radio-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .radio-option {
+    color: #ccc;
+}
+
+/* Slightly nicer radios (still native) */
+.radio-option input[type="radio"] {
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+/* ================= DISABLED FORM STATE ================= */
+
+#study-session-form {
+    position: relative;
+}
+
+#study-session-form.disabled .form-body {
+    opacity: 0.45;
+    filter: grayscale(0.2);
+    pointer-events: none;
+}
+
+#study-session-form.disabled .form-overlay {
+    display: flex;
+    pointer-events: all;
+}
+
+.form-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem;
+    z-index: 9999; /* make sure it's above everything */
+    border-radius: 12px;
+    pointer-events: all; /* 👈 this is crucial */
+}
+
+
+.form-overlay p {
+    font-weight: 600;
+    color: #444;
+    line-height: 1.4;
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .form-overlay {
+    background: rgba(20, 20, 35, 0.8);
+}
+
+:root[data-theme="dark"] .form-overlay p {
+    color: #eee;
+}
+
+/* Utility */
+.hidden {
+    display: none;
+}
