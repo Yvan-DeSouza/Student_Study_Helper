@@ -96,55 +96,49 @@ def add_session():
 @study.route("/study/<int:session_id>/end", methods=["POST"])
 @login_required
 def end_session(session_id):
-    session = StudySession.query.filter_by(
-        session_id=session_id,
-        user_id=current_user.user_id,
-        is_active=True
+    now = datetime.now(timezone.utc)
+    session = StudySession.query.filter(
+        StudySession.session_id == session_id,
+        StudySession.user_id == current_user.user_id,
+        StudySession.is_active == True,
+        StudySession.started_at <= now
     ).first_or_404()
 
-    # Safety check (should never happen if is_active=True, but defensive)
     if session.is_completed:
         return {"error": "Session already ended"}, 400
 
-    # Accept session_end from JSON or form (optional)
     if request.is_json:
         session_end_input = request.json.get("session_end")
     else:
         session_end_input = request.form.get("session_end")
 
-    if session_end_input:
-        session_end = datetime.fromisoformat(session_end_input).astimezone(timezone.utc)
-    else:
-        session_end = datetime.now(timezone.utc)
+    session_end = datetime.fromisoformat(session_end_input).astimezone(timezone.utc) if session_end_input else now
 
-    # Finalize session
     session.session_end = session_end
-    session.duration_minutes = int(
-        (session.session_end - session.started_at).total_seconds() / 60
-    )
+    session.duration_minutes = int((session.session_end - session.started_at).total_seconds() / 60)
     session.is_active = False
     session.is_completed = True
 
     db.session.commit()
 
-    return {
-        "success": True,
-        "duration_minutes": session.duration_minutes
-    }
-
-
-
-
+    return {"success": True, "duration_minutes": session.duration_minutes}
 
 
 @study.route("/study/active", methods=["GET"])
 @login_required
 def active_session():
-    session = StudySession.query.filter_by(user_id=current_user.user_id, session_end=None).first()
+    now = datetime.now(timezone.utc)
+    session = StudySession.query.filter(
+        StudySession.user_id == current_user.user_id,
+        StudySession.is_active == True,
+        StudySession.started_at <= now
+    ).first()
+
     if not session:
         return {"active": False, "session": None}
 
-    elapsed_minutes = int((datetime.now(timezone.utc) - session.started_at).total_seconds() / 60)
+    elapsed_minutes = int((now - session.started_at).total_seconds() / 60)
+
     return {
         "active": True,
         "session": {
@@ -158,3 +152,5 @@ def active_session():
             "elapsed_minutes": elapsed_minutes
         }
     }
+
+

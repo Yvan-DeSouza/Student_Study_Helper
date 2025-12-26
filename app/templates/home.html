@@ -63,7 +63,7 @@
                     method="POST"
                     action="{{ url_for('study.add_session') }}"
                     id="study-session-form"
-                    data-active="{{ 'true' if active_session else 'false' }}"
+                    data-has-active-sessions="{{ 'true' if has_active_session else 'false' }}"
                 >
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 

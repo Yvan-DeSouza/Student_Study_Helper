@@ -24,7 +24,7 @@
   <!-- Optional global navbar (future use) -->
   {% block navbar %}{% endblock %}
     {# ================= ACTIVE STUDY SESSION BAR ================= #}
-  {% if active_session %}
+  {% if active_session and active_session.is_active and active_session.started_at <= now() %}
   <div
     id="active-session-bar"
     class="active-session-bar"
