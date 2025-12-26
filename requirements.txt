@@ -4,6 +4,7 @@ flask-login
 flask-migrate
 flask-wtf
 SQLAlchemy
+email-validator
 psycopg2-binary
 pandas
 matplotlib

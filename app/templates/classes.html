@@ -230,6 +230,7 @@
         </div>
 
         <form method="POST" id="deleteClassForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-actions">
                 <button
                     type="button"
@@ -266,7 +267,7 @@
     <div class="modal card">
         <h2 id="classModalTitle">Add Class</h2>
         <form method="POST" action="{{ url_for('classes.add_class') }}">
-
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label for="class-name" class="input-label">Class Name</label>
             <input
                 id="class-name"

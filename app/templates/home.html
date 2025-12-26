@@ -65,6 +65,7 @@
                     id="study-session-form"
                     data-active="{{ 'true' if active_session else 'false' }}"
                 >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                     <!-- Overlay message (hidden by default) -->
                     <div class="form-overlay hidden">
@@ -149,7 +150,7 @@
                 <h3>Log New Assignment</h3>
 
                 <form method="POST" action="{{ url_for('assignment.add_assignment') }}">
-
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <!-- Mandatory: Class & Assignment Name -->
                     <label for="assignment-class" class="input-label">Class</label>
                     <select id="assignment-class" name="class_id" class="input-field" required>
@@ -345,9 +346,10 @@
     <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="add-class-title">
 
         <h2 id="add-class-title">Add New Class</h2>
-
+        
         <form method="POST" action="{{ url_for('classes.add_class') }}">
-
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
             <label for="class-name" class="input-label">Class Name</label>
             <input
                 id="class-name"
@@ -469,6 +471,7 @@
                 </button>
             </div>
         </form>
+        
     </div>
 </div>
 {% endblock %}

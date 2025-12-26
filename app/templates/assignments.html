@@ -245,7 +245,7 @@
     <div class="modal card">
         <h2>Add Assignment</h2>
         <form method="POST" action="{{ url_for('assignment.add_assignment') }}">
-
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Mandatory: Class & Assignment Name -->
             <label for="assignment-class" class="input-label">Class</label>
             <select id="assignment-class" name="class_id" class="input-field" required>

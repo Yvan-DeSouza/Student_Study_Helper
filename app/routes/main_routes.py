@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
 from app.models.course import Class
 from app.models.assignment import Assignment
 from app.models.study_session import StudySession
+
 main = Blueprint("main", __name__)
 
 @main.route("/main")

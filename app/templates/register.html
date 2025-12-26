@@ -10,6 +10,11 @@
 {% block content %}
 <div class="login-container">
     <div class="login-card">
+        <div class="theme-switch-wrapper">
+            <button class="theme-toggle" id="theme-btn">
+                <span class="toggle-icon">☀️</span>
+            </button>
+        </div>
         <h1 class="welcome-text">Join <span>Us!</span></h1>
         <p class="subtitle">Create your study account</p>
 
@@ -39,6 +44,7 @@
             <div class="auth-actions">
                 {{ form.submit(class_="btn full-btn") }}
             </div>
+
         </form>
 
         <div class="footer-link">
@@ -47,6 +53,7 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}
