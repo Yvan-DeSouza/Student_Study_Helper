@@ -4,113 +4,94 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-
   <title>{% block title %}Student Study Dashboard{% endblock %}</title>
 
   <!-- Global CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/sticky_session.css') }}">
 
-
-  <!-- Page-specific CSS -->
   {% block extra_css %}{% endblock %}
 </head>
 <body>
 <script>
-  // Prevents theme flashing
   const theme = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', theme);
 </script>
-  <!-- Optional global navbar (future use) -->
-  {% block navbar %}{% endblock %}
-    {# ================= ACTIVE STUDY SESSION BAR ================= #}
-  {% if active_session and active_session.is_active and active_session.started_at <= now() %}
-  <div
-    id="active-session-bar"
-    class="active-session-bar"
-    data-started-at="{{ active_session.started_at.isoformat()}}"
-    data-session-id="{{ active_session.session_id }}"
-  >
-    <div class="session-bar-left">
-      <span class="session-dot"></span>
-      <span class="session-title">
-        {{ active_session.title }}
-      </span>
-      <span class="session-class">
-        · {{ active_session.class_.class_name }}
-      </span>
-    </div>
 
-    <div class="session-bar-center">
-      <span class="session-timer" id="session-timer">
-        00:00:00
-      </span>
-    </div>
+{% block navbar %}{% endblock %}
 
-    <div class="session-bar-right">
-      <button
-        class="end-session-btn"
-        id="end-session-btn"
-        type="button"
-      >
-        End Session
-      </button>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Flash messages -->
-  <div class="flash-messages">
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul class="flash-list">
-          {% for message in messages %}
-            <li class="flash-item">{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+<!--{# ================= ACTIVE STUDY SESSION BAR ================= #}-->
+{% if active_session and active_session.is_active and active_session.started_at <= now %}
+<div
+  id="active-session-bar"
+  class="active-session-bar"
+  data-started-at="{{ active_session.started_at.isoformat() }}"
+  data-session-id="{{ active_session.session_id }}"
+>
+  <div class="session-bar-left">
+    <span class="session-dot"></span>
+    <span class="session-title">{{ active_session.title }}</span>
+    <span class="session-class">· {{ active_session.class_.class_name }}</span>
   </div>
 
-  <!-- Main page content -->
-  <main>
-    {% block content %}{% endblock %}
+  <div class="session-bar-center">
+    <span class="session-timer" id="session-timer">00:00:00</span>
+  </div>
 
-    <!-- ================= END SESSION CONFIRM MODAL ================= -->
-    <div id="end-session-modal" class="modal-overlay hidden">
-      <div class="modal-card">
-        <h2>End Study Session</h2>
-        <p>Are you sure you want to end this study session?</p>
+  <div class="session-bar-right">
+    <button class="end-session-btn" id="end-session-btn" type="button">End Session</button>
+  </div>
+</div>
+{% endif %}
 
-        <div class="modal-actions">
-          <button
-            type="button"
-            id="cancel-end-session"
-            class="modal-btn cancel-btn"
-          >
-            Cancel
-          </button>
+<!--{# ================= DUE SESSION MODAL ================= #}-->
+{% if due_session %}
+<div id="due-session-modal" class="modal-overlay" data-session-id="{{ due_session.session_id }}">
+  <div class="modal-card">
+    <h2>Study Session Started</h2>
+    <p>Your "{{ due_session.title }}" session for the "{{ due_session.class_.class_name }}" class has started. What would you like to do?</p>
 
-          <button
-            type="button"
-            id="confirm-end-session"
-            class="modal-btn confirm-btn"
-          >
-            End Session
-          </button>
-        </div>
+    <div class="modal-actions">
+      <button type="button" id="start-now-btn" class="modal-btn confirm-btn">Start Now</button>
+      <button type="button" id="cancel-session-btn" class="modal-btn cancel-btn">Cancel</button>
+      <button type="button" id="reschedule-btn" class="modal-btn">Reschedule</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!--{# ================= FLASH MESSAGES ================= #}-->
+<div class="flash-messages">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="flash-list">
+        {% for message in messages %}
+          <li class="flash-item">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+</div>
+
+<main>
+  {% block content %}{% endblock %}
+
+  <!-- ================= END SESSION MODAL ================= #}-->
+  <div id="end-session-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2>End Study Session</h2>
+      <p>Are you sure you want to end this study session?</p>
+      <div class="modal-actions">
+        <button type="button" id="cancel-end-session" class="modal-btn cancel-btn">Cancel</button>
+        <button type="button" id="confirm-end-session" class="modal-btn confirm-btn">End Session</button>
       </div>
     </div>
-  </main>
+  </div>
+</main>
 
-
-
-  <!-- Global JS -->
-  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/sticky_session.js') }}"></script>
-
-
-  <!-- Page-specific JS -->
-  {% block extra_js %}{% endblock %}
+<!-- Global JS -->
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sticky_session.js') }}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

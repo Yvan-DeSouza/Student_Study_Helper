@@ -28,6 +28,7 @@ class StudySession(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
     started_at = db.Column(db.DateTime(timezone=True), nullable=False)
     session_end = db.Column(db.DateTime(timezone=True), nullable=True)
+    cancelled_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     # Relationships
     class_ = db.relationship("Class", back_populates="study_sessions")

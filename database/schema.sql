@@ -107,10 +107,13 @@ CREATE TABLE study_sessions (
     ),
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	started_at TIMESTAMPTZ NOT NULL,
+	expected_started_at TIMESTAMPTZ,
 	session_end TIMESTAMPTZ,
+	cancelled_at TIMESTAMPTZ,
 
 	is_completed BOOLEAN NOT NULL DEFAULT FALSE,
 	is_active BOOLEAN NOT NULL DEFAULT FALSE,
+	
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
         ON DELETE CASCADE,
     FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
@@ -128,8 +131,18 @@ CREATE TABLE study_sessions (
 	
 	CHECK (
 	    session_end IS NULL OR started_at <= session_end
-	) 	
+	),
+	CHECK (
+	    cancelled_at IS NULL
+	    OR (
+	        is_active = FALSE
+	        AND is_completed = FALSE
+	        AND session_end IS NULL
+	    )
+	)
+	
 );
+
 
 CREATE UNIQUE INDEX one_active_session_per_user
 ON study_sessions(user_id)
@@ -186,6 +199,32 @@ CREATE TABLE user_assignment_type_colors (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 );
+
+
+
+CREATE TABLE study_session_pauses (
+    pause_id SERIAL PRIMARY KEY,
+    session_id INT NOT NULL,
+
+    paused_at TIMESTAMPTZ NOT NULL,
+    resumed_at TIMESTAMPTZ,
+
+    duration_seconds INT,
+
+    FOREIGN KEY (session_id) REFERENCES study_sessions(session_id)
+        ON DELETE CASCADE,
+
+    CHECK (
+        resumed_at IS NULL OR paused_at <= resumed_at
+    ),
+
+	CHECK (
+		resumed_at IS NULL
+		OR duration_seconds IS NOT NULL
+	)
+);
+
+
 
 
 

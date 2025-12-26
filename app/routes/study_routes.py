@@ -154,3 +154,16 @@ def active_session():
     }
 
 
+@study.route("/study/<int:session_id>/cancel", methods=["POST"])
+@login_required
+def cancel_session(session_id):
+    session = StudySession.query.filter_by(
+        session_id=session_id,
+        user_id=current_user.user_id,
+        is_active=False,
+        cancelled_at=None
+    ).first_or_404()
+
+    session.cancelled_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return {"success": True}
