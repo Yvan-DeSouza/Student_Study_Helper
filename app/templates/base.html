@@ -28,8 +28,8 @@
   <div
     id="active-session-bar"
     class="active-session-bar"
-    data-started-at="{{ active_session.started_at.isoformat().replace('+00:00', 'Z') }}"
-    data-session-id="{{ active_session.study_session_id }}"
+    data-started-at="{{ active_session.started_at.isoformat()}}"
+    data-session-id="{{ active_session.session_id }}"
   >
     <div class="session-bar-left">
       <span class="session-dot"></span>
@@ -75,7 +75,35 @@
   <!-- Main page content -->
   <main>
     {% block content %}{% endblock %}
+
+    <!-- ================= END SESSION CONFIRM MODAL ================= -->
+    <div id="end-session-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <h2>End Study Session</h2>
+        <p>Are you sure you want to end this study session?</p>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            id="cancel-end-session"
+            class="modal-btn cancel-btn"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            id="confirm-end-session"
+            class="modal-btn confirm-btn"
+          >
+            End Session
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
+
+
 
   <!-- Global JS -->
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>

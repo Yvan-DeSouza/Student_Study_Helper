@@ -8,14 +8,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const modal = document.getElementById(modalId);
             if (!modal) return;
 
-            // Use custom class if provided, otherwise fallback
+            modal.classList.remove("hidden");
+
             const openClass = modal.dataset.modalClass || "visible";
             modal.classList.add(openClass);
         });
     });
 
-    // ------------------------------
-    // Close modal buttons
+
     // ------------------------------
     document.querySelectorAll("[data-close-modal]").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -24,8 +24,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const openClass = modal.dataset.modalClass || "visible";
             modal.classList.remove(openClass);
+            modal.classList.add("hidden");
         });
     });
+
 
     // ------------------------------
     // Click outside modal to close
@@ -33,9 +35,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".modal-overlay").forEach(overlay => {
         overlay.addEventListener("click", e => {
             if (e.target === overlay) {
-                const openClass = overlay.dataset.modalClass || "visible";
-                overlay.classList.remove(openClass);
+            const openClass = overlay.dataset.modalClass || "visible";
+            overlay.classList.remove(openClass);
+            overlay.classList.add("hidden");
             }
         });
     });
+
 });

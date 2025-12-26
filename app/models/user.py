@@ -21,6 +21,9 @@ class User(UserMixin, db.Model):
 
     classes = db.relationship("Class", back_populates="user", cascade="all, delete-orphan")
 
+    class_type_colors = db.relationship('UserClassTypeColor', back_populates="user", cascade="all, delete-orphan")
+    assignment_type_colors = db.relationship('UserAssignmentTypeColor', back_populates="user", cascade="all, delete-orphan")
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
 
@@ -43,3 +46,43 @@ class UserPreferences(db.Model):
 
     user = db.relationship("User", back_populates="preferences")
 
+
+
+
+
+
+
+
+# ================= USER CLASS-TYPE COLORS =================
+class UserClassTypeColor(db.Model):
+    __tablename__ = "user_class_type_colors"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    class_type = db.Column(db.Text, nullable=False)
+    color = db.Column(db.Text, nullable=False, default="#4f46e5")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
+
+    user = db.relationship("User", back_populates="class_type_colors")
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "class_type", name="uq_user_class_type"),
+    )
+
+
+
+# ================= USER ASSIGNMENT-TYPE COLORS =================
+class UserAssignmentTypeColor(db.Model):
+    __tablename__ = "user_assignment_type_colors"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), nullable=False)
+    assignment_type = db.Column(db.Text, nullable=False)
+    color = db.Column(db.Text, nullable=False, default="#4f46e5")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
+
+    user = db.relationship("User", back_populates="assignment_type_colors")
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "assignment_type", name="uq_user_assignment_type"),
+    )

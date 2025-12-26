@@ -88,7 +88,7 @@ CREATE TABLE assignments (
 	),
 	CHECK (
 	       (is_graded = FALSE AND grade IS NULL AND ponderation IS NULL)
-	    OR (is_graded = TRUE AND grade IS NOT NULL)
+	    OR (is_graded = TRUE)
 	)
 
 );
@@ -154,6 +154,41 @@ CREATE TABLE assignment_expected_grades (
     FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
         ON DELETE CASCADE
 );
+
+-- ================= USER CLASS-TYPE COLORS =================
+CREATE TABLE user_class_type_colors (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    class_type TEXT NOT NULL CHECK (
+        class_type IN ('math', 'science', 'language', 'social_science', 'art', 'engineering', 'technology', 'finance', 'other')
+    ),
+    color TEXT NOT NULL DEFAULT '#4f46e5', -- fallback default color
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE(user_id, class_type),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+
+-- ================= USER ASSIGNMENT-TYPE COLORS =================
+CREATE TABLE user_assignment_type_colors (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    assignment_type TEXT NOT NULL CHECK (
+        assignment_type IN ('homework', 'quiz', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
+    ),
+    color TEXT NOT NULL DEFAULT '#4f46e5', -- fallback default color
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE(user_id, assignment_type),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+
+
+
 
 
 

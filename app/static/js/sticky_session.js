@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const startedAtISO = sessionBar.dataset.startedAt;
   const sessionId = sessionBar.dataset.sessionId;
   const timerEl = document.getElementById("session-timer");
+  const endBtn = document.getElementById("end-session-btn");
 
   if (!startedAtISO || !sessionId) return;
 
@@ -17,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
+
     timerEl.textContent =
       `${String(hours).padStart(2, "0")}:` +
       `${String(minutes).padStart(2, "0")}:` +
@@ -25,14 +27,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   updateTimer();
   const timerInterval = setInterval(updateTimer, 1000);
+  const modal = document.getElementById("end-session-modal");
+  const confirmBtn = document.getElementById("confirm-end-session");
+  const cancelBtn = document.getElementById("cancel-end-session");
 
-  const endBtn = document.getElementById("end-session-btn");
-  endBtn.addEventListener("click", async () => {
+  function openModal() {
+    modal.classList.remove("hidden");
+    modal.classList.add("active");
+  }
+
+  function closeModal() {
+    modal.classList.remove("active");
+    modal.classList.add("hidden");
+  }
+
+
+  endBtn.addEventListener("click", () => {
+    openModal();
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    closeModal();
+  });
+
+  confirmBtn.addEventListener("click", async () => {
+    closeModal();
+
     endBtn.disabled = true;
     endBtn.textContent = "Ending...";
 
     try {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        .getAttribute("content");
 
       const response = await fetch(`/study/${sessionId}/end`, {
         method: "POST",
@@ -43,9 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({})
       });
 
-      if (!response.ok) throw new Error("Failed to end session");
+      if (!response.ok) throw new Error("Request failed");
 
-      await response.json();
+      const data = await response.json();
+      if (!data.success) throw new Error("Server rejected session");
 
       clearInterval(timerInterval);
       window.location.reload();
@@ -57,4 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Failed to end session. Please try again.");
     }
   });
+
+
 });

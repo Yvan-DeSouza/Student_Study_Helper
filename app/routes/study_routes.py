@@ -5,7 +5,6 @@ from app.models.study_session import StudySession
 from app.models.course import Class
 from app.models.assignment import Assignment
 from datetime import datetime, timezone
-
 study = Blueprint("study", __name__)
 
 @study.route("/study")

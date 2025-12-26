@@ -41,26 +41,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
         classForm.action = `/classes/${btn.dataset.classId}/edit`;
 
-        addModal.classList.add("active");
+        addModal.classList.remove('hidden')
+        addModal.classList.add('active')
         previousClassType = btn.dataset.type;
     }
 
 
     // Open ADD modal
     document.querySelectorAll(
-        "#openAddClassModal, #openAddClassModalEmpty"
+    "#openAddClassModal, #openAddClassModalEmpty"
     ).forEach(btn => {
         btn.addEventListener("click", () => {
             resetClassModal();
-            addModal.classList.add("active");
         });
     });
+
 
     // Close ADD / EDIT modal
     document.getElementById("closeAddClassModal")
         ?.addEventListener("click", () => {
             resetClassModal();
-            addModal.classList.remove("active");
         });
 
     // Edit buttons
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             currentStep = 1;
             renderDeleteStep();
-
+            deleteModal.classList.add("hidden");
             deleteModal.classList.add("active");
         });
     });
@@ -211,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Cancel delete
     cancelBtn.addEventListener("click", () => {
         deleteModal.classList.remove("active");
+        deleteModal.classList.add("hidden")
     });
 
 });
