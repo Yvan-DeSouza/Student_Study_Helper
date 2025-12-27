@@ -129,12 +129,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const collisionModal = document.getElementById("collision-modal");
   const collisionDataEl = document.getElementById("session-collision-data");
   const session_collision = collisionDataEl ? JSON.parse(collisionDataEl.dataset.collision) : null;
-  window.session_collision = session_collision;
 
   if (collisionModal && session_collision) {
     const startNowBtn = document.getElementById("collision-start-now");
     const cancelBtn = document.getElementById("collision-cancel");
-    const rescheduleBtn = document.getElementById("collision-reschedule");
+    const rescheduleBtn = document.querySelector(".open-reschedule-btn");
 
     function openCollisionModal() {
       collisionModal.classList.remove("hidden");
