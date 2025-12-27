@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  let rescheduleContext = null;
   // ================= ACTIVE SESSION BAR =================
   const sessionBar = document.getElementById("active-session-bar");
   const endBtn = document.getElementById("end-session-btn");
@@ -72,12 +73,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeErrorBtn = document.getElementById("close-reschedule-error");
   let currentRescheduleSessionId = null; // dynamic session id for reschedule
 
-  function openRescheduleModal(sessionId) {
-    currentRescheduleSessionId = sessionId;
+  function openRescheduleModal(context) {
+    if (!context || !context.sessionId || !context.title) {
+      console.error("Invalid reschedule context:", context);
+      return;
+    }
+
+    rescheduleContext = context;
+    currentRescheduleSessionId = context.sessionId;
+
+    document.getElementById("reschedule-session-title").textContent =
+      `Session: "${context.title}"`;
+
     rescheduleInput.value = "";
     rescheduleModal.classList.remove("hidden");
     rescheduleModal.classList.add("active");
   }
+
+
 
   function closeRescheduleModal() {
     rescheduleModal.classList.remove("active");
@@ -92,7 +105,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeErrorModal() {
     errorModal.classList.remove("active");
     errorModal.classList.add("hidden");
-    openRescheduleModal(currentRescheduleSessionId);
+    
+    if (rescheduleContext) {
+      openRescheduleModal(rescheduleContext);
+    }
   }
 
   confirmRescheduleBtn.addEventListener("click", async () => {
@@ -122,7 +138,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  cancelRescheduleBtn.addEventListener("click", () => closeRescheduleModal());
+  cancelRescheduleBtn.addEventListener("click", () => {
+    closeRescheduleModal();
+
+    if (!rescheduleContext) return;
+
+    if (rescheduleContext.source === "collision") {
+      collisionModal.classList.remove("hidden");
+      collisionModal.classList.add("active");
+    }
+
+    if (rescheduleContext.source === "due") {
+      dueModal.classList.remove("hidden");
+      dueModal.classList.add("active");
+    }
+  });
+
   closeErrorBtn.addEventListener("click", closeErrorModal);
 
   // ================= SESSION COLLISION HANDLER =================
@@ -149,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startNowBtn.addEventListener("click", async () => {
       closeCollisionModal();
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-      const { active_session_id, scheduled_session_id } = window.session_collision;
+      const { active_session_id, scheduled_session_id } = session_collision;
       try {
         await fetch(`/study/${active_session_id}/end`, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken }, body: JSON.stringify({}) });
         const startResp = await fetch(`/study/${scheduled_session_id}/start`, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken }, body: JSON.stringify({}) });
@@ -165,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cancelBtn.addEventListener("click", async () => {
       closeCollisionModal();
       const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-      const { scheduled_session_id } = window.session_collision;
+      const { scheduled_session_id } = session_collision;
       try {
         const resp = await fetch(`/study/${scheduled_session_id}/cancel`, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken } });
         const data = await resp.json();
@@ -179,8 +210,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     rescheduleBtn.addEventListener("click", () => {
       closeCollisionModal();
-      openRescheduleModal(session_collision.scheduled_session_id);
+      openRescheduleModal({
+        source: "collision",
+        sessionId: session_collision.scheduled_session_id,
+        title: session_collision.scheduled_session_title
+      });
     });
+
   }
 
   // ================= DUE SESSION MODAL =================
@@ -225,7 +261,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     rescheduleBtn.addEventListener("click", () => {
       closeDueModal();
-      openRescheduleModal(dueModal.dataset.sessionId);
+      openRescheduleModal({
+        source: "due",
+        sessionId: dueModal.dataset.sessionId,
+        title: dueModal.dataset.sessionTitle
+      });
     });
+
   }
 });

@@ -55,7 +55,8 @@ def create_app():
             if active_session and due_session:
                 session_collision = {
                     "active_session_id": active_session.session_id,
-                    "scheduled_session_id": due_session.session_id
+                    "scheduled_session_id": due_session.session_id,
+                    "scheduled_session_title": due_session.title
                 }
 
         return {

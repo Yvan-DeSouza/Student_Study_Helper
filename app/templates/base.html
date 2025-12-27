@@ -75,7 +75,7 @@
       </div>
     {% else %}
       <!--{# ================= DUE SESSION MODAL ================= #}-->
-      <div id="due-session-modal" class="modal-overlay" data-session-id="{{ due_session.session_id }}">
+      <div id="due-session-modal" class="modal-overlay" data-session-id="{{ due_session.session_id }}" data-session-title="{{ due_session.title}}">
         <div class="modal-card">
           <h2>Study Session Started</h2>
           <p>Your "{{ due_session.title }}" session for the "{{ due_session.class_.class_name }}" class has started. What would you like to do?</p>
@@ -95,7 +95,7 @@
   <div id="reschedule-modal" class="modal-overlay hidden">
     <div class="modal-card">
       <h2>Reschedule Study Session</h2>
-
+      <p id="reschedule-session-title"></p>
       <label for="reschedule-datetime">New Date & Time</label>
       <input
         type="datetime-local"
