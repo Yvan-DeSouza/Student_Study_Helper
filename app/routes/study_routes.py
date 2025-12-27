@@ -48,15 +48,14 @@ def add_session():
 
         if start_option == "now":
             started_at = now
+            expected_started_at = None
             is_active = True
         elif start_option == "later":
             if not started_at_input:
                 return "Started at is required for future sessions", 400
-            started_at = datetime.fromisoformat(started_at_input).astimezone(timezone.utc)
+            expected_started_at = datetime.fromisoformat(started_at_input).astimezone(timezone.utc)
+            started_at = None
             is_active = False
-
-
-
 
         session = StudySession(
             user_id=current_user.user_id,
@@ -66,6 +65,7 @@ def add_session():
             session_type=session_type,
             expected_duration_minutes=expected_duration,
             started_at=started_at,
+            expected_started_at=expected_started_at,
             is_active=is_active
         )
 
@@ -166,4 +166,75 @@ def cancel_session(session_id):
 
     session.cancelled_at = datetime.now(timezone.utc)
     db.session.commit()
+    return {"success": True}
+
+
+
+
+
+@study.route("/study/<int:session_id>/start", methods=["POST"])
+@login_required
+def start_scheduled_session(session_id):
+    now = datetime.now(timezone.utc)
+
+    # 1️⃣ Fetch scheduled session
+    session = StudySession.query.filter(
+        StudySession.session_id == session_id,
+        StudySession.user_id == current_user.user_id,
+        StudySession.is_active == False,
+        StudySession.is_completed == False,
+        StudySession.cancelled_at.is_(None)
+    ).first_or_404()
+
+    # 2️⃣ Safety: ensure no other active session
+    existing_active = StudySession.query.filter(
+        StudySession.user_id == current_user.user_id,
+        StudySession.is_active == True
+    ).first()
+
+    if existing_active:
+        return {"success": False, "error": "Active session already exists"}, 400
+
+    if session.expected_started_at and session.expected_started_at > now:
+        return {"success": False, "error": "Session is not due yet"}, 400
+
+    # 3️⃣ Start the session
+    session.started_at = now
+    session.is_active = True
+
+    db.session.commit()
+
+    return {"success": True}
+
+
+@study.route("/study/<int:session_id>/reschedule", methods=["POST"])
+@login_required
+def reschedule_session(session_id):
+    session = StudySession.query.filter(
+        StudySession.session_id == session_id,
+        StudySession.user_id == current_user.user_id,
+        StudySession.is_active == False,
+        StudySession.is_completed == False,
+        StudySession.cancelled_at.is_(None)
+    ).first_or_404()
+
+    data = request.get_json()
+    if not data or "expected_started_at" not in data:
+        return {"success": False, "error": "Missing expected_started_at"}, 400
+
+    try:
+        new_time = datetime.fromisoformat(data["expected_started_at"]).astimezone(timezone.utc)
+    except ValueError:
+        return {"success": False, "error": "Invalid datetime format"}, 400
+
+    now = datetime.now(timezone.utc)
+    if new_time <= now:
+        return {"success": False, "error": "New time must be in the future"}, 400
+
+    # Update session
+    session.expected_started_at = new_time
+    session.rescheduled_count += 1
+
+    db.session.commit()
+
     return {"success": True}

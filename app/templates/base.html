@@ -1,97 +1,135 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>{% block title %}Student Study Dashboard{% endblock %}</title>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}Student Study Dashboard{% endblock %}</title>
 
-  <!-- Global CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/sticky_session.css') }}">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sticky_session.css') }}">
 
-  {% block extra_css %}{% endblock %}
-</head>
+    {% block extra_css %}{% endblock %}
+  </head>
 <body>
-<script>
-  const theme = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-</script>
+  <script>
+    const theme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+  </script>
 
-{% block navbar %}{% endblock %}
+  {% block navbar %}{% endblock %}
 
-<!--{# ================= ACTIVE STUDY SESSION BAR ================= #}-->
-{% if active_session and active_session.is_active and active_session.started_at <= now %}
-<div
-  id="active-session-bar"
-  class="active-session-bar"
-  data-started-at="{{ active_session.started_at.isoformat() }}"
-  data-session-id="{{ active_session.session_id }}"
->
-  <div class="session-bar-left">
-    <span class="session-dot"></span>
-    <span class="session-title">{{ active_session.title }}</span>
-    <span class="session-class">· {{ active_session.class_.class_name }}</span>
-  </div>
+    <!--{# ================= ACTIVE STUDY SESSION BAR ================= #}-->
+  {% if active_session and active_session.is_active and active_session.started_at <= now %}
+    <div
+      id="active-session-bar"
+      class="active-session-bar"
+      data-started-at="{{ active_session.started_at.isoformat() }}"
+      data-session-id="{{ active_session.session_id }}"
+    >
+      <div class="session-bar-left">
+        <span class="session-dot"></span>
+        <span class="session-title">{{ active_session.title }}</span>
+        <span class="session-class">· {{ active_session.class_.class_name }}</span>
+      </div>
 
-  <div class="session-bar-center">
-    <span class="session-timer" id="session-timer">00:00:00</span>
-  </div>
+      <div class="session-bar-center">
+        <span class="session-timer" id="session-timer">00:00:00</span>
+      </div>
 
-  <div class="session-bar-right">
-    <button class="end-session-btn" id="end-session-btn" type="button">End Session</button>
-  </div>
-</div>
-{% endif %}
-
-<!--{# ================= DUE SESSION MODAL ================= #}-->
-{% if due_session %}
-<div id="due-session-modal" class="modal-overlay" data-session-id="{{ due_session.session_id }}">
-  <div class="modal-card">
-    <h2>Study Session Started</h2>
-    <p>Your "{{ due_session.title }}" session for the "{{ due_session.class_.class_name }}" class has started. What would you like to do?</p>
-
-    <div class="modal-actions">
-      <button type="button" id="start-now-btn" class="modal-btn confirm-btn">Start Now</button>
-      <button type="button" id="cancel-session-btn" class="modal-btn cancel-btn">Cancel</button>
-      <button type="button" id="reschedule-btn" class="modal-btn">Reschedule</button>
+      <div class="session-bar-right">
+        <button class="end-session-btn" id="end-session-btn" type="button">End Session</button>
+      </div>
     </div>
-  </div>
-</div>
-{% endif %}
+  {% endif %}
 
-<!--{# ================= FLASH MESSAGES ================= #}-->
-<div class="flash-messages">
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul class="flash-list">
-        {% for message in messages %}
-          <li class="flash-item">{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-</div>
+  <!--{# ================= DUE SESSION MODAL ================= #}-->
+  {% if due_session %}
+    <div id="due-session-modal" class="modal-overlay" data-session-id="{{ due_session.session_id }}">
+      <div class="modal-card">
+        <h2>Study Session Started</h2>
+        <p>Your "{{ due_session.title }}" session for the "{{ due_session.class_.class_name }}" class has started. What would you like to do?</p>
 
-<main>
-  {% block content %}{% endblock %}
+        <div class="modal-actions">
+          <button type="button" id="start-now-btn" class="modal-btn confirm-btn">Start Now</button>
+          <button type="button" id="cancel-session-btn" class="modal-btn cancel-btn">Cancel</button>
+          <button type="button" id="reschedule-btn" class="modal-btn">Reschedule</button>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
-  <!-- ================= END SESSION MODAL ================= #}-->
-  <div id="end-session-modal" class="modal-overlay hidden">
+  <!-- ================= RESCHEDULE MODAL ================= -->
+  <div id="reschedule-modal" class="modal-overlay hidden">
     <div class="modal-card">
-      <h2>End Study Session</h2>
-      <p>Are you sure you want to end this study session?</p>
+      <h2>Reschedule Study Session</h2>
+
+      <label for="reschedule-datetime">New Date & Time</label>
+      <input
+        type="datetime-local"
+        id="reschedule-datetime"
+        required
+      />
+
       <div class="modal-actions">
-        <button type="button" id="cancel-end-session" class="modal-btn cancel-btn">Cancel</button>
-        <button type="button" id="confirm-end-session" class="modal-btn confirm-btn">End Session</button>
+        <button type="button" id="cancel-reschedule" class="modal-btn cancel-btn">
+          Cancel
+        </button>
+        <button type="button" id="confirm-reschedule" class="modal-btn confirm-btn">
+          Reschedule
+        </button>
       </div>
     </div>
   </div>
-</main>
 
-<!-- Global JS -->
-<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
-<script src="{{ url_for('static', filename='js/sticky_session.js') }}"></script>
-{% block extra_js %}{% endblock %}
-</body>
+  <!-- ================= RESCHEDULE ERROR MODAL ================= -->
+  <div id="reschedule-error-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h3>Invalid Date</h3>
+      <p>Please make sure your rescheduled date is set in the future.</p>
+
+      <div class="modal-actions">
+        <button type="button" id="close-reschedule-error" class="modal-btn confirm-btn">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!--{# ================= FLASH MESSAGES ================= #}-->
+  <div class="flash-messages">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class="flash-list">
+          {% for message in messages %}
+            <li class="flash-item">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <main>
+    {% block content %}{% endblock %}
+
+    <!-- ================= END SESSION MODAL ================= #}-->
+    <div id="end-session-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <h2>End Study Session</h2>
+        <p>Are you sure you want to end this study session?</p>
+        <div class="modal-actions">
+          <button type="button" id="cancel-end-session" class="modal-btn cancel-btn">Cancel</button>
+          <button type="button" id="confirm-end-session" class="modal-btn confirm-btn">End Session</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Global JS -->
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/sticky_session.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+  </body>
 </html>

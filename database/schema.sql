@@ -96,31 +96,32 @@ CREATE TABLE assignments (
 -- STUDY SESSIONS
 CREATE TABLE study_sessions (
     session_id SERIAL PRIMARY KEY,
-	title TEXT NOT NULL,
+    title TEXT NOT NULL,
     class_id INT NOT NULL,
-	user_id INT NOT NULL,
+    user_id INT NOT NULL,
     assignment_id INT, -- optional: NULL if not tied to an assignment
     duration_minutes INT, -- total time
     expected_duration_minutes INT, -- optional
     session_type TEXT NOT NULL CHECK (
         session_type IN ('homework', 'quiz', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
     ),
-	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-	started_at TIMESTAMPTZ NOT NULL,
-	expected_started_at TIMESTAMPTZ,
-	session_end TIMESTAMPTZ,
-	cancelled_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    started_at TIMESTAMPTZ,
+    expected_started_at TIMESTAMPTZ,
+    session_end TIMESTAMPTZ,
+    cancelled_at TIMESTAMPTZ,
 
-	is_completed BOOLEAN NOT NULL DEFAULT FALSE,
-	is_active BOOLEAN NOT NULL DEFAULT FALSE,
-	
-    FOREIGN KEY (class_id) REFERENCES classes(class_id)
-        ON DELETE CASCADE,
-    FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
-        ON DELETE SET NULL, 
-	FOREIGN KEY (user_id) REFERENCES users(user_id) 
-		ON DELETE CASCADE,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
 
+    FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id) ON DELETE SET NULL, 
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+
+    -- Ensure at least one start time is set
+    CHECK (started_at IS NOT NULL OR expected_started_at IS NOT NULL),
+
+    -- Session consistency checks
     CHECK (
         (is_active = TRUE AND is_completed = FALSE AND session_end IS NULL)
         OR
@@ -128,19 +129,17 @@ CREATE TABLE study_sessions (
         OR
         (is_active = FALSE AND is_completed = TRUE AND session_end IS NOT NULL AND duration_minutes IS NOT NULL)
     ),
-	
-	CHECK (
-	    session_end IS NULL OR started_at <= session_end
-	),
-	CHECK (
-	    cancelled_at IS NULL
-	    OR (
-	        is_active = FALSE
-	        AND is_completed = FALSE
-	        AND session_end IS NULL
-	    )
-	)
-	
+    CHECK (
+        session_end IS NULL OR (started_at IS NOT NULL AND started_at <= session_end)
+    ),
+    CHECK (
+        cancelled_at IS NULL
+        OR (
+            is_active = FALSE
+            AND is_completed = FALSE
+            AND session_end IS NULL
+        )
+    )
 );
 
 
@@ -223,6 +222,7 @@ CREATE TABLE study_session_pauses (
 		OR duration_seconds IS NOT NULL
 	)
 );
+
 
 
 

@@ -30,8 +30,8 @@ def get_due_scheduled_session(user_id: int) -> StudySession | None:
         is_completed=False
     ).filter(
         StudySession.cancelled_at.is_(None),
-        StudySession.started_at <= now
-    ).order_by(StudySession.started_at.asc()).first()
+        StudySession.expected_started_at <= now
+    ).order_by(StudySession.expected_started_at.asc()).first()
 
 
 def has_active_session(user_id: int) -> bool:

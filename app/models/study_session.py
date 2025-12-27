@@ -22,11 +22,12 @@ class StudySession(db.Model):
     expected_duration_minutes = db.Column(db.Integer)
     session_type = db.Column(db.Text, nullable=False)  # homework, project, etc.
 
-
+    rescheduled_count = db.Column(db.Integer, default=0, server_default=text("0"))
     is_active = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
     is_completed = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
-    started_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    started_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    expected_started_at = db.Column(db.DateTime(timezone=True), nullable=True)
     session_end = db.Column(db.DateTime(timezone=True), nullable=True)
     cancelled_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
@@ -48,6 +49,8 @@ class StudySession(db.Model):
 
         if self.is_completed:
             return self.session_end is not None and self.duration_minutes is not None
+        if self.started_at is None and self.expected_started_at is None:
+            return False
 
         # not completed
         return self.session_end is None and self.duration_minutes is None

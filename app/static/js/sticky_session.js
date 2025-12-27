@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
           console.error(err);
           alert("Failed to cancel session. Please try again.");
       }
-  });
+    });
 
 
     startBtn.addEventListener("click", async () => {
@@ -131,9 +131,84 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     rescheduleBtn.addEventListener("click", async () => {
-      // TODO: implement reschedule logic
-      alert("Reschedule feature coming soon!");
-      closeDueModal();
+      // ================= RESCHEDULE =================
+      const rescheduleModal = document.getElementById("reschedule-modal");
+      const rescheduleInput = document.getElementById("reschedule-datetime");
+      const confirmRescheduleBtn = document.getElementById("confirm-reschedule");
+      const cancelRescheduleBtn = document.getElementById("cancel-reschedule");
+
+      const errorModal = document.getElementById("reschedule-error-modal");
+      const closeErrorBtn = document.getElementById("close-reschedule-error");
+
+      function openRescheduleModal() {
+        rescheduleInput.value = "";
+        rescheduleModal.classList.remove("hidden");
+        rescheduleModal.classList.add("active");
+      }
+
+      function closeRescheduleModal() {
+        rescheduleModal.classList.remove("active");
+        rescheduleModal.classList.add("hidden");
+      }
+
+      function openErrorModal() {
+        errorModal.classList.remove("hidden");
+        errorModal.classList.add("active");
+      }
+
+      function closeErrorModal() {
+        errorModal.classList.remove("active");
+        errorModal.classList.add("hidden");
+        openRescheduleModal(); // return user to form
+      }
+
+      rescheduleBtn.addEventListener("click", () => {
+        closeDueModal();
+        openRescheduleModal();
+      });
+
+      cancelRescheduleBtn.addEventListener("click", () => {
+        closeRescheduleModal();
+        dueModal.classList.remove("hidden");
+        dueModal.classList.add("active");
+      });
+
+      closeErrorBtn.addEventListener("click", closeErrorModal);
+
+      confirmRescheduleBtn.addEventListener("click", async () => {
+        const newTime = rescheduleInput.value;
+        if (!newTime) return;
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+        try {
+          const response = await fetch(`/study/${dueModal.dataset.sessionId}/reschedule`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ expected_started_at: newTime })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.success) {
+            closeRescheduleModal();
+            openErrorModal(); // 👈 clean UX
+            return;
+          }
+
+          closeRescheduleModal();
+          window.location.reload();
+
+        } catch (err) {
+          console.error(err);
+          closeRescheduleModal();
+          openErrorModal();
+        }
+      });
+      
     });
   }
 });
