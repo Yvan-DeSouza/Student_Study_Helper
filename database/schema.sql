@@ -110,7 +110,7 @@ CREATE TABLE study_sessions (
     expected_started_at TIMESTAMPTZ,
     session_end TIMESTAMPTZ,
     cancelled_at TIMESTAMPTZ,
-
+	rescheduled_count INT NOT NULL DEFAULT 0,
     is_completed BOOLEAN NOT NULL DEFAULT FALSE,
     is_active BOOLEAN NOT NULL DEFAULT FALSE,
 
@@ -222,6 +222,8 @@ CREATE TABLE study_session_pauses (
 		OR duration_seconds IS NOT NULL
 	)
 );
+
+
 
 
 

@@ -3,7 +3,7 @@ from .config import Config
 from .extensions import db, migrate, login_manager
 from flask_wtf.csrf import CSRFProtect
 from datetime import datetime, timezone
-from app.services.study_session_services import get_active_session, get_due_scheduled_session
+from app.services.study_session_services import get_active_session, get_due_scheduled_session, check_session_collision
 from flask_login import current_user
 
 
@@ -40,20 +40,32 @@ def create_app():
             'now': datetime.now(timezone.utc)
         }
 
+
     @app.context_processor
     def inject_global_sessions():
         active_session = None
         due_session = None
+        session_collision = None
+
         if current_user.is_authenticated:
             active_session = get_active_session(current_user.user_id)
-            if not active_session:
-                due_session = get_due_scheduled_session(current_user.user_id)
+            due_session = get_due_scheduled_session(current_user.user_id)
+
+            # Detect collision: due session exists but there is also an active session
+            if active_session and due_session:
+                session_collision = {
+                    "active_session_id": active_session.session_id,
+                    "scheduled_session_id": due_session.session_id
+                }
 
         return {
-            'active_session': active_session,
-            'has_active_session': active_session is not None,
-            'due_session': due_session
+            "active_session": active_session,
+            "has_active_session": active_session is not None,
+            "due_session": due_session,
+            "session_collision": session_collision
         }
+
+
 
 
 

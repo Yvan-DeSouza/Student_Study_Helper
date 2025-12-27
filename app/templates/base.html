@@ -17,6 +17,12 @@
     const theme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', theme);
   </script>
+  <div id="session-collision-data"
+      data-collision='{{ session_collision|tojson | safe if session_collision else "null" }}'>
+  </div>
+
+
+
 
   {% block navbar %}{% endblock %}
 
@@ -44,21 +50,46 @@
     </div>
   {% endif %}
 
-  <!--{# ================= DUE SESSION MODAL ================= #}-->
   {% if due_session %}
-    <div id="due-session-modal" class="modal-overlay" data-session-id="{{ due_session.session_id }}">
-      <div class="modal-card">
-        <h2>Study Session Started</h2>
-        <p>Your "{{ due_session.title }}" session for the "{{ due_session.class_.class_name }}" class has started. What would you like to do?</p>
+    {% if active_session %}
+      <!-- ================= SESSION COLLISION MODAL ================= -->
+      <div id="collision-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+          <h2>Session Conflict Detected</h2>
+          <p>You currently have an active session. Another session is scheduled to start now.</p>
 
-        <div class="modal-actions">
-          <button type="button" id="start-now-btn" class="modal-btn confirm-btn">Start Now</button>
-          <button type="button" id="cancel-session-btn" class="modal-btn cancel-btn">Cancel</button>
-          <button type="button" id="reschedule-btn" class="modal-btn">Reschedule</button>
+          <div class="modal-actions">
+            <button type="button" id="collision-start-now" class="modal-btn confirm-btn">
+              Start Scheduled Session
+            </button>
+            <button type="button" id="collision-cancel" class="modal-btn cancel-btn">
+              Cancel Scheduled Session
+            </button>
+            <button type="button" class="modal-btn open-reschedule-btn" data-session-id="{{ session_collision.scheduled_session_id }}">
+              Reschedule
+            </button>
+
+
+          </div>
         </div>
       </div>
-    </div>
+    {% else %}
+      <!--{# ================= DUE SESSION MODAL ================= #}-->
+      <div id="due-session-modal" class="modal-overlay" data-session-id="{{ due_session.session_id }}">
+        <div class="modal-card">
+          <h2>Study Session Started</h2>
+          <p>Your "{{ due_session.title }}" session for the "{{ due_session.class_.class_name }}" class has started. What would you like to do?</p>
+
+          <div class="modal-actions">
+            <button type="button" id="start-now-btn" class="modal-btn confirm-btn">Start Now</button>
+            <button type="button" id="cancel-session-btn" class="modal-btn cancel-btn">Cancel</button>
+            <button type="button" id="reschedule-btn" class="modal-btn">Reschedule</button>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   {% endif %}
+
 
   <!-- ================= RESCHEDULE MODAL ================= -->
   <div id="reschedule-modal" class="modal-overlay hidden">

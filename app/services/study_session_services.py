@@ -39,3 +39,31 @@ def has_active_session(user_id: int) -> bool:
     Returns True if the user currently has an active session.
     """
     return get_active_session(user_id) is not None
+
+
+
+def check_session_collision(user_id: int) -> dict | None:
+    """
+    Checks if the user has a session collision:
+    - There is an active session (session 1)
+    - There is a scheduled session due to start (session 2)
+
+    Returns:
+        None if no collision exists.
+
+        Otherwise, a dict:
+        {
+            "active_session": StudySession,
+            "due_scheduled_session": StudySession
+        }
+    """
+    active_session = get_active_session(user_id)
+    due_scheduled_session = get_due_scheduled_session(user_id)
+
+    if active_session and due_scheduled_session:
+        return {
+            "active_session": active_session,
+            "due_scheduled_session": due_scheduled_session
+        }
+
+    return None
