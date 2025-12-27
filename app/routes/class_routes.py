@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.course import Class
 from app.models.assignment import Assignment
+from sqlalchemy import and_
+
 
 classes = Blueprint("classes", __name__)
 
@@ -12,33 +14,51 @@ def list_classes():
     classes = Class.query.filter_by(user_id=current_user.user_id).all()
     return render_template("classes.html", classes=classes)
 
+
 @classes.route("/classes/new", methods=["POST"])
 @login_required
 def add_class():
-    importance = request.form.get("importance")
+    class_code = request.form["class_code"].strip()
 
+    existing = Class.query.filter(
+        and_(
+            Class.user_id == current_user.user_id,
+            Class.class_code == class_code
+        )
+    ).first()
+
+    if existing:
+        return jsonify({
+            "success": False,
+            "error": "DUPLICATE_CLASS_CODE",
+            "existing_class_name": existing.class_name
+        }), 409
+
+    importance = request.form.get("importance")
     if importance == "":
         importance = None
+        
     difficulty_raw = request.form.get("difficulty")
     pass_grade_raw = request.form.get("pass_grade")
+
     new_class = Class(
         user_id=current_user.user_id,
-        teacher_name=request.form.get("teacher_name") or None,
         class_name=request.form["class_name"],
+        class_code=class_code,
         class_type=request.form["class_type"],
-        class_code=request.form["class_code"],
+        teacher_name=request.form.get("teacher_name") or None,
         color=request.form.get("color"),
-        
-        importance= importance,
-
-        difficulty = int(difficulty_raw) if difficulty_raw else None,
-        pass_grade = float(pass_grade_raw) if pass_grade_raw else None
+        importance=importance,
+        difficulty=int(difficulty_raw) if difficulty_raw else None,
+        pass_grade=float(pass_grade_raw) if pass_grade_raw else None
     )
 
     db.session.add(new_class)
     db.session.commit()
 
-    return redirect(url_for("main.home"))
+    return jsonify({"success": True}), 201
+
+
 
 @classes.route("/classes/<int:class_id>/delete", methods=["POST"])
 @login_required

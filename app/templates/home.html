@@ -341,139 +341,7 @@
     </div>
 </div>
 
-<!-- ================= ADD CLASS MODAL ================= -->
-<div class="modal-overlay hidden" id="addClassModal" data-modal-class="active">
-    <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="add-class-title">
 
-        <h2 id="add-class-title">Add New Class</h2>
-        
-        <form method="POST" action="{{ url_for('classes.add_class') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        
-            <label for="class-name" class="input-label">Class Name</label>
-            <input
-                id="class-name"
-                type="text"
-                name="class_name"
-                class="input-field"
-                required
-            >
-
-            <label for="class-code" class="input-label">Class Code</label>
-            <input
-                id="class-code"
-                type="text"
-                name="class_code"
-                class="input-field"
-                placeholder="e.g. MATH101"
-                required
-            >
-
-            <label for="classTypeSelect" class="input-label">Class Type</label>
-            <select id="classTypeSelect" name="class_type" class="input-field" required>
-                <option value="">Select Class Type</option>
-                <option value="math">Math</option>
-                <option value="science">Science</option>
-                <option value="language">Language</option>
-                <option value="social_science">Social Science</option>
-                <option value="art">Art</option>
-                <option value="engineering">Engineering</option>
-                <option value="technology">Technology</option>
-                <option value="finance">Finance</option>
-                <option value="other">Other</option>
-            </select>
-
-            <label for="classColor" class="input-label">
-                Class Color
-                <span class="hint">(used for charts & calendar)</span>
-            </label>
-
-            <div class="color-picker-row">
-                <input
-                    id="classColor"
-                    type="color"
-                    name="color"
-                    class="color-input"
-                    value="#4f46e5"
-                >
-                <span class="color-preview-text">Click to choose a color</span>
-            </div>
-            <!-- ===== ADVANCED OPTIONS TOGGLE ===== -->
-            <button
-                type="button"
-                class="advanced-toggle"
-                aria-expanded="false"
-            >
-                ▸ Advanced options
-            </button>
-
-            <div class="advanced-options hidden">
-                <label class="input-label">
-                    Teacher Name
-                    <span class="hint-icon"
-                        data-hint="Optional. Helps you remember who teaches this class, especially if you have multiple classes with similar names.">
-                        ?
-                    </span>
-                    </label>
-                    <input
-                        type="text"
-                        name="teacher_name"
-                        class="input-field"
-                        placeholder="e.g. Mr. Smith"
-                    />
-                <!-- Importance -->
-                <label class="input-label">
-                    Importance
-                    <span class="hint-icon" data-hint="How important this class is compared to your others. Used for prioritization and analytics.">?</span>
-                </label>
-                <select name="importance" class="input-field">
-                    <option value="">Not set</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                </select>
-
-                <!-- Difficulty -->
-                <label class="input-label">
-                    Difficulty
-                    <span class="hint-icon" data-hint="How hard this class feels to you overall. You can change this later.">?</span>
-                </label>
-                <input
-                    type="number"
-                    name="difficulty"
-                    class="input-field"
-                    min="1"
-                    max="10"
-                    placeholder="1 (easy) – 10 (very hard)"
-                >
-
-                <!-- Pass Grade -->
-                <label class="input-label">
-                    Pass Grade (%)
-                    <span class="hint-icon" data-hint="The minimum grade you personally consider a passing grade for this class.">?</span>
-                </label>
-                <input
-                    type="number"
-                    name="pass_grade"
-                    class="input-field"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                    placeholder="e.g. 60"
-                >
-            </div>
-
-
-            <div class="modal-actions">
-                <button type="submit" class="btn full-btn">Create Class</button>
-                <button type="button" class="btn ghost-btn" data-close-modal>
-                    Cancel
-                </button>
-            </div>
-        </form>
-        
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -484,4 +352,6 @@
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/add_class.js') }}"></script>
+
 {% endblock %}
