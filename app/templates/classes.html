@@ -251,7 +251,14 @@
                 <button class="icon-btn cancel-inline-btn" data-class-id="{{ c.class_id }}" style="display:none;">
                     Cancel
                 </button>
+
+                {% else %}
+                <button class="icon-btn edit-inline-btn" data-class-id="{{ c.class_id }}" disabled>
+                    Edit Inline
+                </button>
                 {% endif %}
+
+
             </div>
 
         </div>
