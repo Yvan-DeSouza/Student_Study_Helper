@@ -97,9 +97,11 @@
 
         {% for c in classes %}
         <div class="card class-card"
-             data-importance="{{ c.importance }}"
-             data-finished="{{ c.is_finished }}"
-             data-name="{{ c.class_name }}">
+            data-class-id="{{ c.class_id }}"
+            data-importance="{{ c.importance }}"
+            data-finished="{{ c.is_finished }}"
+            data-name="{{ c.class_name }}">
+
 
             <div class="class-card-header">
                 <span
@@ -114,27 +116,81 @@
                 {% if c.teacher_name %}
                 <p><strong>Teacher:</strong> {{ c.teacher_name }}</p>
                 {% endif %}
-                <p><strong>Type:</strong> {{ c.class_type|capitalize }}</p>
+                <p class="meta-row">
+                    <strong>Type:</strong>
+                    <span
+                        class="class-type"
+                        data-type="{{ c.class_type }}"
+                    >
+                        {{ c.class_type|capitalize }}
+                    </span>
+                </p>
                 <p><strong>Code:</strong> {{ c.class_code }}</p>
-                <p><strong>Importance:</strong> {{ c.importance|capitalize }}</p>
-                <p>
+                <p class="meta-row">
+                    <strong>Importance:</strong>
+                    {% if c.importance %}
+                        <span
+                            class="importance-dot"
+                            data-importance="{{ c.importance }}"
+                        ></span>
+                        {{ c.importance|capitalize }}
+                    {% else %}
+                        None
+                    {% endif %}
+                </p>
+
+                <p class="difficulty-row">
+                    <strong>Difficulty:</strong>
+                    {% if c.difficulty %}
+                        <span
+                            class="difficulty-value"
+                            data-difficulty="{{ c.difficulty }}"
+                        >
+                            {{ c.difficulty }}
+                        </span>
+                    {% else %}
+                        None
+                    {% endif %}
+                </p>
+             
+                <p class="meta-row">
                     <strong>Grade:</strong>
+
+                    <!-- DISPLAY MODE -->
+                    <span
+                        class="grade-display"
+                        data-grade="{{ c.grade }}"
+                        data-pass-grade="{{ c.pass_grade }}"
+                        {% if c.is_finished %}data-locked="true"{% endif %}
+                    >
+                        {{ c.grade if c.grade is not none else "—" }}
+                    </span>
+
+                    <!-- EDIT MODE (hidden by default) -->
                     {% if not c.is_finished %}
                         <input
                             type="number"
                             class="inline-grade-input"
                             data-class-id="{{ c.class_id }}"
+                            data-pass-grade="{{ c.pass_grade }}"
                             value="{{ c.grade if c.grade is not none else '' }}"
                             min="0"
                             max="100"
                             step="0.1"
-                            placeholder="—"
+                            style="display:none;"
+                            disabled
                         >
-                    {% else %}
-                        {{ c.grade if c.grade is not none else "—" }}
                     {% endif %}
+
+                    <span class="grade-dot"></span>
                 </p>
 
+
+
+                <p>
+                    <strong>Pass Grade: 🎯</strong>
+                        {{ c.pass_grade if c.pass_grade is not none else "—" }}
+                </p>
 
                 <p>
                     <strong>Status:</strong>
@@ -154,8 +210,8 @@
                     Finished
                 </label>
 
-                <p><strong>Assignments:</strong> {{ c.completed_assignments }} / {{ c.total_assignments }}</p>
-                <p><strong>Total Study Time:</strong> {{ c.total_study_time }}</p>
+                <p><strong>Assignments: 📄</strong> {{ c.completed_assignments }} / {{ c.total_assignments }}</p>
+                <p><strong>Total Study Time: ⏱️</strong> {{ c.total_study_time }}</p>
             </div>
 
             <div class="class-actions">
@@ -166,13 +222,13 @@
                     data-code="{{ c.class_code }}"
                     data-type="{{ c.class_type }}"
                     data-importance="{{ c.importance }}"
+                    data-difficulty="{{ c.difficulty }}"
+                    data-pass-grade="{{ c.pass_grade }}"
+                    data-teacher-name="{{ c.teacher_name }}"
                     data-color="{{ c.color }}"
-                    data-grade="{{ c.grade }}"
-                    data-finished="{{ c.is_finished }}"
                 >
                     ✏ Edit
                 </button>
-
 
                 <button
                     class="icon-btn delete-btn"
@@ -184,8 +240,22 @@
                     🗑 Delete
                 </button>
 
+                {% if not c.is_finished %}
+                <!-- Inline edit buttons -->
+                <button class="icon-btn edit-inline-btn" data-class-id="{{ c.class_id }}">
+                    Edit Inline
+                </button>
+                <button class="icon-btn save-inline-btn" data-class-id="{{ c.class_id }}" style="display:none;">
+                    Save
+                </button>
+                <button class="icon-btn cancel-inline-btn" data-class-id="{{ c.class_id }}" style="display:none;">
+                    Cancel
+                </button>
+                {% endif %}
             </div>
+
         </div>
+
         {% endfor %}
     </section>
 
@@ -209,6 +279,27 @@
             <canvas id="assignmentsPerClassChart"></canvas>
         </div>
     </section>
+</div>
+<!-- ================= INVALID GRADE MODAL ================= -->
+<div class="modal-overlay hidden" id="invalidGradeModal">
+    <div class="modal card">
+        <h2>Invalid Grade</h2>
+
+        <p>
+            Please make sure to enter a correct grade value that is between
+            <strong>0 and 100</strong>.
+        </p>
+
+        <div class="modal-actions">
+            <button
+                type="button"
+                class="btn full-btn"
+                data-close-modal
+            >
+                OK
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- ================= DELETE CONFIRM MODAL ================= -->
@@ -268,15 +359,36 @@
     </div>
 </div>
 
+<div class="modal-overlay hidden" id="unsavedChangesModal">
+  <div class="modal card">
+    <h2>Unsaved Changes</h2>
+    <p>You are about to leave this page with unsaved changes.</p>
+
+    <div class="modal-actions">
+      <button id="saveAllInline" class="btn full-btn" style="background:#22c55e">
+        Save changes
+      </button>
+
+      <button id="leaveWithoutSaving" class="btn full-btn" style="background:#ef4444">
+        Leave without saving
+      </button>
+
+      <button id="stayOnPage" class="btn full-btn" style="background:#3b82f6">
+        Stay on the page
+      </button>
+    </div>
+  </div>
+</div>
+
 
 
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/add_class.js') }}"></script>
 <script src="{{ url_for('static', filename='js/classes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
-<script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 {% endblock %}

@@ -1,4 +1,382 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+
+    document.querySelectorAll(".class-dot").forEach(dot => {
+        const color = dot.dataset.color;
+        if (color) {
+            dot.style.backgroundColor = color;
+        }
+    });
+    // Class type emoji injection
+    document.querySelectorAll(".class-type").forEach(el => {
+        const type = el.dataset.type;
+        if (CLASS_TYPE_EMOJIS[type]) {
+            el.textContent = `${CLASS_TYPE_EMOJIS[type]} ${el.textContent}`;
+        }
+    });
+
+    // Importance dot coloring
+    document.querySelectorAll(".importance-dot").forEach(dot => {
+        const level = dot.dataset.importance;
+        if (IMPORTANCE_COLORS[level]) {
+            dot.style.backgroundColor = IMPORTANCE_COLORS[level];
+        }
+    });
+    function getDifficultyColor(value) {
+        if (value <= 3) return "#22c55e";   // green
+        if (value <= 5) return "#facc15";   // yellow
+        if (value <= 7) return "#fb923c";   // orange
+        return "#ef4444";                   // red
+    }
+
+    document.querySelectorAll(".difficulty-value").forEach(el => {
+        const difficulty = parseInt(el.dataset.difficulty, 10);
+        if (isNaN(difficulty)) return;
+
+        // Create bar container
+        const bar = document.createElement("span");
+        bar.className = "difficulty-bar";
+
+        // Create bar fill
+        const fill = document.createElement("span");
+        fill.className = "difficulty-bar-fill";
+
+        // Width = difficulty %
+        fill.style.width = `${difficulty * 10}%`;
+        fill.style.backgroundColor = getDifficultyColor(difficulty);
+
+        bar.appendChild(fill);
+
+        // Insert bar right after the number
+        el.insertAdjacentElement("afterend", bar);
+    });
+
+
+    function getGradeColor(grade, passGrade) {
+        if (grade === null || isNaN(grade)) {
+            return "#9ca3af"; // neutral
+        }
+
+        grade = Math.max(0, Math.min(100, grade));
+
+        // CASE 1: Grade + pass grade
+        if (passGrade !== null && !isNaN(passGrade)) {
+            if (grade >= passGrade) {
+                return "#22c55e"; // green
+            }
+
+            const ratio = grade / passGrade;
+
+            if (ratio < 0.4) return "#ef4444";   // red
+            if (ratio < 0.7) return "#fb923c";   // orange
+            return "#facc15";                    // yellow
+        }
+
+        // CASE 2: Grade only (0–100)
+        if (grade < 50) return "#ef4444";        // red
+        if (grade < 65) return "#fb923c";        // orange
+        if (grade < 80) return "#facc15";        // yellow
+        return "#22c55e";                        // green
+    }
+
+    document.querySelectorAll(".class-card").forEach(card => {
+        const display = card.querySelector(".grade-display");
+        const dot = card.querySelector(".grade-dot");
+
+        if (!display || !dot) return;
+
+        const gradeRaw = display.dataset.grade;
+        const passRaw = display.dataset.passGrade;
+
+        const grade = gradeRaw !== "" && gradeRaw !== null
+            ? parseFloat(gradeRaw)
+            : null;
+
+        const passGrade = passRaw !== "" && passRaw !== null
+            ? parseFloat(passRaw)
+            : null;
+
+        dot.style.backgroundColor = getGradeColor(grade, passGrade);
+    });
+
+
+
+
+
+    /* ======================================================
+   INLINE GRADE EDITING + UNSAVED CHANGES (CLEAN REWRITE)
+    ====================================================== */
+
+    let hasUnsavedChanges = false;
+    let pendingNavigation = null;
+    // Track changes for all relevant inputs
+    document.querySelectorAll(".inline-grade-input, #class-name, #class-code, #teacher_name, #difficulty, #pass_grade")
+        .forEach(input => {
+            input.addEventListener("input", markDirty);
+        });
+
+
+    /* ---------- DOM REFERENCES ---------- */
+
+    const unsavedModal = document.getElementById("unsavedChangesModal");
+    if (!unsavedModal) {
+        console.warn("Unsaved changes modal not found!");
+    }
+    const saveAllBtn = document.getElementById("saveAllInline");
+    const leaveBtn = document.getElementById("leaveWithoutSaving");
+    const stayBtn = document.getElementById("stayOnPage");
+
+    /* ---------- MODAL HELPERS ---------- */
+
+    function openUnsavedModal() {
+        unsavedModal.classList.remove("hidden");
+        unsavedModal.classList.add("active");
+    }
+
+    function closeUnsavedModal() {
+        unsavedModal.classList.add("hidden");
+        unsavedModal.classList.remove("active");
+    }
+
+    /* ---------- NAVIGATION INTERCEPTION ---------- */
+
+    /**
+     * Intercept ALL anchor navigation
+     * (navbar + internal links)
+     */
+    document.addEventListener("click", (e) => {
+        const link = e.target.closest("a");
+        if (!link) return;
+
+        if (!hasUnsavedChanges) return;
+
+        e.preventDefault();
+        pendingNavigation = () => {
+            window.location.href = link.href;
+        };
+        openUnsavedModal();
+    });
+
+    /**
+     * Browser-level page leave (refresh, close tab, back)
+     */
+    window.addEventListener("beforeunload", (e) => {
+        if (!hasUnsavedChanges) return;
+        e.preventDefault();
+        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+    });
+
+    /* ---------- INLINE EDIT STATE ---------- */
+
+    const inlineEdits = new Map();
+
+    function markDirty() {
+        hasUnsavedChanges = true;
+    }
+
+    function clearDirty() {
+        hasUnsavedChanges = false;
+    }
+
+    function forceCloseInlineEdit(card, { disable = false } = {}) {
+        const inlineEditBtn = card.querySelector(".edit-inline-btn");
+        const saveBtn = card.querySelector(".save-inline-btn");
+        const cancelBtn = card.querySelector(".cancel-inline-btn");
+        const input = card.querySelector(".inline-grade-input");
+        const display = card.querySelector(".grade-display");
+
+        if (input && display) {
+            display.textContent = input.value || "—";
+            display.dataset.grade = input.value || "";
+            input.style.display = "none";
+            input.disabled = true;
+            display.style.display = "inline";
+        }
+
+        if (saveBtn) saveBtn.style.display = "none";
+        if (cancelBtn) cancelBtn.style.display = "none";
+
+        if (inlineEditBtn) {
+            inlineEditBtn.style.display = "inline-block";
+            inlineEditBtn.disabled = disable;
+            inlineEditBtn.style.opacity = disable ? "0.5" : "1";
+            inlineEditBtn.title = disable
+                ? "Cannot edit the grade of a class that is already finished"
+                : "";
+        }
+    }
+
+
+
+
+    /* ---------- EDIT INLINE ---------- */
+
+    document.querySelectorAll(".edit-inline-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const card = btn.closest(".class-card");
+            const classId = card.dataset.classId;
+
+            const display = card.querySelector(".grade-display");
+            const input = card.querySelector(".inline-grade-input");
+            const saveBtn = card.querySelector(".save-inline-btn");
+            const cancelBtn = card.querySelector(".cancel-inline-btn");
+
+            inlineEdits.set(classId, {
+                original: display.dataset.grade ? parseFloat(display.dataset.grade) : null
+            });
+
+            display.style.display = "none";
+            input.style.display = "inline-block";
+            input.disabled = false;
+            input.focus();
+
+            btn.style.display = "none";
+            saveBtn.style.display = "inline-block";
+            cancelBtn.style.display = "inline-block";
+        });
+    });
+
+    /* ---------- INPUT CHANGE TRACKING ---------- */
+
+    document.querySelectorAll(".inline-grade-input").forEach(input => {
+        input.addEventListener("input", () => {
+            markDirty();
+        });
+    });
+
+    /* ---------- SAVE SINGLE ---------- */
+
+    document.querySelectorAll(".save-inline-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const card = btn.closest(".class-card");
+            const classId = card.dataset.classId;
+
+            const input = card.querySelector(".inline-grade-input");
+            const display = card.querySelector(".grade-display");
+
+            const value = parseFloat(input.value);
+            if (isNaN(value) || value < 0 || value > 100) {
+                document.getElementById("invalidGradeModal")
+                    .classList.remove("hidden");
+                return;
+            }
+
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute("content");
+
+            await fetch(`/classes/${classId}/grade`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": csrfToken
+                },
+                body: `grade=${encodeURIComponent(value)}`
+            });
+
+            display.textContent = value.toFixed(1);
+            display.dataset.grade = value;
+            const dot = card.querySelector(".grade-dot");
+            const passGrade = parseFloat(display.dataset.passGrade);
+            dot.style.backgroundColor = getGradeColor(value, passGrade);
+
+
+            resetInlineUI(card);
+            inlineEdits.delete(classId);
+
+            if (inlineEdits.size === 0) {
+                clearDirty();
+            }
+        });
+    });
+
+    /* ---------- CANCEL SINGLE ---------- */
+
+    document.querySelectorAll(".cancel-inline-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const card = btn.closest(".class-card");
+            const classId = card.dataset.classId;
+
+            const input = card.querySelector(".inline-grade-input");
+            const display = card.querySelector(".grade-display");
+
+            const edit = inlineEdits.get(classId);
+            input.value = edit?.original ?? "";
+
+            resetInlineUI(card);
+            inlineEdits.delete(classId);
+
+            if (inlineEdits.size === 0) {
+                clearDirty();
+            }
+        });
+    });
+
+    /* ---------- SAVE ALL ---------- */
+
+    saveAllBtn.addEventListener("click", async () => {
+        const csrfToken = document
+            .querySelector('meta[name="csrf-token"]')
+            .getAttribute("content");
+
+        const requests = [];
+
+        inlineEdits.forEach((_, classId) => {
+            const card = document.querySelector(
+                `.class-card[data-class-id="${classId}"]`
+            );
+            const input = card.querySelector(".inline-grade-input");
+
+            requests.push(
+                fetch(`/classes/${classId}/grade`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: `grade=${encodeURIComponent(input.value)}`
+                })
+            );
+        });
+
+        await Promise.all(requests);
+
+        inlineEdits.clear();
+        clearDirty();
+        closeUnsavedModal();
+
+        if (pendingNavigation) pendingNavigation();
+    });
+
+    /* ---------- LEAVE WITHOUT SAVING ---------- */
+
+    leaveBtn.addEventListener("click", () => {
+        inlineEdits.clear();
+        clearDirty();
+        closeUnsavedModal();
+        if (pendingNavigation) pendingNavigation();
+    });
+
+    /* ---------- STAY ---------- */
+
+    stayBtn.addEventListener("click", () => {
+        pendingNavigation = null;
+        closeUnsavedModal();
+    });
+
+    /* ---------- UI RESET ---------- */
+
+    function resetInlineUI(card) {
+        card.querySelector(".inline-grade-input").style.display = "none";
+        card.querySelector(".inline-grade-input").disabled = true;
+        card.querySelector(".grade-display").style.display = "inline";
+
+        card.querySelector(".edit-inline-btn").style.display = "inline-block";
+        card.querySelector(".save-inline-btn").style.display = "none";
+        card.querySelector(".cancel-inline-btn").style.display = "none";
+    }
+    
+
     let isEditMode = false;
     let previousClassType = null;
 
@@ -12,12 +390,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const classModalTitle = document.getElementById("classModalTitle");
     const classModalSubmit = document.getElementById("classModalSubmit");
     const classForm = addModal.querySelector("form");
-
+    const teacherNameInput = document.getElementById("teacher_name");
     const nameInput = document.getElementById("class-name");
     const codeInput = document.getElementById("class-code");
     const typeSelect = document.getElementById("classTypeSelect");
     const importanceSelect = document.getElementById("importance");
     const colorInput = document.getElementById("classColor");
+    const difficultyInput = document.getElementById("difficulty");
+    const passGradeInput = document.getElementById("pass_grade");
+
 
     function resetClassModal() {
         classModalTitle.textContent = "Add Class";
@@ -31,6 +412,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function openEditClassModal(btn) {
+        console.log(nameInput)
         isEditMode = true;
 
         classModalTitle.textContent = "Edit Class";
@@ -41,6 +423,16 @@ document.addEventListener("DOMContentLoaded", () => {
         typeSelect.value = btn.dataset.type;
         importanceSelect.value = btn.dataset.importance || "";
         colorInput.value = btn.dataset.color || "#4f46e5";
+        if (difficultyInput) {
+            difficultyInput.value = btn.dataset.difficulty || "";
+        }
+        if (passGradeInput){
+            passGradeInput.value = btn.dataset.passGrade || "";
+        }
+
+        if (teacherNameInput) {
+            teacherNameInput.value = btn.dataset.teacherName || "";
+        }
 
         classForm.action = `/classes/${btn.dataset.classId}/edit`;
 
@@ -49,6 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         previousClassType = btn.dataset.type;
     }
+
 
     // Open ADD modal
     document.querySelectorAll(
@@ -86,31 +479,120 @@ document.addEventListener("DOMContentLoaded", () => {
         previousClassType = newType;
     });
 
-    /* ======================================================
-       INLINE GRADE UPDATE
-    ====================================================== */
 
-    document.querySelectorAll(".inline-grade-input").forEach(input => {
-        let timeout;
-        input.addEventListener("input", () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                fetch(`/classes/${input.dataset.classId}/grade`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: `grade=${encodeURIComponent(input.value)}`
-                });
-            }, 600);
-        });
-    });
+
 
     document.querySelectorAll(".finish-checkbox").forEach(cb => {
-        cb.addEventListener("change", () => {
-            fetch(`/classes/${cb.dataset.classId}/toggle-finished`, {
-                method: "POST"
-            }).then(() => location.reload());
+        cb.addEventListener("change", async () => {
+            const card = cb.closest(".class-card");
+            const statusEl = card.querySelector(".status");
+            const editBtn = card.querySelector(".edit-btn");
+            const inlineEditBtn = card.querySelector(".edit-inline-btn"); // only the inline edit button
+
+            const classId = cb.dataset.classId;
+            const isFinished = cb.checked;
+
+            // Update UI immediately
+            if (isFinished) {
+                statusEl.textContent = "Finished ✓";
+                statusEl.classList.remove("in-progress");
+                statusEl.classList.add("finished");
+
+                // Main edit button stays normal
+                if (editBtn) {
+                    editBtn.disabled = false; // keep it usable
+                    editBtn.style.opacity = "1";
+                    editBtn.title = "";
+                }
+
+                // Inline edit button is blurred/disabled
+                if (inlineEditBtn) {
+                    inlineEditBtn.disabled = true;
+                    inlineEditBtn.style.opacity = "0.5";
+                    inlineEditBtn.title = "Cannot edit the grade of a class that is already finished";
+                }
+
+                // Also hide save/cancel if currently editing
+                const saveBtn = card.querySelector(".save-inline-btn");
+                const cancelBtn = card.querySelector(".cancel-inline-btn");
+                if (saveBtn) saveBtn.style.display = "none";
+                if (cancelBtn) cancelBtn.style.display = "none";
+
+            } else {
+                statusEl.textContent = "In Progress";
+                statusEl.classList.remove("finished");
+                statusEl.classList.add("in-progress");
+
+                // Re-enable buttons
+                if (editBtn) {
+                    editBtn.disabled = false;
+                    editBtn.style.opacity = "1";
+                    editBtn.title = "";
+                }
+
+                if (inlineEditBtn) {
+                    inlineEditBtn.disabled = false;
+                    inlineEditBtn.style.opacity = "1";
+                    inlineEditBtn.title = "";
+                }
+            }
+
+
+            const input = card.querySelector(".inline-grade-input");
+            const isEditing = input && input.style.display === "inline-block";
+
+
+            if (isFinished && isEditing && input.value !== "") {
+                const value = parseFloat(input.value);
+
+                if (!isNaN(value) && value >= 0 && value <= 100) {
+                    const csrfToken = document
+                        .querySelector('meta[name="csrf-token"]')
+                        .getAttribute("content");
+
+                    await fetch(`/classes/${classId}/grade`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                            "X-CSRFToken": csrfToken
+                        },
+                        body: `grade=${encodeURIComponent(value)}`
+                    });
+
+                    // Update UI immediately
+                    const display = card.querySelector(".grade-display");
+                    display.textContent = value.toFixed(1);
+                    display.dataset.grade = value;
+                }
+
+                inlineEdits.delete(classId);
+                clearDirty();
+            }
+
+            if (isFinished) {
+                forceCloseInlineEdit(card, { disable: true });
+            } else {
+                forceCloseInlineEdit(card, { disable: false });
+            }
+
+
+            // Send request to server
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+                await fetch(`/classes/${classId}/toggle-finished`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: `is_finished=${isFinished ? "true" : "false"}`
+                });
+            } catch (err) {
+                console.error("Failed to update finish status:", err);
+            }
         });
     });
+
 
     /* ======================================================
        DELETE CLASS MODAL (MULTI-STEP)
@@ -187,7 +669,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             currentStep = 1;
             renderDeleteStep();
-            deleteModal.classList.add("hidden");
+            deleteModal.classList.remove("hidden");
             deleteModal.classList.add("active");
         });
     });
@@ -205,6 +687,8 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             currentStep++;
             renderDeleteStep();
+        } else {
+
         }
     });
 

@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models.course import Class
 from app.models.assignment import Assignment
 from sqlalchemy import and_
-
+from datetime import datetime, timezone
 
 classes = Blueprint("classes", __name__)
 
@@ -37,7 +37,7 @@ def add_class():
     importance = request.form.get("importance")
     if importance == "":
         importance = None
-        
+
     difficulty_raw = request.form.get("difficulty")
     pass_grade_raw = request.form.get("pass_grade")
 
@@ -73,6 +73,7 @@ def delete_class(class_id):
 
     return redirect(url_for("classes.list_classes"))
 
+
 @classes.route("/classes/<int:class_id>/edit", methods=["POST"])
 @login_required
 def edit_class(class_id):
@@ -84,15 +85,27 @@ def edit_class(class_id):
     cls.class_name = request.form["class_name"]
     cls.class_code = request.form["class_code"]
     cls.class_type = request.form["class_type"]
-    cls.importance = request.form.get("importance")
+
+    importance = request.form.get("importance")
+    cls.importance = importance if importance else None
+
     cls.color = request.form.get("color")
 
+    difficulty_raw = request.form.get("difficulty")
+    cls.difficulty = int(difficulty_raw) if difficulty_raw else None
+
+    pass_grade_raw = request.form.get("pass_grade")
+    cls.pass_grade = float(pass_grade_raw) if pass_grade_raw else None
+
     if not cls.is_finished:
-        cls.grade = request.form.get("grade") or None
+        grade_raw = request.form.get("grade")
+        cls.grade = float(grade_raw) if grade_raw else None
 
 
     db.session.commit()
     return redirect(url_for("classes.list_classes"))
+
+
 
 @classes.route("/classes/<int:class_id>/toggle-finished", methods=["POST"])
 @login_required
@@ -102,10 +115,28 @@ def toggle_finished(class_id):
         user_id=current_user.user_id
     ).first_or_404()
 
-    cls.is_finished = not cls.is_finished
+    raw = request.form.get("is_finished", "").lower()
+    if raw not in ("true", "false"):
+        return jsonify({"error": "Invalid is_finished value"}), 400
+
+    is_finished = raw == "true"
+
+    cls.is_finished = is_finished
+
+    if is_finished:
+        cls.finish_date= datetime.now(timezone.utc)
+    else:
+        cls.finish_date = None
+
     db.session.commit()
 
-    return "", 204
+    return jsonify({
+        "success": True,
+        "is_finished": cls.is_finished
+    })
+
+
+
 
 
 @classes.route("/classes/<int:class_id>/grade", methods=["POST"])
@@ -119,7 +150,16 @@ def update_grade(class_id):
     if cls.is_finished:
         return "Class is finished", 400
 
-    cls.grade = request.form.get("grade") or None
+    try:
+        grade = float(request.form.get("grade"))
+    except (TypeError, ValueError):
+        return "Invalid grade", 400
+
+    if not 0 <= grade <= 100:
+        return "Grade must be between 0 and 100", 400
+
+    cls.grade = grade
     db.session.commit()
 
     return "", 204
+

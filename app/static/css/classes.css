@@ -101,3 +101,93 @@
     background: rgba(0,0,0,0.05);
     border-radius: 15px;
 }
+
+
+.class-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #4f46e5; /* fallback */
+}
+
+
+/* Meta rows */
+.meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Importance dot */
+.importance-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Type emoji spacing */
+.class-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+/* ================= Difficulty Bar ================= */
+
+.difficulty-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.difficulty-bar {
+    width: 80px;
+    height: 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.difficulty-bar-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    border-radius: 6px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+
+/* ================= Grade Dot ================= */
+
+.grade-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #9ca3af; /* neutral gray */
+    display: inline-block;
+    margin-left: 6px;
+}
+
+
+.edit-inline-btn,
+.save-inline-btn,
+.cancel-inline-btn {
+    background: rgba(75,141,242,0.15);
+    color: #4b8df2;
+    font-size: 0.85rem;
+    padding: 6px;
+}
+.save-inline-btn { background-color: #22c55e; color: white; }
+.cancel-inline-btn { background-color: #ef4444; color: white; }
+
+
+/* Invalid grade state */
+.grade-dot.invalid {
+    background-color: #ef4444 !important; /* red */
+}
+
+.inline-grade-input.invalid {
+    border-color: #ef4444;
+}

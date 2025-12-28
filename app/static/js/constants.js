@@ -1,4 +1,5 @@
 // static/js/constants.js
+
 const DEFAULT_COLORS = {
     math: "#F50000",
     science: "#16a34a",
@@ -10,3 +11,22 @@ const DEFAULT_COLORS = {
     finance: "#D2B604",
     other: "#6D6D69"
 };
+
+const CLASS_TYPE_EMOJIS = {
+    math: "📐",
+    science: "🧪",
+    language: "📖",
+    social_science: "🌍",
+    art: "🎨",
+    engineering: "🛠️",
+    technology: "💻",
+    finance: "💰",
+    other: "📚"
+};
+
+const IMPORTANCE_COLORS = {
+    low: "#22c55e",     // green
+    medium: "#facc15",  // yellow
+    high: "#ef4444"     // red
+};
+
