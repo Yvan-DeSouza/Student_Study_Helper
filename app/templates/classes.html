@@ -253,9 +253,16 @@
                 </button>
 
                 {% else %}
-                <button class="icon-btn edit-inline-btn" data-class-id="{{ c.class_id }}" disabled>
+                <button class="icon-btn edit-inline-btn" 
+                    data-class-id="{{ c.class_id }}">   
                     Edit Inline
+    
                 </button>
+                <span class="hint-icon"
+                    data-hint="Cannot edit the grade of a class that is already finished.">
+                          ?
+                    
+                </span>
                 {% endif %}
 
 
