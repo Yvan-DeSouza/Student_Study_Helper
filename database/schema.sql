@@ -89,7 +89,17 @@ CREATE TABLE assignments (
 	CHECK (
 	       (is_graded = FALSE AND grade IS NULL AND ponderation IS NULL)
 	    OR (is_graded = TRUE)
+	),
+	CHECK (
+	    grade IS NULL
+	    OR is_completed = TRUE
+	),
+
+	CHECK (
+		finish_date is NULL
+		or finish_date >= created_at
 	)
+
 
 );
 
@@ -228,9 +238,7 @@ CREATE TABLE study_session_pauses (
 
 
 
-
-
-
+SELECT * FROM classes
 
 
 
