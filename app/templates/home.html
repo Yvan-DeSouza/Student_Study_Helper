@@ -187,7 +187,7 @@
                     <label for="due_at" class="input-label">Due Date <span class="hint">(optional)</span></label>
                     <input
                         id="due_at"
-                        type="date"
+                        type="datetime-local"
                         name="due_at"
                         class="input-field"
                     >
@@ -214,7 +214,7 @@
                     <div class="advanced-options hidden"> 
 
 
-                        <!-- Ponderation & Pass Grade (conditional) -->
+                        <!-- Ponderation, Expected Grade & Pass Grade (conditional) -->
                         <div id="graded-options-container" class="graded-options hidden">
                             <label for="ponderation" class="input-label">
                                 Ponderation, from 1–5 (Optional)
@@ -237,6 +237,19 @@
                                 id="pass_grade"
                                 type="number"
                                 name="pass_grade"
+                                class="input-field"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                            >
+                            <label for="expected_grade" class="input-label">
+                                Expected Grade in % (Optional)
+                                <span class="hint-icon" data-hint="What grade do you expect to get on this assignment?">?</span>
+                            </label>
+                            <input
+                                id="expected_grade"
+                                type="number"
+                                name="expected_grade"
                                 class="input-field"
                                 min="0"
                                 max="100"

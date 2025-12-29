@@ -87,7 +87,7 @@ CREATE TABLE assignments (
     	OR (is_completed = TRUE AND finished_at IS NOT NULL)
 	),
 	CHECK (
-	       (is_graded = FALSE AND grade IS NULL AND ponderation IS NULL)
+	       (is_graded = FALSE AND grade IS NULL AND ponderation IS NULL AND expected_grade IS NULL)
 	    OR (is_graded = TRUE)
 	),
 	CHECK (
@@ -169,11 +169,14 @@ CREATE TABLE class_expected_grades (
 
 CREATE TABLE assignment_expected_grades (
     id SERIAL PRIMARY KEY,
+	user_id INT NOT NULL,
     assignment_id INT NOT NULL,
     expected_grade NUMERIC(5,2) NOT NULL CHECK (expected_grade >= 0 AND expected_grade <= 100),
     recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
+        ON DELETE CASCADE
+	FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 );
 
@@ -232,6 +235,9 @@ CREATE TABLE study_session_pauses (
 		OR duration_seconds IS NOT NULL
 	)
 );
+
+
+
 
 
 

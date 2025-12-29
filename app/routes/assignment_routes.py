@@ -42,6 +42,9 @@ def add_assignment():
     pass_grade = request.form.get("pass_grade")
     pass_grade = float(pass_grade) if pass_grade else None
 
+    expected_grade = request.form.get("expected_grade")
+    expected_grade = float(expected_grade) if expected_grade else None
+
     assignment = Assignment(
         user_id=current_user.user_id,
         estimated_minutes=estimated_minutes,
@@ -50,6 +53,7 @@ def add_assignment():
         title=request.form.get("assignment_title"),
         due_at=due_at,
         is_graded=is_graded,
+        expected_grade=expected_grade,
         ponderation=ponderation,
         difficulty=difficulty,
         pass_grade=pass_grade
