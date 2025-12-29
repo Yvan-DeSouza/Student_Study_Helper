@@ -1,7 +1,7 @@
-from flask import Blueprint, request, redirect, url_for, render_template
+from flask import Blueprint, request, redirect, url_for, render_template, abort
 from flask_login import login_required, current_user
 from app.extensions import db
-from app.models.assignment import Assignment
+from app.models.assignment import Assignment, AssignmentExpectedGrade
 from app.models.course import Class
 from datetime import datetime
 
@@ -107,3 +107,124 @@ def list_assignments():
     )
 
 
+
+@assignment.route("/assignments/<int:assignment_id>", methods=["PATCH"])
+@login_required
+def update_assignment(assignment_id):
+    assignment = Assignment.query.filter_by(
+        assignment_id=assignment_id,
+        user_id=current_user.user_id
+    ).first_or_404()
+
+    prev_expected = assignment.expected_grade
+    new_is_graded = request.form.get("is_graded") == "true"
+
+    assignment.title = request.form.get("title", assignment.title)
+    assignment.assignment_type = request.form.get("assignment_type", assignment.assignment_type)
+    assignment.difficulty = request.form.get("difficulty", assignment.difficulty)
+    assignment.estimated_minutes = request.form.get("estimated_minutes", assignment.estimated_minutes)
+
+    due_at = request.form.get("due_at")
+    assignment.due_at = datetime.fromisoformat(due_at) if due_at else assignment.due_at
+
+    # Handle is_graded transition
+    if assignment.is_graded and not new_is_graded:
+        assignment.ponderation = None
+        assignment.grade = None
+        assignment.expected_grade = None
+        assignment.pass_grade = None
+
+    assignment.is_graded = new_is_graded
+
+    if assignment.is_graded:
+        assignment.ponderation = request.form.get("ponderation", assignment.ponderation)
+        assignment.pass_grade = request.form.get("pass_grade", assignment.pass_grade)
+        assignment.expected_grade = request.form.get("expected_grade", assignment.expected_grade)
+
+    # Expected grade history
+    if assignment.expected_grade != prev_expected and assignment.expected_grade is not None:
+        record = AssignmentExpectedGrade(
+            assignment_id=assignment.assignment_id,
+            user_id=current_user.user_id,
+            expected_grade=assignment.expected_grade
+        )
+        db.session.add(record)
+
+    db.session.commit()
+    return {"status": "updated"}, 200
+
+
+
+@assignment.route("/assignments/<int:assignment_id>/completion", methods=["PATCH"])
+@login_required
+def toggle_completion(assignment_id):
+    assignment = Assignment.query.filter_by(
+        assignment_id=assignment_id,
+        user_id=current_user.user_id
+    ).first_or_404()
+
+    is_completed = request.form.get("is_completed") == "true"
+
+    if is_completed:
+        finished_at = request.form.get("finished_at")
+        if not finished_at:
+            abort(400, "finished_at is required when completing an assignment")
+
+        assignment.is_completed = True
+        assignment.finished_at = datetime.fromisoformat(finished_at)
+    else:
+        assignment.is_completed = False
+        assignment.finished_at = None
+        assignment.grade = None
+        assignment.expected_grade = None
+
+    db.session.commit()
+    return {"status": "completion updated"}, 200
+
+
+@assignment.route("/assignments/<int:assignment_id>/grade", methods=["PATCH"])
+@login_required
+def change_grade(assignment_id):
+    assignment = Assignment.query.filter_by(
+        assignment_id=assignment_id,
+        user_id=current_user.user_id
+    ).first_or_404()
+
+    if not assignment.is_graded:
+        abort(400, "Assignment is not gradable")
+
+    grade = request.form.get("grade")
+
+    if grade is None:
+        assignment.grade = None
+        db.session.commit()
+        return {"status": "grade cleared"}, 200
+
+    finished_at = request.form.get("finished_at")
+    if not finished_at:
+        abort(400, "finished_at is required when setting a grade")
+
+    grade = float(grade)
+    if grade < 0 or grade > 100:
+        abort(400, "Grade must be between 0 and 100")
+
+    assignment.grade = grade
+    assignment.is_completed = True
+    assignment.finished_at = datetime.fromisoformat(finished_at)
+
+    db.session.commit()
+    return {"status": "grade updated"}, 200
+
+
+@assignment.route("/assignments/<int:assignment_id>", methods=["DELETE"])
+@login_required
+def delete_assignment(assignment_id):
+    assignment = Assignment.query.filter_by(
+        assignment_id=assignment_id,
+        user_id=current_user.user_id
+    ).first_or_404()
+
+    db.session.delete(assignment)
+    db.session.commit()
+
+    return {"status": "assignment deleted"}, 200
