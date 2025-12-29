@@ -167,7 +167,6 @@
                     </span>
 
                     <!-- EDIT MODE (hidden by default) -->
-                    {% if not c.is_finished %}
                         <input
                             type="number"
                             class="inline-grade-input"
@@ -178,9 +177,8 @@
                             max="100"
                             step="0.1"
                             style="display:none;"
-                            disabled
+                            {% if c.is_finished %} disabled {% endif %}
                         >
-                    {% endif %}
 
                     <span class="grade-dot"></span>
                 </p>
@@ -240,11 +238,18 @@
                     🗑 Delete
                 </button>
 
-                {% if not c.is_finished %}
-                <!-- Inline edit buttons -->
+                <!-- Inline edit button -->
                 <button class="icon-btn edit-inline-btn" data-class-id="{{ c.class_id }}">
                     Edit Inline
                 </button>
+
+                <span class="hint-icon"
+                    data-hint="Cannot edit the grade of a class that is already finished."
+                    {% if not c.is_finished %}style="display:none;"{% endif %}>
+                          ?
+                    
+                </span>
+
                 <button class="icon-btn save-inline-btn" data-class-id="{{ c.class_id }}" style="display:none;">
                     Save
                 </button>
@@ -252,18 +257,8 @@
                     Cancel
                 </button>
 
-                {% else %}
-                <button class="icon-btn edit-inline-btn" 
-                    data-class-id="{{ c.class_id }}">   
-                    Edit Inline
-    
-                </button>
-                <span class="hint-icon"
-                    data-hint="Cannot edit the grade of a class that is already finished.">
-                          ?
-                    
-                </span>
-                {% endif %}
+
+
 
 
             </div>

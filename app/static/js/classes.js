@@ -245,19 +245,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const input = card.querySelector(".inline-grade-input");
         const display = card.querySelector(".grade-display");
 
-
         if (input && display) {
-            display.textContent = input.value || "—";
-            display.dataset.grade = input.value || "";
             input.style.display = "none";
-            input.disabled = true;
+            input.disabled = disable;
             display.style.display = "inline";
         }
 
-
         if (saveBtn) saveBtn.style.display = "none";
         if (cancelBtn) cancelBtn.style.display = "none";
-
 
         if (inlineEditBtn) {
             inlineEditBtn.style.display = "inline-block";
@@ -268,6 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 : "";
         }
     }
+
 
 
 
@@ -653,7 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
             inlineEdits.clear();
             clearDirty();
             pendingNavigation = null;
-            
+
             openEditClassModal(btn);
         });
     });
@@ -726,6 +722,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     inlineEditBtn.title = "Cannot edit the grade of a class that is already finished";
                 }
 
+                const hint = card.querySelector(".hint-icon");
+                if (hint){
+                    hint.style.display = "inline-block"
+                }
 
                 // Also hide save/cancel if currently editing
                 const saveBtn = card.querySelector(".save-inline-btn");
@@ -752,6 +752,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     inlineEditBtn.disabled = false;
                     inlineEditBtn.style.opacity = "1";
                     inlineEditBtn.title = "";
+                }
+
+                const hint = card.querySelector(".hint-icon");
+                if (hint) {
+                    hint.style.display = "none"
                 }
             }
 
