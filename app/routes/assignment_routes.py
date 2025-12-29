@@ -26,10 +26,10 @@ def add_assignment():
         ponderation = request.form.get("ponderation")
         ponderation = int(ponderation) if ponderation else None
 
-    due_date = request.form.get("due_date")
-    due_date = (
-        datetime.fromisoformat(due_date).date()
-        if due_date else None
+    due_at = request.form.get("due_at")
+    due_at = (
+        datetime.fromisoformat(due_at).date()
+        if due_at else None
     )
     estimated_minutes = request.form.get("estimated_minutes")
     estimated_minutes = (
@@ -48,7 +48,7 @@ def add_assignment():
         assignment_type=request.form.get("assignment_type"),
         class_id=course.class_id,
         title=request.form.get("assignment_title"),
-        due_date=due_date,
+        due_at=due_at,
         is_graded=is_graded,
         ponderation=ponderation,
         difficulty=difficulty,
@@ -73,7 +73,7 @@ def list_assignments():
         )
         .join(Class, Assignment.class_id == Class.class_id)
         .filter(Class.user_id == current_user.user_id)
-        .order_by(Assignment.due_date.asc())
+        .order_by(Assignment.due_at.asc())
         .all()
     )
 
@@ -84,7 +84,7 @@ def list_assignments():
             "assignment_id": a.assignment_id,
             "title": a.title,
             "assignment_type": a.assignment_type,
-            "due_date": a.due_date,
+            "due_at": a.due_at,
             "is_completed": a.is_completed,
             "grade": a.grade,
             "is_graded": a.is_graded,

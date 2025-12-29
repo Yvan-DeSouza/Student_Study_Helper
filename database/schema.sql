@@ -44,7 +44,7 @@ CREATE TABLE classes (
 
 	
 	is_finished BOOLEAN NOT NULL DEFAULT FALSE,
-	finish_date TIMESTAMPTZ,
+	finished_at TIMESTAMPTZ,
 	
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	
@@ -52,8 +52,8 @@ CREATE TABLE classes (
         ON DELETE CASCADE,
 
 	CHECK (
-		   (is_finished = FALSE AND finish_date IS NULL)
-		OR (is_finished = TRUE AND finish_date IS NOT NULL)
+		   (is_finished = FALSE AND finished_at IS NULL)
+		OR (is_finished = TRUE AND finished_at IS NOT NULL)
 	)
 );
 
@@ -66,7 +66,7 @@ CREATE TABLE assignments (
     assignment_type TEXT NOT NULL CHECK (
         assignment_type IN ('homework', 'quiz', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
     ),
-    due_date DATE,
+    due_at TIMESTAMPTZ,
 	grade NUMERIC(5,2) CHECK (grade >= 0 AND grade <= 100),
 	expected_grade NUMERIC(5,2) CHECK (expected_grade >= 0 AND expected_grade <= 100),
     estimated_minutes INT CHECK (estimated_minutes > 0),
@@ -77,14 +77,14 @@ CREATE TABLE assignments (
     ponderation INT CHECK (ponderation >= 1 AND ponderation <= 5), -- optional, only relevant if graded
     is_completed BOOLEAN DEFAULT FALSE,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-	finish_date TIMESTAMPTZ,
+	finished_at TIMESTAMPTZ,
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
         ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users(user_id) 
 		ON DELETE CASCADE,
 	CHECK (
-       	   (is_completed = FALSE AND finish_date IS NULL)
-    	OR (is_completed = TRUE AND finish_date IS NOT NULL)
+       	   (is_completed = FALSE AND finished_at IS NULL)
+    	OR (is_completed = TRUE AND finished_at IS NOT NULL)
 	),
 	CHECK (
 	       (is_graded = FALSE AND grade IS NULL AND ponderation IS NULL)
@@ -96,8 +96,8 @@ CREATE TABLE assignments (
 	),
 
 	CHECK (
-		finish_date is NULL
-		or finish_date >= created_at
+		finished_at is NULL
+		or finished_at >= created_at
 	)
 
 
@@ -238,7 +238,6 @@ CREATE TABLE study_session_pauses (
 
 
 
-SELECT * FROM classes
 
 
 

@@ -124,9 +124,9 @@ def toggle_finished(class_id):
     cls.is_finished = is_finished
 
     if is_finished:
-        cls.finish_date= datetime.now(timezone.utc)
+        cls.finished_at= datetime.now(timezone.utc)
     else:
-        cls.finish_date = None
+        cls.finished_at = None
 
     db.session.commit()
 

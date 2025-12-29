@@ -20,8 +20,8 @@ class Class(db.Model):
     pass_grade = db.Column(db.Numeric)
 
     is_finished = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
-    finish_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
+    finished_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
 
     user = db.relationship("User", back_populates="classes")
     assignments = db.relationship("Assignment", back_populates="class_", cascade="all, delete-orphan")
@@ -56,6 +56,6 @@ class ClassExpectedGrade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     class_id = db.Column(db.Integer, db.ForeignKey("classes.class_id"), nullable=False)
     expected_grade = db.Column(db.Numeric, nullable=False)
-    recorded_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
+    recorded_at = db.Column(db.DateTime(timezone = True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
 
     class_ = db.relationship("Class", back_populates="expected_grades")
