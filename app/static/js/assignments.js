@@ -1,4 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
+    function showModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove("hidden");
+        modal.classList.add("visible");
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove("visible");
+        modal.classList.add("hidden");
+    }
 
     // Edit modal elements
     const editModal = document.getElementById("editAssignmentModal");
@@ -19,6 +32,133 @@ document.addEventListener("DOMContentLoaded", () => {
     const editGradedOnly = document.getElementById("edit-graded-only");
 
     const modeSelect = document.getElementById("tableMode");
+
+    let pendingRow = null;
+    let pendingCheckbox = null;
+    document.querySelectorAll(".completion-checkbox").forEach(cb => {
+        cb.addEventListener("change", e => {
+            e.stopPropagation()
+            e.preventDefault();
+
+            pendingCheckbox = cb;
+            pendingRow = cb.closest("tr");
+
+            const title = pendingRow.dataset.title;
+            const dueAt = pendingRow.dataset.dueAt;
+
+            const wasCompleted = pendingRow.dataset.completed === "true";
+            const wantsCompleted = cb.checked;
+
+            // Always revert until confirmed
+            cb.checked = wasCompleted;
+
+            if (wantsCompleted && !wasCompleted) {
+                // user is marking as completed
+                openCompleteModal(title, dueAt);
+            } else if (!wantsCompleted && wasCompleted) {
+                // user is uncompleting
+                openUncompleteModal(title);
+            }
+
+        });
+    });
+    function openUncompleteModal(title) {
+        document.getElementById("uncompleteMessage").innerText =
+            `Are you sure you want to mark "${title}" as uncompleted? This will remove the finish date.`;
+
+        showModal("uncompleteConfirmModal");
+    }
+
+    document.getElementById("confirmUncomplete").addEventListener("click", async () => {
+        if (!pendingCheckbox || !pendingRow) return;
+
+        await sendCompletionUpdate(false, null);
+
+        // Update the UI manually
+        pendingCheckbox.checked = false;
+        pendingRow.dataset.completed = "false";
+
+        closeModal("uncompleteConfirmModal");
+        pendingRow = null;
+        pendingCheckbox = null;
+    });
+
+    function openCompleteModal(title, dueAt) {
+        document.getElementById("completeMessage").innerText =
+            `You have marked "${title}" as completed. Please indicate the date/time of completion.`;
+
+        const dueOption = document.getElementById("dueDateOption");
+        dueOption.classList.toggle("hidden", !dueAt);
+
+        showModal("completeAssignmentModal");
+    }
+
+
+    document.querySelectorAll("input[name='completion_time']").forEach(radio => {
+        radio.addEventListener("change", e => {
+            document
+                .getElementById("pickedCompletionDate")
+                .classList.toggle("hidden", e.target.value !== "pick");
+        });
+    });
+ 
+
+
+    async function sendCompletionUpdate(isCompleted, finishedAt) {
+        const id = pendingRow.dataset.assignmentId;
+
+        const res = await fetch(`/assignments/${id}/completion`, {
+            method: "PATCH",
+            headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content
+            },
+            body: JSON.stringify({
+            is_completed: isCompleted,
+            finished_at: finishedAt
+            })
+        });
+
+        if (!res.ok) {
+            alert("Failed to update completion status");
+            return;
+        }
+
+        pendingRow.dataset.completed = isCompleted.toString();
+        pendingCheckbox.checked = isCompleted;
+    }
+
+
+
+    document.getElementById("confirmComplete").addEventListener("click", async () => {
+        const mode = document.querySelector("input[name='completion_time']:checked").value;
+        const now = new Date();
+        let finishedAt = null;
+
+        if (mode === "now") {
+            finishedAt = now.toISOString();
+        }
+
+        if (mode === "pick") {
+            const val = document.getElementById("pickedCompletionDate").value;
+            if (!val || new Date(val) > now) {
+            showModal("futureFinishDateModal");
+            return;
+            }
+            finishedAt = val;
+        }
+
+        if (mode === "due") {
+            finishedAt = pendingRow.dataset.dueAt;
+        }
+
+        await sendCompletionUpdate(true, finishedAt);
+        closeModal("completeAssignmentModal");
+        pendingCheckbox.checked = true;
+        pendingRow.dataset.completed = "true";
+    });
+
+
 
 
     // Populate edit-type
@@ -70,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rows.forEach(row => {
             row.addEventListener("click", e => {
                 if (card.dataset.editing !== "true") return;
-                if (e.target.matches("input, select, button, label")) return;
+                if (e.target.closest("input, select, button, label")) return;
                 openEditModal(row);
             });
         });
@@ -133,10 +273,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-    // Close modal on cancel
-    editModal.querySelectorAll("[data-close-modal]").forEach(btn => {
-        btn.addEventListener("click", () => editModal.classList.remove("visible"));
+   document.addEventListener("click", e => {
+        const btn = e.target.closest("[data-close-modal]");
+        if (!btn) return;
+
+        const modal = btn.closest(".modal-overlay");
+        if (!modal) return;
+
+        modal.classList.remove("visible");
+        modal.classList.add("hidden");
     });
+
+
 
     // Submit edit form
     editForm.addEventListener("submit", async e => {
@@ -152,16 +300,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 modal.classList.remove("hidden");
                 modal.classList.add("visible");
-               document
-                .querySelector("#futureFinishDateModal [data-close-modal]")
-                .addEventListener("click", () => {
-                    document.getElementById("edit-finished-at").focus();
-                });
                 
 
                 return; // stop form submission
             }
         }
+        document
+            .querySelector("#futureFinishDateModal [data-close-modal]")
+            .addEventListener("click", () => {
+                document.getElementById("edit-finished-at").focus();
+            });
 
 
 

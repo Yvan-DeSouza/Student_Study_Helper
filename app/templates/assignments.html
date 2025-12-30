@@ -470,7 +470,58 @@
 </div>
 
 
+<!-- Uncomplete confirmation modal-->
+<div class="modal-overlay hidden" id="uncompleteConfirmModal">
+    <div class="modal card">
+        <h2>Mark as Uncompleted</h2>
 
+        <p class="modal-message" id="uncompleteMessage"></p>
+
+        <div class="modal-actions">
+        <button class="btn danger" id="confirmUncomplete">Confirm</button>
+        <button class="btn ghost-btn" data-close-modal>Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Complete assignment modal -->
+ <div class="modal-overlay hidden" id="completeAssignmentModal">
+  <div class="modal card">
+    <h2>Mark as Completed</h2>
+
+    <p class="modal-message" id="completeMessage"></p>
+
+    <fieldset class="radio-group">
+      <label>
+        <input type="radio" name="completion_time" value="now" checked>
+        Now
+      </label>
+
+      <label>
+        <input type="radio" name="completion_time" value="pick">
+        Pick a date
+      </label>
+
+      <input
+        type="datetime-local"
+        id="pickedCompletionDate"
+        class="input-field hidden"
+      >
+
+      <label id="dueDateOption" class="hidden">
+        <input type="radio" name="completion_time" value="due">
+        Due date
+      </label>
+    </fieldset>
+
+    <div class="modal-actions">
+      <button class="btn full-btn" id="confirmComplete">Confirm</button>
+      <button class="btn ghost-btn" data-close-modal>Cancel</button>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 

@@ -37,39 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-    const startNowRadio = document.querySelector('input[name="start_option"][value="now"]');
-    const startLaterRadio = document.querySelector('input[name="start_option"][value="later"]');
-    const startedAtGroup = document.getElementById("started-at-group");
-    const startedAtInput = document.getElementById("started-at");
-    const submitBtn = document.getElementById("session-submit-btn");
-    const sessionForm = document.getElementById("study-session-form");
-
-
-    function updateForm() {
-        if (startLaterRadio.checked) {
-            startedAtGroup.style.display = "block";
-            startedAtInput.required = true;
-            submitBtn.textContent = "Log Session";
-        } else {
-            startedAtGroup.style.display = "none";
-            startedAtInput.required = false;
-            startedAtInput.value = "";
-            submitBtn.textContent = "Start Session";
-        }
-    }
-
-    startNowRadio.addEventListener("change", updateForm);
-    startLaterRadio.addEventListener("change", updateForm);
-    updateForm(); // initial call
-
-    // Disable form if active session exists
-    // ================= FORM LOCK =================
-    if (sessionForm && sessionForm.dataset.active === "true") {
-        lockForm(
-            sessionForm,
-            "There is an ongoing study session.<br>Only one session is allowed at a time."
-        );
-    }
 
 
 

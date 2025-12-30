@@ -215,15 +215,18 @@ def toggle_completion(assignment_id):
         user_id=current_user.user_id
     ).first_or_404()
 
-    is_completed = request.form.get("is_completed") == "true"
+    data = request.get_json()
+
+    is_completed = bool(data.get("is_completed"))
+    finished_at = data.get("finished_at")
 
     if is_completed:
-        finished_at = request.form.get("finished_at")
         if not finished_at:
             abort(400, "finished_at is required when completing an assignment")
 
         assignment.is_completed = True
-        assignment.finished_at = datetime.fromisoformat(finished_at)
+        assignment.finished_at = parser.isoparse(finished_at)
+
     else:
         assignment.is_completed = False
         assignment.finished_at = None
@@ -232,6 +235,7 @@ def toggle_completion(assignment_id):
 
     db.session.commit()
     return {"status": "completion updated"}, 200
+
 
 
 @assignment.route("/assignments/<int:assignment_id>/grade", methods=["PATCH"])

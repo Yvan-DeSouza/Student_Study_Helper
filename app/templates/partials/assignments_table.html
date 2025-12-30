@@ -24,6 +24,7 @@
             data-assignment-id="{{ a.assignment_id }}"
             data-class-id="{{ a.class_id }}"
             data-class="{{ a.class_name }}"
+            data-title="{{ a.title }}"
             data-assignment-type="{{ a.assignment_type }}"
             data-completed="{{ a.is_completed }}"
             data-graded="{{ a.is_graded }}"
@@ -42,7 +43,7 @@
 
             <td>{{ a.assignment_type|capitalize }}</td>
             <td>{{ a.due_at.strftime('%Y-%m-%d') if a.due_at else "—" }}</td>
-            <td><input type="checkbox" class="complete-checkbox" {% if a.is_completed %}checked{% endif %}></td>
+            <td><input type="checkbox" class="completion-checkbox" {% if a.is_completed %}checked{% endif %}></td>
             <td>{{ a.grade if a.grade is not none else "—" }}</td>
             <td>{{ "✔" if a.is_graded else "—" }}</td>
             <td>{{ a.ponderation or "—" }}</td>
