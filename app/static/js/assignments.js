@@ -146,12 +146,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (finishedAtVal) {
             const finishedDate = new Date(finishedAtVal);
             const now = new Date();
+
             if (finishedDate > now) {
-                if (!confirm("Finish date is in the future. Are you sure?")) {
-                    return;
-                }
+                const modal = document.getElementById("futureFinishDateModal");
+
+                modal.classList.remove("hidden");
+                modal.classList.add("visible");
+               document
+                .querySelector("#futureFinishDateModal [data-close-modal]")
+                .addEventListener("click", () => {
+                    document.getElementById("edit-finished-at").focus();
+                });
+                
+
+                return; // stop form submission
             }
         }
+
 
 
 
