@@ -142,6 +142,32 @@ document.addEventListener("DOMContentLoaded", () => {
     editForm.addEventListener("submit", async e => {
         e.preventDefault();
 
+        const finishedAtVal = editFinishedAt.value;
+        if (finishedAtVal) {
+            const finishedDate = new Date(finishedAtVal);
+            const now = new Date();
+            if (finishedDate > now) {
+                if (!confirm("Finish date is in the future. Are you sure?")) {
+                    return;
+                }
+            }
+        }
+
+        let finishedAtPayload = null;
+        if (finishedAtVal) {
+            // Add seconds if missing and convert to ISO string
+            const dt = new Date(finishedAtVal);
+            finishedAtPayload = dt.toISOString(); // YYYY-MM-DDTHH:MM:SS.sssZ
+        }
+
+        let dueAtPayload = null;
+        if (editDueAt.value) {
+            const dt = new Date(editDueAt.value);
+            dueAtPayload = dt.toISOString();
+        }
+
+
+
         const assignmentId = editId.value;
         const payload = {
             title: editTitle.value,
@@ -161,17 +187,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const res = await fetch(`/assignments/${assignmentId}/update`, {
             method: "PATCH",
-            headers: { 
+            headers: {
                 "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken  // <-- send CSRF token
+                "X-CSRFToken": csrfToken
             },
             body: JSON.stringify(payload)
         });
 
-
-
         if (!res.ok) {
-            alert("Invalid data");
+            const errData = await res.json();
+            alert(errData.error || "Invalid data");
             return;
         }
 

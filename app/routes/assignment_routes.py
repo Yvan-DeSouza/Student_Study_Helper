@@ -4,6 +4,8 @@ from app.extensions import db
 from app.models.assignment import Assignment, AssignmentExpectedGrade
 from app.models.course import Class
 from datetime import datetime
+from dateutil import parser
+
 
 assignment = Blueprint("assignment", __name__)
 
@@ -123,7 +125,7 @@ def update_assignment(assignment_id):
     ).first_or_404()
 
     prev_expected = assignment.expected_grade
-    new_is_graded = data.get("is_graded") == "true"
+    new_is_graded = bool(data.get("is_graded"))
 
     assignment.title =  data.get("title", assignment.title)
     assignment.assignment_type = data.get("assignment_type", assignment.assignment_type)
@@ -147,8 +149,8 @@ def update_assignment(assignment_id):
     assignment.estimated_minutes = parse_int(data.get("estimated_minutes"))
 
 
-    due_at = data.get("due_at")
-    assignment.due_at = datetime.fromisoformat(due_at) if due_at else assignment.due_at
+
+
 
     # Handle is_graded transition
     if assignment.is_graded and not new_is_graded:
@@ -164,17 +166,33 @@ def update_assignment(assignment_id):
         assignment.pass_grade = parse_float(data.get("pass_grade"))
         assignment.expected_grade = parse_float(data.get("expected_grade"))
 
-    finished_at = data.get("finished_at")
-    assignment.finished_at = (
-        datetime.fromisoformat(finished_at)
-        if finished_at not in (None, "", "null")
-        else None
-    )
 
-    if finished_at:
-        assignment.is_completed = True
+    due_at_str = data.get("due_at")
+    assignment.due_at = None
+    if due_at_str not in (None, "", "null"):
+        try:
+            assignment.due_at = parser.isoparse(due_at_str)
+        except (ValueError, TypeError):
+            return {"error": "Invalid due_at datetime format"}, 400
+
+    finished_at_str = data.get("finished_at")
+    assignment.finished_at = None
+
+    if finished_at_str not in (None, "", "null"):
+        try:
+            # isoparse handles both "YYYY-MM-DDTHH:MM" and "YYYY-MM-DDTHH:MM:SS"
+            assignment.finished_at = parser.isoparse(finished_at_str)
+            assignment.is_completed = True
+        except (ValueError, TypeError):
+            return {"error": "Invalid finished_at datetime format"}, 400
     else:
         assignment.is_completed = False
+
+
+
+
+
+
     # Expected grade history
     if assignment.expected_grade != prev_expected and assignment.expected_grade is not None:
         record = AssignmentExpectedGrade(
