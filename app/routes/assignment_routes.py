@@ -148,10 +148,6 @@ def update_assignment(assignment_id):
     assignment.difficulty = parse_int(data.get("difficulty"))
     assignment.estimated_minutes = parse_int(data.get("estimated_minutes"))
 
-
-
-
-
     # Handle is_graded transition
     if assignment.is_graded and not new_is_graded:
         assignment.ponderation = None
@@ -180,11 +176,15 @@ def update_assignment(assignment_id):
 
     if finished_at_str not in (None, "", "null"):
         try:
+            assignment.is_completed = True
             # isoparse handles both "YYYY-MM-DDTHH:MM" and "YYYY-MM-DDTHH:MM:SS"
             assignment.finished_at = parser.isoparse(finished_at_str)
-            assignment.is_completed = True
         except (ValueError, TypeError):
-            return {"error": "Invalid finished_at datetime format"}, 400
+           return {
+                "error": due_at_str,
+                "due_at": due_at_str
+            }, 400
+
     else:
         assignment.is_completed = False
 

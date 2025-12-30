@@ -153,18 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        let finishedAtPayload = null;
-        if (finishedAtVal) {
-            // Add seconds if missing and convert to ISO string
-            const dt = new Date(finishedAtVal);
-            finishedAtPayload = dt.toISOString(); // YYYY-MM-DDTHH:MM:SS.sssZ
-        }
-
-        let dueAtPayload = null;
-        if (editDueAt.value) {
-            const dt = new Date(editDueAt.value);
-            dueAtPayload = dt.toISOString();
-        }
 
 
 
