@@ -94,6 +94,11 @@ def list_assignments():
             "is_graded": a.is_graded,
             "ponderation": a.ponderation,
             "class_id": a.class_id,
+            "expected_grade": a.expected_grade,
+            "estimated_minutes": a.estimated_minutes,
+            "difficulty": a.difficulty,
+            "finished_at": a.finished_at,
+            "pass_grade": a.pass_grade,
             "class_name": class_name
         })
 
@@ -108,23 +113,41 @@ def list_assignments():
 
 
 
-@assignment.route("/assignments/<int:assignment_id>", methods=["PATCH"])
+@assignment.route("/assignments/<int:assignment_id>/update", methods=["PATCH"])
 @login_required
 def update_assignment(assignment_id):
+    data = request.get_json()
     assignment = Assignment.query.filter_by(
         assignment_id=assignment_id,
         user_id=current_user.user_id
     ).first_or_404()
 
     prev_expected = assignment.expected_grade
-    new_is_graded = request.form.get("is_graded") == "true"
+    new_is_graded = data.get("is_graded") == "true"
 
-    assignment.title = request.form.get("title", assignment.title)
-    assignment.assignment_type = request.form.get("assignment_type", assignment.assignment_type)
-    assignment.difficulty = request.form.get("difficulty", assignment.difficulty)
-    assignment.estimated_minutes = request.form.get("estimated_minutes", assignment.estimated_minutes)
+    assignment.title =  data.get("title", assignment.title)
+    assignment.assignment_type = data.get("assignment_type", assignment.assignment_type)
 
-    due_at = request.form.get("due_at")
+    new_class_id = data.get("class_id")
+    if new_class_id:
+        course = Class.query.filter_by(
+            class_id=new_class_id,
+            user_id=current_user.user_id
+        ).first_or_404()
+        assignment.class_id = course.class_id
+
+    def parse_int(val):
+        return int(val) if val not in (None, "", "null") else None
+
+    def parse_float(val):
+        return float(val) if val not in (None, "", "null") else None
+
+
+    assignment.difficulty = parse_int(data.get("difficulty"))
+    assignment.estimated_minutes = parse_int(data.get("estimated_minutes"))
+
+
+    due_at = data.get("due_at")
     assignment.due_at = datetime.fromisoformat(due_at) if due_at else assignment.due_at
 
     # Handle is_graded transition
@@ -137,10 +160,21 @@ def update_assignment(assignment_id):
     assignment.is_graded = new_is_graded
 
     if assignment.is_graded:
-        assignment.ponderation = request.form.get("ponderation", assignment.ponderation)
-        assignment.pass_grade = request.form.get("pass_grade", assignment.pass_grade)
-        assignment.expected_grade = request.form.get("expected_grade", assignment.expected_grade)
+        assignment.ponderation = parse_int(data.get("ponderation"))
+        assignment.pass_grade = parse_float(data.get("pass_grade"))
+        assignment.expected_grade = parse_float(data.get("expected_grade"))
 
+    finished_at = data.get("finished_at")
+    assignment.finished_at = (
+        datetime.fromisoformat(finished_at)
+        if finished_at not in (None, "", "null")
+        else None
+    )
+
+    if finished_at:
+        assignment.is_completed = True
+    else:
+        assignment.is_completed = False
     # Expected grade history
     if assignment.expected_grade != prev_expected and assignment.expected_grade is not None:
         record = AssignmentExpectedGrade(

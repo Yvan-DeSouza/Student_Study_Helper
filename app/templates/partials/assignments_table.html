@@ -1,0 +1,56 @@
+<table class="assignments-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            {% if show_class_column %}
+                <th>Class</th>
+            {% endif %}
+            <th>Type</th>
+            <th>Due Date</th>
+            <th>Completed</th>
+            <th>Grade</th>
+            <th>Graded</th>
+            <th>Ponderation</th>
+            <th>Pass Grade</th>
+            <th>Finished At</th>
+            <th>Difficulty</th>
+            <th>Expected Grade</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    {% for a in rows%}
+        <tr
+            data-assignment-id="{{ a.assignment_id }}"
+            data-class-id="{{ a.class_id }}"
+            data-class="{{ a.class_name }}"
+            data-assignment-type="{{ a.assignment_type }}"
+            data-completed="{{ a.is_completed }}"
+            data-graded="{{ a.is_graded }}"
+            data-due-at="{{ a.due_at.strftime('%Y-%m-%dT%H:%M') if a.due_at else '' }}"
+            data-finished-at="{{ a.finished_at.strftime('%Y-%m-%dT%H:%M') if a.finished_at else '' }}"
+            data-expected-grade="{{ a.expected_grade or '' }}"
+            data-pass-grade="{{ a.pass_grade or '' }}"
+            data-ponderation="{{ a.ponderation or '' }}"
+            data-difficulty="{{ a.difficulty or '' }}"
+            data-estimated-minutes="{{ a.estimated_minutes or '' }}"
+        >
+            <td>{{ a.title }}</td>
+            {% if show_class_column %}
+                <td>{{ a.class_name }}</td>
+            {% endif %}
+
+            <td>{{ a.assignment_type|capitalize }}</td>
+            <td>{{ a.due_at.strftime('%Y-%m-%d') if a.due_at else "—" }}</td>
+            <td><input type="checkbox" class="complete-checkbox" {% if a.is_completed %}checked{% endif %}></td>
+            <td>{{ a.grade if a.grade is not none else "—" }}</td>
+            <td>{{ "✔" if a.is_graded else "—" }}</td>
+            <td>{{ a.ponderation or "—" }}</td>
+            <td>{{ a.pass_grade or "—" }}</td>
+            <td>{{ a.finished_at.strftime('%Y-%m-%d') if a.finished_at else "—" }}</td>
+            <td>{{ a.difficulty or "—" }}</td>
+            <td>{{ a.expected_grade or "—" }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

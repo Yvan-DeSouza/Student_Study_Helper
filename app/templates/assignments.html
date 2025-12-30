@@ -159,66 +159,57 @@
     </div>
 </section>
 
-<!-- ================= ASSIGNMENTS TABLE ================= -->
+
+
+
+<!-- ================= Table ================= -->
+{% set assignments_by_class = {} %}
+{% for a in assignments %}
+    {% if a.class_name not in assignments_by_class %}
+        {% set _ = assignments_by_class.update({a.class_name: []}) %}
+    {% endif %}
+    {% set _ = assignments_by_class[a.class_name].append(a) %}
+{% endfor %}
 <section class="assignments-table-wrapper">
 
-    <div class="table-actions">
-        <button class="btn-tiny" id="bulkEditBtn">✏ Edit</button>
-        <button class="btn-tiny danger" id="bulkDeleteBtn">🗑 Delete</button>
+
+
+    <!-- ===== SINGLE TABLE MODE ===== -->
+    <div class="card assignments-table-card" data-table-mode="single">
+        <div class="table-actions">
+            <button class="btn-tiny table-edit-btn">✏ Edit</button>
+            <button class="btn-tiny danger table-delete-btn" >🗑 Delete</button>
+        </div>
+
+        {% set rows = assignments %}
+        {% set show_class_column = true %}
+        {% include "partials/assignments_table.html" %}
     </div>
 
-    <div class="card assignments-table-card">
-        <table class="assignments-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Class</th>
-                    <th>Type</th>
-                    <th>Due Date</th>
-                    <th>Completed</th>
-                    <th>Grade</th>
-                    <th>Graded</th>
-                    <th>Ponderation</th>
-                    <th>Pass Grade</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for a in assignments %}
-            <tr
-                data-assignment-id="{{ a.assignment_id }}"
-                data-class-id="{{ a.class_id }}"
-                data-completed="{{ a.is_completed }}"
-                data-graded="{{ a.is_graded }}"
-            >
-                <td>{{ a.title }}</td>
-                <td>{{ a.class_name }}</td>
-                <td>{{ a.assignment_type|capitalize }}</td>
-                <td>{% if a.due_date %}{{ a.due_date.strftime('%Y-%m-%d') }}{% else %}—{% endif %}</td>
-                <td><input type="checkbox" class="complete-checkbox" aria-label = "Assignment completed" {% if a.is_completed %}checked{% endif %} disabled></td>
 
-                <!-- Grade -->
-                <td>
-                    {% if a.is_completed %}
-                    <input type="number" class="inline-grade-input" aria-label="Assignment grade" value="{{ a.grade if a.grade is not none else '' }}" min="0" max="100" step="0.1" placeholder="—" disabled>
-                    {% else %}—{% endif %}
-                </td>
+    <!-- ===== PER CLASS MODE ===== -->
+    <div class="per-class-wrapper hidden" data-table-mode="per_class">
+        {% for class_name, rows in assignments_by_class.items() %}
+        <div class="card assignments-table-card per-class-card">
+            <h3 class="class-table-title">{{ class_name }}</h3>
 
-                <!-- Graded Checkbox -->
-                <td><input type="checkbox" aria-label="Assignment graded" {% if a.is_graded %}checked{% endif %} disabled></td>
-
-                <!-- Ponderation -->
-                <td>{% if a.is_graded and a.ponderation %}{{ a.ponderation }}%{% else %}—{% endif %}</td>
-
-                <!-- Pass Grade -->
-                <td>{% if a.is_graded and a.pass_grade %}{{ a.pass_grade }}%{% else %}—{% endif %}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-    
-
-        </table>
+            <div class="table-actions">
+                <button class="btn-tiny table-edit-btn">✏ Edit</button>
+                <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
+            </div>
+            {% set rows = rows %}
+            {% set show_class_column = false %}
+            {% include "partials/assignments_table.html" %}
+        </div>
+        {% endfor %}
     </div>
+
 </section>
+
+
+
+
+
 
 <!-- ================= ANALYTICS ================= -->
 <section class="assignments-analytics">
@@ -240,8 +231,92 @@
 
 </div>
 
+
+<!--Edit Assignment Modal-->
+
+<div class="modal-overlay" id="editAssignmentModal">
+    <div class="modal card">
+        <h2>Edit Assignment</h2>
+
+        <form id="editAssignmentForm">
+            <input type="hidden" id="edit-assignment-id">
+
+            <!-- Class -->
+            <label for="edit-class" class="input-label">Class</label>
+            <select id="edit-class" class="input-field"></select>
+
+            <!-- Title -->
+            <label for="edit-title"class="input-label">Title</label>
+            <input id="edit-title" type="text" class="input-field" required>
+
+            <!-- Type -->
+            <label for="edit-type" class="input-label">Type</label>
+            <select id="edit-type" class="input-field"></select>
+
+            <!-- Due -->
+            <label for="edit-due-at" class="input-label">Due Date</label>
+            <input id="edit-due-at" type="datetime-local" class="input-field">
+
+            <!-- Finished At -->
+            <label for="edit-finished-at" class="input-label">Finish Date (Optional)</label>
+            <input id="edit-finished-at" type="datetime-local" class="input-field">
+
+            <!-- Graded -->
+            <div class="checkbox-row">
+                <input type="checkbox" id="edit-is-graded">
+                <label for="edit-is-graded">This assignment is graded</label>
+            </div>
+
+            <!-- Advanced -->
+            <button type="button" class="advanced-toggle">▸ Advanced options</button>
+
+            <div class="advanced-options hidden">
+                <label for="edit-difficulty" class="input-label">Difficulty
+                    <span class="hint-icon" data-hint="How difficult this assignment is expected to be.">?</span>
+                </label>
+                <input id="edit-difficulty" type="number" class="input-field" min="1" max="10" placeholder="1 (easy) – 10 (hard)">
+
+                <label for="edit-estimated-minutes" class="input-label">Estimated Minutes
+                    <span class="hint-icon" data-hint="Estimated time to complete this assignment.">?</span>
+                </label>
+                <input id="edit-estimated-minutes" type="number" class="input-field" min="1" placeholder="e.g. 45">
+
+                <div id="edit-graded-only" class="hidden">
+                    <label for="edit-expected-grade" class="input-label">Expected Grade in % (Optional)
+                        <span class="hint-icon" data-hint="What grade do you expect to get for this assignment.">?</span>
+                    </label>
+                    <input id="edit-expected-grade" type="number" class="input-field" min="0" max="100" >
+
+                    <label for="edit-pass-grade" class="input-label">Pass Grade in % (Optional)
+                        <span class="hint-icon" data-hint="Minimum grade considered passing.">?</span>
+                    </label>
+                    <input id="edit-pass-grade" type="number" class="input-field" min="0" max="100">
+
+                    <label for="edit-ponderation" class="input-label">Ponderation, from 1-5 (Optional)
+                        <span class="hint-icon" data-hint="What is the relative weight of this assignment compared to others.">?</span>
+                    </label>
+                    <input id="edit-ponderation" type="number" class="input-field" min="1" max="5">
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn full-btn">Confirm</button>
+                <button type="button" class="btn ghost-btn" data-close-modal>Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
 <!-- ================= ADD ASSIGNMENT MODAL ================= -->
-<div class="modal-overlay" id="addAssignmentModal" data-modal-class="visible">
+<div class="modal-overlay" id="addAssignmentModal" >
     <div class="modal card">
         <h2>Add Assignment</h2>
         <form method="POST" action="{{ url_for('assignment.add_assignment') }}">
@@ -277,11 +352,11 @@
             </select>
 
             <!-- Optional: Due Date -->
-            <label for="due_date" class="input-label">Due Date <span class="hint">(optional)</span></label>
+            <label for="due_at" class="input-label">Due Date (Optional) <span class="hint">(optional)</span></label>
             <input
-                id="due_date"
-                type="date"
-                name="due_date"
+                id="due_at"
+                type="datetime-local"
+                name="due_at"
                 class="input-field"
             >
 
@@ -305,6 +380,8 @@
             <div class="advanced-options hidden"> 
                 <!-- Ponderation & Pass Grade (conditional) -->
                 <div id="graded-options-container" class="graded-options hidden">
+                    <label for="add-expected-grade" class="input-label">Expected Grade</label>
+                    <input id="add-expected-grade" type="number" class="input-field" min="0" max="100">
                     <label for="ponderation" class="input-label">
                         Ponderation, from 1–5 (Optional)
                         <span class="hint-icon" data-hint="What is the relative weight of this assignment compared to others.">?</span>

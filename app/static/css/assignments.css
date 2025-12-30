@@ -290,3 +290,30 @@
 #addAssignmentModal.visible {
     display: flex;
 }
+.assignments-table tr.editable {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.assignments-table tr.editable:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.table-edit-btn.active {
+    background: rgba(75, 141, 242, 0.2);
+    color: #4b8df2;
+    border: 1px solid rgba(75, 141, 242, 0.4);
+}
+.assignments-table-card {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.modal-overlay{
+    display:none;
+}
+
+.modal-overlay.visible{
+    display:flex;
+}
