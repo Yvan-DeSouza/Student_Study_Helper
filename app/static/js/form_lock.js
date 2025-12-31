@@ -4,18 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const hasActiveSession = form.dataset.hasActiveSession === "true";
 
-    if (!hasActiveSession) return;
-
-    lockForm(form, "You have an active study session");
-
-        
     const startNowRadio = document.querySelector('input[name="start_option"][value="now"]');
     const startLaterRadio = document.querySelector('input[name="start_option"][value="later"]');
     const startedAtGroup = document.getElementById("started-at-group");
     const startedAtInput = document.getElementById("started-at");
     const submitBtn = document.getElementById("session-submit-btn");
-    const sessionForm = document.getElementById("study-session-form");
-
 
     function updateForm() {
         if (startLaterRadio.checked) {
@@ -32,19 +25,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     startNowRadio.addEventListener("change", updateForm);
     startLaterRadio.addEventListener("change", updateForm);
-    updateForm(); // initial call
+    updateForm(); // initial state
 
-    // Disable form if active session exists
     // ================= FORM LOCK =================
-    if (sessionForm && sessionForm.dataset.active === "true") {
+    if (hasActiveSession) {
         lockForm(
-            sessionForm,
+            form,
             "There is an ongoing study session.<br>Only one session is allowed at a time."
         );
     }
-
-
 });
+
 
 /**
  * Locks a form completely

@@ -312,8 +312,75 @@
 
 .modal-overlay{
     display:none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+}
+.modal-overlay.modal-top{
+    z-index: 1100;
 }
 
 .modal-overlay.visible{
     display:flex;
+}
+
+
+
+
+/* ================= INLINE EDIT MODE ================= */
+
+.assignments-table-card[data-inline-editing="true"] {
+    border: 1px solid rgba(75, 141, 242, 0.3);
+}
+
+/* Graded rows (editable) */
+.assignments-table tr.inline-graded {
+    background: rgba(75, 141, 242, 0.08);
+}
+
+.assignments-table tr.inline-not-graded {
+    background: rgba(0,0,0,0.03);
+}
+
+.assignments-table tr.inline-not-graded td {
+    opacity: 0.55;
+}
+
+/* Prevent interaction ONLY for non-graded rows */
+.assignments-table tr.inline-not-graded * {
+    pointer-events: none;
+}
+
+
+.assignments-table tr.inline-not-graded {
+    cursor: not-allowed;
+}
+
+
+
+/* Inline grade input */
+.inline-grade-input {
+    width: 70px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 0.85rem;
+}
+
+/* Disable pointer interaction */
+.inline-grade-input[disabled] {
+    background: #eee;
+    cursor: not-allowed;
+}
+
+
+/* ================= INVALID INLINE GRADE ================= */
+
+.inline-grade-input.invalid {
+    border: 2px solid #f44336;
+    background: rgba(244, 67, 54, 0.08);
+}
+
+:root[data-theme="dark"] .inline-grade-input.invalid {
+    background: rgba(244, 67, 54, 0.18);
 }

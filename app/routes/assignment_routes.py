@@ -264,9 +264,9 @@ def change_grade(assignment_id):
     if grade < 0 or grade > 100:
         abort(400, "Grade must be between 0 and 100")
 
-    assignment.grade = grade
     assignment.is_completed = True
     assignment.finished_at = datetime.fromisoformat(finished_at)
+    assignment.grade = grade
 
     db.session.commit()
     return {"status": "grade updated"}, 200

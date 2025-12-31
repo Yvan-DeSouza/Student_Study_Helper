@@ -1,10 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("tr[data-completed]").forEach(row => {
+        const raw = row.dataset.completed;
+        row.dataset.completed =
+            raw === "true" || raw === "True" || raw === "1"
+                ? "true"
+                : "false";
+    });
+
+    
     function showModal(id) {
         const modal = document.getElementById(id);
         if (!modal) return;
+
+        // Remove top status from all modals
+        document.querySelectorAll(".modal-overlay")
+            .forEach(m => m.classList.remove("modal-top"));
+
+        // Bring this modal to front
+        modal.classList.add("modal-top");
+
         modal.classList.remove("hidden");
         modal.classList.add("visible");
     }
+
 
     function closeModal(id) {
         const modal = document.getElementById(id);
@@ -32,6 +50,39 @@ document.addEventListener("DOMContentLoaded", () => {
     const editGradedOnly = document.getElementById("edit-graded-only");
 
     const modeSelect = document.getElementById("tableMode");
+    function clearInvalidGradeHighlights(card) {
+        card.querySelectorAll(".inline-grade-input.invalid")
+            .forEach(input => input.classList.remove("invalid"));
+    }
+
+    function validateInlineGrades(card) {
+        let hasInvalid = false;
+
+        card.querySelectorAll(".inline-grade-input").forEach(input => {
+            const raw = input.value.trim();
+
+            // Allow empty (null)
+            if (raw === "") return;
+
+            const num = Number(raw);
+
+            const isValid =
+                Number.isFinite(num) &&
+                num >= 0 &&
+                num <= 100;
+
+            if (!isValid) {
+                input.classList.add("invalid");
+                hasInvalid = true;
+            }
+        });
+
+        return !hasInvalid;
+    }
+
+
+
+
 
     let pendingRow = null;
     let pendingCheckbox = null;
@@ -102,6 +153,140 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
  
+
+    document.querySelectorAll(".assignments-table-card").forEach(card => {
+        const editInlineBtn = card.querySelector(".table-edit-inline-btn");
+        const editBtn = card.querySelector(".table-edit-btn");
+        const deleteBtn = card.querySelector(".table-delete-btn");
+        const saveBtn = card.querySelector(".table-save-inline-btn");
+        const cancelBtn = card.querySelector(".table-cancel-inline-btn");
+
+        const rows = card.querySelectorAll(".assignments-table tbody tr");
+
+        if (!editInlineBtn) return;
+
+        editInlineBtn.addEventListener("click", () => {
+            // Exit normal edit mode if active
+            card.dataset.editing = "false";
+            editBtn?.classList.remove("active");
+            rows.forEach(r => r.classList.remove("editable"));
+
+            // Enter inline edit mode
+            card.dataset.inlineEditing = "true";
+
+            // Button swap
+            editInlineBtn.classList.add("hidden");
+            editBtn.classList.add("hidden");
+            deleteBtn.classList.add("hidden");
+
+            saveBtn.classList.remove("hidden");
+            cancelBtn.classList.remove("hidden");
+
+            rows.forEach(row => {
+                if (!("graded" in row.dataset)) {
+                    console.warn("Row missing data-graded attribute", row);
+                }
+
+                const isGraded = String(row.dataset.graded).toLowerCase() === "true";
+                const gradeCell = row.children[5]; // Grade column index
+
+                row.classList.add(isGraded ? "inline-graded" : "inline-not-graded");
+
+                if (isGraded) {
+                    const currentGrade = gradeCell.innerText.trim();
+                    gradeCell.innerHTML = `
+                        <input
+                            type="number"
+                            class="inline-grade-input"
+                            min="0"
+                            max="100"
+                            value="${currentGrade !== "—" ? currentGrade : ""}"
+                        >
+                    `;
+
+                    const input = gradeCell.querySelector("input");
+                    input.disabled = false;
+                }
+
+            });
+        });
+
+    // Cancel button (visual reset only for now)
+    cancelBtn.addEventListener("click", () => {
+        card.dataset.inlineEditing = "false";
+
+        editInlineBtn.classList.remove("hidden");
+        editBtn.classList.remove("hidden");
+        deleteBtn.classList.remove("hidden");
+
+        saveBtn.classList.add("hidden");
+        cancelBtn.classList.add("hidden");
+
+        rows.forEach(row => {
+            row.classList.remove("inline-graded", "inline-not-graded");
+
+            const gradeCell = row.children[5];
+            const original = row.dataset.grade || "—";
+            gradeCell.innerText = original;
+        });
+    });
+
+    function collectInlineGradedAssignments(card) {
+        const assignments = [];
+
+        card.querySelectorAll("tbody tr").forEach(row => {
+            const input = row.querySelector(".inline-grade-input");
+            if (!input) return;
+
+            const value = input.value.trim();
+            if (value === "") return;
+
+            assignments.push({
+                id: row.dataset.assignmentId,
+                title: row.dataset.title,
+                due_at: row.dataset.dueAt !== "null" ? row.dataset.dueAt : null,
+                grade: Number(value),
+                finished_at: row.dataset.finishedAt || null
+            });
+        });
+
+        return assignments;
+    }
+
+
+
+
+    saveBtn.addEventListener("click", () => {
+        // Remove old highlights first
+        clearInvalidGradeHighlights(card);
+
+        const isValid = validateInlineGrades(card);
+
+        if (!isValid) {
+            showModal("invalidGradeModal");
+            return; // HARD STOP — nothing saved
+        }
+
+        // TEMP: fake assignments to show modal
+        const assignments = collectInlineGradedAssignments(card);
+
+        // All already have finish dates → save immediately
+        const missingFinishDates = assignments.filter(a => !a.finished_at);
+
+        if (missingFinishDates.length === 0) {
+            saveInlineGrades(assignments);
+        } else {
+            openInlineFinishDatesModal(missingFinishDates);
+        }
+
+    });
+
+
+
+
+});
+
+
 
 
     async function sendCompletionUpdate(isCompleted, finishedAt) {
@@ -349,4 +534,208 @@ document.addEventListener("DOMContentLoaded", () => {
 
         location.reload();
     });
+
+
+    let finishModalState = {
+        assignments: [], // populated dynamically
+        lastSelectAllDate: null
+    };
+
+    function openInlineFinishDatesModal(assignments) {
+        finishModalState.assignments = assignments;
+        finishModalState.lastSelectAllDate = null;
+
+        const container = document.getElementById("finishAssignmentsContainer");
+        const selectAll = document.getElementById("finishSelectAll");
+        const allDueOption = document.getElementById("finishAllDueOption");
+
+        container.innerHTML = "";
+
+        // Show Select All only if >= 2 assignments
+        selectAll.classList.toggle("hidden", assignments.length < 2);
+
+        // Show due-date option only if at least one assignment has due_at
+        allDueOption.classList.toggle(
+            "hidden",
+            !assignments.some(a => a.due_at)
+        );
+
+        assignments.forEach(a => {
+            const section = document.createElement("div");
+            section.className = "finish-assignment-section";
+            section.dataset.assignmentId = a.id;
+
+            section.innerHTML = `
+            <h4>${a.title}</h4>
+
+            <fieldset class="radio-group">
+                <label>
+                <input type="radio" name="finish_${a.id}" value="now">
+                Now
+                </label>
+
+                <label>
+                <input type="radio" name="finish_${a.id}" value="pick">
+                Pick a date
+                </label>
+
+                <input
+                type="datetime-local"
+                class="input-field hidden assignment-picked-date"
+                >
+
+                ${
+                a.due_at
+                    ? `
+                    <label>
+                    <input type="radio" name="finish_${a.id}" value="due">
+                    Due date
+                    </label>
+                    `
+                    : ""
+                }
+            </fieldset>
+            `;
+
+            container.appendChild(section);
+        });
+
+        showModal("inlineFinishDatesModal");
+    }
+
+
+   document.querySelectorAll("input[name='finish_all']").forEach(radio => {
+        radio.addEventListener("change", e => {
+            const mode = e.target.value;
+            const allDateInput = document.getElementById("finishAllPickedDate");
+
+            allDateInput.classList.toggle("hidden", mode !== "pick");
+
+            document
+                .querySelectorAll("#finishAssignmentsContainer .finish-assignment-section")
+                .forEach(section => {
+                    const radios = section.querySelectorAll("input[type='radio']");
+                    const pickInput = section.querySelector(".assignment-picked-date");
+
+                    radios.forEach(r => {
+                        if (r.value === mode) r.checked = true;
+                    });
+
+                    pickInput.classList.toggle("hidden", mode !== "pick");
+
+                    if (mode === "pick" && finishModalState.lastSelectAllDate) {
+                        pickInput.value = finishModalState.lastSelectAllDate;
+                    }
+                });
+        });
+    });
+ 
+
+    document
+    .getElementById("finishAllPickedDate")
+    .addEventListener("change", e => {
+        finishModalState.lastSelectAllDate = e.target.value;
+
+        document
+            .querySelectorAll(".assignment-picked-date")
+            .forEach(input => {
+                input.value = e.target.value;
+            });
+    });
+
+
+
+    document.addEventListener("change", e => {
+        if (!e.target.name.startsWith("finish_")) return;
+
+        const section = e.target.closest(".finish-assignment-section");
+        const pickInput = section.querySelector(".assignment-picked-date");
+
+        pickInput.classList.toggle("hidden", e.target.value !== "pick");
+    });
+
+
+
+    async function saveInlineGrades(assignments) {
+        const csrf = document.querySelector("meta[name='csrf-token']").content;
+        const now = new Date();
+
+        for (const a of assignments) {
+            if (!a.finished_at) continue;
+
+            if (new Date(a.finished_at) > now) {
+                showModal("futureFinishDateModal");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("grade", a.grade);
+            formData.append("finished_at", a.finished_at);
+
+            const res = await fetch(`/assignments/${a.id}/grade`, {
+                method: "PATCH",
+                headers: { "X-CSRFToken": csrf },
+                body: formData
+            });
+
+            if (!res.ok) {
+                alert("Failed to save grades");
+                return;
+            }
+        }
+
+        location.reload();
+    }
+
+
+    document
+    .getElementById("confirmInlineFinishDates")
+    .addEventListener("click", () => {
+        const now = new Date();
+        const assignments = [];
+
+        document
+        .querySelectorAll(".finish-assignment-section")
+        .forEach(section => {
+            const id = section.dataset.assignmentId;
+            const mode = section.querySelector("input[type='radio']:checked")?.value;
+            let finishedAt = null;
+
+            if (mode === "now") {
+                finishedAt = now.toISOString();
+            }
+
+            if (mode === "pick") {
+                const val = section.querySelector(".assignment-picked-date").value;
+                if (!val || new Date(val) > now) {
+                    showModal("futureFinishDateModal");
+                    return;
+                }
+                finishedAt = val;
+            }
+
+            if (mode === "due") {
+                finishedAt = finishModalState.assignments
+                    .find(a => a.id == id).due_at;
+            }
+
+            assignments.push({
+                id,
+                finished_at: finishedAt
+            });
+        });
+
+        // Merge finish dates back into original data
+        finishModalState.assignments.forEach(a => {
+            const found = assignments.find(x => x.id == a.id);
+            a.finished_at = found.finished_at;
+        });
+
+        closeModal("inlineFinishDatesModal");
+        saveInlineGrades(finishModalState.assignments);
+    });
+
+
+
+
 });

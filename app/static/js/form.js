@@ -9,17 +9,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const update = () => {
             const active = checkbox.checked;
+
+            // Show / hide container
             target.classList.toggle("hidden", !active);
 
-            inputs.forEach(input => {
-                input.required = active;
-                if (!active) input.value = "";
-            });
+            // Never force required — allow empty OR valid value
+            if (!active) {
+                inputs.forEach(input => {
+                    input.value = "";
+                });
+            }
         };
 
         update();
         checkbox.addEventListener("change", update);
     });
+
 
     // ================= ADVANCED OPTIONS =================
     document.querySelectorAll(".advanced-toggle").forEach(toggle => {

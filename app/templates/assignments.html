@@ -177,9 +177,15 @@
     <!-- ===== SINGLE TABLE MODE ===== -->
     <div class="card assignments-table-card" data-table-mode="single">
         <div class="table-actions">
+            <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
             <button class="btn-tiny table-edit-btn">✏ Edit</button>
-            <button class="btn-tiny danger table-delete-btn" >🗑 Delete</button>
+            <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
+
+            <!-- hidden initially -->
+            <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
+            <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
         </div>
+
 
         {% set rows = assignments %}
         {% set show_class_column = true %}
@@ -194,8 +200,13 @@
             <h3 class="class-table-title">{{ class_name }}</h3>
 
             <div class="table-actions">
+                <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
                 <button class="btn-tiny table-edit-btn">✏ Edit</button>
                 <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
+
+                <!-- hidden initially -->
+                <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
+                <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
             </div>
             {% set rows = rows %}
             {% set show_class_column = false %}
@@ -446,6 +457,61 @@
     </div>
 </div>
 
+<!-- ================= INLINE SAVE FINISH DATES MODAL ================= -->
+<div class="modal-overlay hidden" id="inlineFinishDatesModal">
+  <div class="modal card large-modal">
+
+    <h2>Finish Dates Required</h2>
+
+    <p class="modal-message">
+      Please select the finish date for all assignments you have given a grade to.
+    </p>
+
+    <!-- ===== SELECT ALL (only shown if >=2 assignments) ===== -->
+    <div class="select-all-section hidden" id="finishSelectAll">
+      <h4>Select for all</h4>
+
+      <fieldset class="radio-group">
+        <label>
+          <input type="radio" name="finish_all" value="now">
+          Now
+        </label>
+
+        <label>
+          <input type="radio" name="finish_all" value="pick">
+          Pick a date
+        </label>
+
+        <input
+          type="datetime-local"
+          id="finishAllPickedDate"
+          class="input-field hidden"
+        >
+
+        <label id="finishAllDueOption" class="hidden">
+          <input type="radio" name="finish_all" value="due">
+          Due date
+        </label>
+      </fieldset>
+
+      <hr>
+    </div>
+
+    <!-- ===== PER-ASSIGNMENT SECTIONS (JS injects) ===== -->
+    <div id="finishAssignmentsContainer"></div>
+
+    <div class="modal-actions">
+      <button class="btn full-btn" id="confirmInlineFinishDates">
+        Save
+      </button>
+      <button class="btn ghost-btn" data-close-modal>
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>
+
 
 <!-- ================= FUTURE FINISH DATE WARNING MODAL ================= -->
 <div class="modal-overlay hidden" id="futureFinishDateModal">
@@ -522,6 +588,29 @@
     </div>
   </div>
 </div>
+
+
+<!-- ================= INVALID GRADE MODAL ================= -->
+<div class="modal-overlay hidden" id="invalidGradeModal">
+    <div class="modal card">
+        <h2>Invalid Grades</h2>
+
+        <p class="modal-message">
+            Please ensure all the grades you input are between 0–100.
+        </p>
+
+        <div class="modal-actions">
+            <button
+                type="button"
+                class="btn full-btn"
+                data-close-modal
+            >
+                Ok
+            </button>
+        </div>
+    </div>
+</div>
+
 
 {% endblock %}
 
