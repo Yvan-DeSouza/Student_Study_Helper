@@ -4,6 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/classes.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/selector.css') }}">
 {% endblock %}
 
 {% block navbar %}
@@ -47,35 +48,82 @@
     <!-- ================= HEADER ================= -->
     <header class="classes-header card">
         <h1>Your Classes</h1>
+    </header>
+        <!-- ================= FILTER / SORT BAR ================= -->
+        <section class="selector-bar">
 
-        <div class="classes-controls">
-            <div class="controls-left">
-                <label class="input-label">Sort by</label>
-                <select id="sortSelect" class="input-field">
+            <!-- Sort -->
+            <div class="selector-group">
+                <label class="selector-label">Sort by</label>
+                <select class="selector-select" id="sortSelect">
                     <option value="name_asc">Name (A → Z)</option>
                     <option value="name_desc">Name (Z → A)</option>
-                    <option value="importance_desc">Importance (High → Low)</option>
-                    <option value="importance_asc">Importance (Low → High)</option>
-                    <option value="grade_desc">Grade (High → Low)</option>
-                    <option value="grade_asc">Grade (Low → High)</option>
-                    <option value="created_desc">Creation Date (Newest)</option>
-                    <option value="created_asc">Creation Date (Oldest)</option>
-                </select>
-
-                <label class="input-label">Filter</label>
-                <select id="filterSelect" class="input-field">
-                    <option value="all">All</option>
-                    <option value="finished">Finished</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="high">High Importance</option>
-                    <option value="medium">Medium Importance</option>
-                    <option value="low">Low Importance</option>
+                    <option value="importance_high_low">Importance (High → Low)</option>
+                    <option value="importance_low_high">Importance (Low → High)</option>
+                    <option value="difficulty_high_low">Difficulty (High → Low)</option>
+                    <option value="difficulty_low_high">Difficulty (Low → High)</option>
+                    <option value="grade_high_low">Grade (High → Low)</option>
+                    <option value="grade_low_high">Grade (Low → High)</option>
+                    <option value="created_newest">Newest</option>
+                    <option value="created_oldest">Oldest</option>
                 </select>
             </div>
 
-            <button class="btn-tiny" data-open-modal="addClassModal" id="openAddClassModal">+ Add Class</button>
-        </div>
-    </header>
+            <!-- Status -->
+            <div class="selector-group">
+                <label class="selector-label">Status</label>
+                <select class="selector-select" id="statusFilter">
+                    <option value="all">All</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="finished">Finished</option>
+                </select>
+            </div>
+
+            <!-- Importance -->
+            <div class="selector-group wide">
+                <span class="selector-label">Importance</span>
+                <div class="selector-checks">
+                    <label class="selector-check">
+                        <input type="checkbox" checked> High
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" checked> Medium
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" checked> Low
+                    </label>
+                </div>
+            </div>
+
+            <!-- Class types -->
+            <div class="selector-group wide">
+                <span class="selector-label">Class type</span>
+                <div class="selector-checks grid">
+                    <label class="selector-check"><input type="checkbox" checked> Math</label>
+                    <label class="selector-check"><input type="checkbox" checked> Science</label>
+                    <label class="selector-check"><input type="checkbox" checked> Language</label>
+                    <label class="selector-check"><input type="checkbox" checked> Social Sci</label>
+                    <label class="selector-check"><input type="checkbox" checked> Art</label>
+                    <label class="selector-check"><input type="checkbox" checked> Engineering</label>
+                    <label class="selector-check"><input type="checkbox" checked> Tech</label>
+                    <label class="selector-check"><input type="checkbox" checked> Other</label>
+                </div>
+            </div>
+
+            <!-- Action -->
+            <div class="selector-actions">
+                <button
+                    class="btn-tiny"
+                    data-open-modal="addClassModal"
+                    id="openAddClassModal"
+                >
+                    + Add Class
+                </button>
+
+        </section>
+
+
+    
 
     <!-- ================= CLASS GRID ================= -->
     <section class="classes-grid">

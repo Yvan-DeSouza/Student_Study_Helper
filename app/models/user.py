@@ -39,8 +39,6 @@ class UserPreferences(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.user_id"), primary_key=True)
     theme = db.Column(db.Text, default='system')
-    assignments_view = db.Column(db.Text, default='single_table')
-    show_completed_assignments = db.Column(db.Boolean, default=True, nullable=False)
     default_upcoming_deadlines_count = db.Column(db.Integer, default=3)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
 
@@ -84,5 +82,153 @@ class UserAssignmentTypeColor(db.Model):
     user = db.relationship("User", back_populates="assignment_type_colors")
 
     __table_args__ = (
-        db.UniqueConstraint("user_id", "assignment_type", name="uq_user_assignment_type"),
+        db.UniqueConstraint("user_id", "assignment_type", name="uq_user_class_type"),
     )
+
+
+# ================= CLASS VIEW PREFERENCES =================
+class ClassViewPreferences(db.Model):
+    __tablename__ = "class_view_preferences"
+
+    class_preference_id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    page_name = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    sort_by = db.Column(
+        db.Text,
+        nullable=False,
+        default="name_asc",
+        server_default="name_asc"
+    )
+
+    status_filter = db.Column(
+        db.Text,
+        nullable=False,
+        default="all",
+        server_default="all"
+    )
+
+    filter_importance_high = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default="true"
+    )
+
+    filter_importance_medium = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default="true"
+    )
+
+    filter_importance_low = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default="true"
+    )
+
+    filter_class_types = db.Column(
+        db.JSON,
+        nullable=False,
+        default=dict,
+        server_default="{}"
+    )
+
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now()
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "page_name"),
+    )
+
+    user = db.relationship("User", backref="class_view_preferences")
+
+
+
+class AssignmentViewPreferences(db.Model):
+    __tablename__ = "assignment_view_preferences"
+
+    assignment_preference_id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True
+    )
+
+    due_status_filter = db.Column(
+        db.Text,
+        nullable=False,
+        default="all",
+        server_default="all"
+    )
+
+    completion_filter = db.Column(
+        db.Text,
+        nullable=False,
+        default="all",
+        server_default="all"
+    )
+
+    graded_filter = db.Column(
+        db.Text,
+        nullable=False,
+        default="all",
+        server_default="all"
+    )
+
+    created_filter = db.Column(
+        db.Text,
+        nullable=False,
+        default="all",
+        server_default="all"
+    )
+
+    filter_assignment_types = db.Column(
+        db.JSON,
+        nullable=False,
+        default=dict,
+        server_default="{}"
+    )
+
+    sort_by = db.Column(
+        db.Text,
+        nullable=False,
+        default="name_asc",
+        server_default="name_asc"
+    )
+
+    table_layout = db.Column(
+        db.Text,
+        nullable=False,
+        default="per_class",
+        server_default="per_class"
+    )
+
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now()
+    )
+
+    user = db.relationship("User", backref=db.backref(
+        "assignment_view_preferences",
+        uselist=False,
+        cascade="all, delete-orphan"
+    ))
+

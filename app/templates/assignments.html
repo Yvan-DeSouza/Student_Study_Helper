@@ -131,14 +131,22 @@
                 Lab Report
             </label>
 
-            <label for="type-essay">
-                <input type="checkbox" id="type-essay" name="assignment_type" value="essay" checked>
-                Essay
+            <label for="type-writing">
+                <input type="checkbox" id="type-writing" name="assignment_type" value="writing" checked>
+                Writing
             </label>
 
             <label for="type-exam">
                 <input type="checkbox" id="type-exam" name="assignment_type" value="exam" checked>
                 Exam
+            </label>
+            <label for="type-presentation">
+                <input type="checkbox" id="type-presentation" name="assignment_type" value="presentation" checked>
+                Presentation
+            </label>
+            <label for="type-reading">
+                <input type="checkbox" id="type-reading" name="assignment_type" value="reading" checked>
+                Reading
             </label>
 
             <label for="type-other">
@@ -355,10 +363,12 @@
                 <option value="homework">Homework</option>
                 <option value="project">Project</option>
                 <option value="quiz">Quiz</option>
-                <option value="essay">Essay</option>
+                <option value="writing">Writing</option>
                 <option value="test">Test</option>
                 <option value="exam">Exam</option>
                 <option value="lab_report">Lab Report</option>
+                <option value="presentation">Presentation</option>
+                <option value="reading">Reading</option>
                 <option value="other">Other</option>
             </select>
 
@@ -544,7 +554,7 @@
         <p class="modal-message" id="uncompleteMessage"></p>
 
         <div class="modal-actions">
-        <button class="btn danger" id="confirmUncomplete">Confirm</button>
+        <button class="btn full-btn" id="confirmUncomplete">Confirm</button>
         <button class="btn ghost-btn" data-close-modal>Cancel</button>
         </div>
     </div>

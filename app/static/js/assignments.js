@@ -500,19 +500,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // Populate edit-type
-    const ASSIGNMENT_TYPES = [
+    const assignment_types = [
         "homework",
         "project",
         "quiz",
-        "essay",
+        "writing",
         "test",
         "exam",
         "lab_report",
+        "presentation",
+        "reading",
         "other"
     ];
 
     editType.innerHTML = "";
-    ASSIGNMENT_TYPES.forEach(type => {
+    assignment_types.forEach(type => {
         const option = document.createElement("option");
         option.value = type;
         option.textContent = type.replace("_", " ").replace(/\b\w/g, c => c.toUpperCase());

@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Class type emoji injection
     document.querySelectorAll(".class-type").forEach(el => {
         const type = el.dataset.type;
-        if (CLASS_TYPE_EMOJIS[type]) {
-            el.textContent = `${CLASS_TYPE_EMOJIS[type]} ${el.textContent}`;
+        if (class_type_emojis[type]) {
+            el.textContent = `${class_type_emojis[type]} ${el.textContent}`;
         }
     });
 
@@ -22,8 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Importance dot coloring
     document.querySelectorAll(".importance-dot").forEach(dot => {
         const level = dot.dataset.importance;
-        if (IMPORTANCE_COLORS[level]) {
-            dot.style.backgroundColor = IMPORTANCE_COLORS[level];
+        if (importance_colors[level]) {
+            dot.style.backgroundColor = importance_colors[level];
         }
     });
     function getDifficultyColor(value) {
@@ -660,21 +660,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // Color auto-update logic
     typeSelect.addEventListener("change", () => {
         const newType = typeSelect.value;
-        if (!newType || !DEFAULT_COLORS[newType]) return;
+        if (!newType || !default_class_colors[newType]) return;
 
 
         if (!isEditMode) {
-            colorInput.value = DEFAULT_COLORS[newType];
+            colorInput.value = default_class_colors[newType];
             return;
         }
 
 
         const currentColor = colorInput.value.toUpperCase();
-        const previousDefault = DEFAULT_COLORS[previousClassType];
+        const previousDefault = default_class_colors[previousClassType];
 
 
         if (previousDefault && currentColor === previousDefault.toUpperCase()) {
-            colorInput.value = DEFAULT_COLORS[newType];
+            colorInput.value = default_class_colors[newType];
         }
 
 

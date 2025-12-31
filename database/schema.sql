@@ -13,8 +13,6 @@ CREATE TABLE users (
 CREATE TABLE user_preferences (
     user_id INT PRIMARY KEY,
     theme TEXT CHECK (theme IN ('fun_light', 'fun_dark', 'modern_light', 'modern_dark', 'system')) DEFAULT 'system',
-    assignments_view TEXT CHECK (assignments_view IN ('single_table', 'per_class')) DEFAULT 'single_table',
-    show_completed_assignments BOOLEAN NOT NULL DEFAULT TRUE,
     default_upcoming_deadlines_count INT NOT NULL DEFAULT 3,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -64,7 +62,7 @@ CREATE TABLE assignments (
     class_id INT NOT NULL,
     title TEXT NOT NULL,
     assignment_type TEXT NOT NULL CHECK (
-        assignment_type IN ('homework', 'quiz', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
+        assignment_type IN ('homework', 'quiz', 'project', 'writing', 'test', 'exam', 'lab_report', 'presentation', 'reading', 'other')
     ),
     due_at TIMESTAMPTZ,
 	grade NUMERIC(5,2) CHECK (grade >= 0 AND grade <= 100),
@@ -113,7 +111,7 @@ CREATE TABLE study_sessions (
     duration_minutes INT, -- total time
     expected_duration_minutes INT, -- optional
     session_type TEXT NOT NULL CHECK (
-        session_type IN ('homework', 'quiz', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
+        session_type IN ('homework', 'quiz', 'project', 'writing', 'test', 'exam', 'lab_report', 'presentation', 'reading', 'other')
     ),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     started_at TIMESTAMPTZ,
@@ -175,7 +173,7 @@ CREATE TABLE assignment_expected_grades (
     recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
     FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 );
@@ -201,7 +199,7 @@ CREATE TABLE user_assignment_type_colors (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     assignment_type TEXT NOT NULL CHECK (
-        assignment_type IN ('homework', 'quiz', 'project', 'essay', 'test', 'exam', 'lab_report', 'other')
+        assignment_type IN ('homework', 'quiz', 'project', 'writing', 'test', 'exam', 'lab_report', 'presentation', 'reading', 'other')
     ),
     color TEXT NOT NULL DEFAULT '#4f46e5', -- fallback default color
 
@@ -238,6 +236,106 @@ CREATE TABLE study_session_pauses (
 
 
 
+CREATE TABLE class_view_preferences (
+    class_preference_id SERIAL PRIMARY KEY,
+
+    user_id INT NOT NULL,
+
+    page_name TEXT NOT NULL CHECK (
+        page_name IN ('classes', 'assignments')
+    ),
+
+    sort_by TEXT NOT NULL DEFAULT 'name_asc' CHECK (
+        sort_by IN (
+            'name_asc',
+            'name_desc',
+            'importance_high_low',
+            'importance_low_high',
+            'difficulty_high_low',
+            'difficulty_low_high',
+            'grade_high_low',
+            'grade_low_high',
+            'created_newest',
+            'created_oldest'
+        )
+    ),
+
+    status_filter TEXT NOT NULL DEFAULT 'all' CHECK (
+        status_filter IN ('all', 'in_progress', 'finished')
+    ),
+
+    filter_importance_high   BOOLEAN NOT NULL DEFAULT TRUE,
+    filter_importance_medium BOOLEAN NOT NULL DEFAULT TRUE,
+    filter_importance_low    BOOLEAN NOT NULL DEFAULT TRUE,
+
+    filter_class_types JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE (user_id, page_name),
+
+    FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+
+
+
+
+CREATE TABLE assignment_view_preferences (
+    assignment_preference_id SERIAL PRIMARY KEY,
+
+    user_id INT NOT NULL,
+
+    due_status_filter TEXT NOT NULL DEFAULT 'all' CHECK (
+        due_status_filter IN ('all', 'overdue', 'not_due')
+    ),
+
+    completion_filter TEXT NOT NULL DEFAULT 'all' CHECK (
+        completion_filter IN ('all', 'completed', 'uncompleted')
+    ),
+
+    graded_filter TEXT NOT NULL DEFAULT 'all' CHECK (
+        graded_filter IN ('all', 'graded', 'ungraded')
+    ),
+
+    created_filter TEXT NOT NULL DEFAULT 'all' CHECK (
+        created_filter IN ('all', 'last_7_days', 'last_30_days')
+    ),
+
+    filter_assignment_types JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    sort_by TEXT NOT NULL DEFAULT 'name_asc' CHECK (
+        sort_by IN (
+            'name_asc',
+            'name_desc',
+            'difficulty_high_low',
+            'difficulty_low_high',
+            'grade_high_low',
+            'grade_low_high',
+            'due_date_soonest',
+            'due_date_latest',
+            'created_newest',
+            'created_oldest',
+            'ponderation_high_low',
+            'ponderation_low_high',
+            'estimated_minutes_high_low',
+            'estimated_minutes_low_high'
+        )
+    ),
+
+    table_layout TEXT NOT NULL DEFAULT 'per_class' CHECK (
+        table_layout IN ('single', 'per_class')
+    ),
+
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE (user_id),
+
+    FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
 
 
 

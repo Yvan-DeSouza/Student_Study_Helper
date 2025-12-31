@@ -1,0 +1,135 @@
+/* ===============================
+   FULL-WIDTH FILTER / SORT BAR
+   Used across pages (classes, assignments)
+================================ */
+
+/* ---- Main bar ---- */
+.selector-bar {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem 1.6rem;
+    padding: 1.2rem 1.5rem;
+    margin: 1.2rem 0 2rem;
+
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .selector-bar {
+    background: rgba(35,35,60,0.75);
+}
+
+/* ---- Group ---- */
+.selector-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 160px;
+}
+
+.selector-group.wide {
+    flex: 1 1 260px;
+}
+
+/* ---- Labels ---- */
+.selector-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #555;
+}
+
+:root[data-theme="dark"] .selector-label {
+    color: #ccc;
+}
+
+/* ---- Select ---- */
+.selector-select {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    background: rgba(255,255,255,0.85);
+    cursor: pointer;
+}
+
+.selector-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .selector-select {
+    background: #2b2b45;
+    border-color: #444;
+    color: white;
+}
+
+/* ---- Checkbox groups ---- */
+.selector-checks {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.selector-checks.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 0.4rem 0.8rem;
+}
+
+/* ---- Checkbox ---- */
+.selector-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #555;
+    cursor: pointer;
+}
+
+.selector-check input {
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.selector-check:hover {
+    color: var(--primary);
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .selector-check {
+    color: #ccc;
+}
+
+/* ---- Actions ---- */
+.selector-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: flex-end;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+    .selector-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .selector-bar {
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .selector-group {
+        min-width: 100%;
+    }
+}
