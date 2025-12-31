@@ -185,9 +185,9 @@ def update_assignment(assignment_id):
                 "error": due_at_str,
                 "due_at": due_at_str
             }, 400
-
+    
     else:
-        assignment.is_completed = False
+        assignment.grade = None
 
 
 
