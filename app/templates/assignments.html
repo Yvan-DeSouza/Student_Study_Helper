@@ -682,6 +682,27 @@
   </div>
 </div>
 
+<!-- ================= UNSAVED CHANGES MODAL ================= -->
+<div class="modal-overlay hidden" id="unsavedChangesModal">
+  <div class="modal card">
+    <h2>Unsaved Changes</h2>
+    <p>You are about to leave this page with unsaved changes.</p>
+
+    <div class="modal-actions">
+      <button id="saveAllInline" class="btn full-btn" style="background:#22c55e">
+        Save changes
+      </button>
+
+      <button id="leaveWithoutSaving" class="btn full-btn" style="background:#ef4444">
+        Leave without saving
+      </button>
+
+      <button id="stayOnPage" class="btn full-btn" style="background:#3b82f6">
+        Stay on the page
+      </button>
+    </div>
+  </div>
+</div>
 
 
 {% endblock %}

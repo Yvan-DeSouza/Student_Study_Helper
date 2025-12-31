@@ -172,6 +172,7 @@ def update_assignment(assignment_id):
             return {"error": "Invalid due_at datetime format"}, 400
 
     finished_at_str = data.get("finished_at")
+    assignment.is_completed = False
     assignment.finished_at = None
 
     if finished_at_str not in (None, "", "null"):

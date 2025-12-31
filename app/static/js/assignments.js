@@ -7,6 +7,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 : "false";
     });
 
+    window.addEventListener("beforeunload", e => {
+        if (!hasUnsavedInlineChanges || isSavingInlineChanges) return;
+
+        e.preventDefault();
+        e.returnValue = ""; 
+    });
+
+
+
     
     function showModal(id) {
         const modal = document.getElementById(id);
@@ -50,6 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const editGradedOnly = document.getElementById("edit-graded-only");
 
     const modeSelect = document.getElementById("tableMode");
+    let hasUnsavedInlineChanges = false;
+    let isSavingInlineChanges = false;
+    let pendingNavigationUrl = null;
+
     function clearInvalidGradeHighlights(card) {
         card.querySelectorAll(".inline-grade-input.invalid")
             .forEach(input => input.classList.remove("invalid"));
@@ -207,6 +220,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     const input = gradeCell.querySelector("input");
                     input.disabled = false;
+                    input.addEventListener("input", () => {
+                        hasUnsavedInlineChanges = true;
+                    });
+
                 }
 
             });
@@ -231,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const original = row.dataset.grade || "—";
                 gradeCell.innerText = original;
             });
+            hasUnsavedInlineChanges = false;
         });
 
         function collectInlineGradedAssignments(card) {
@@ -359,6 +377,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     });
+
+
+    function collectAllInlineAssignments() {
+        const assignments = [];
+
+        document.querySelectorAll(".assignments-table-card").forEach(card => {
+            card.querySelectorAll("tbody tr").forEach(row => {
+                const input = row.querySelector(".inline-grade-input");
+                if (!input) return;
+
+                const value = input.value.trim();
+                if (value === "") return;
+
+                assignments.push({
+                    id: row.dataset.assignmentId,
+                    title: row.dataset.title,
+                    due_at: row.dataset.dueAt !== "null" ? row.dataset.dueAt : null,
+                    grade: Number(value),
+                    finished_at: row.dataset.finishedAt || null
+                });
+            });
+        });
+
+        return assignments;
+    }
 
 
 
@@ -751,6 +794,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!a.finished_at) continue;
 
             if (new Date(a.finished_at) > now) {
+                isSavingInlineChanges = false;
                 showModal("futureFinishDateModal");
                 return;
             }
@@ -766,18 +810,30 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!res.ok) {
+                isSavingInlineChanges = false;
                 alert("Failed to save grades");
                 return;
             }
         }
 
-        location.reload();
+        hasUnsavedInlineChanges = false;
+
+        if (pendingNavigationUrl) {
+            const url = pendingNavigationUrl;
+            pendingNavigationUrl = null;
+            window.location.href = url;
+        } else {
+            location.reload();
+        }
+
+
     }
 
 
     document
     .getElementById("confirmInlineFinishDates")
     .addEventListener("click", () => {
+        isSavingInlineChanges = true;
         const now = new Date();
         const assignments = [];
 
@@ -820,7 +876,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
         closeModal("inlineFinishDatesModal");
         saveInlineGrades(finishModalState.assignments);
+        if (pendingNavigationUrl) {
+            const url = pendingNavigationUrl;
+            pendingNavigationUrl = null;
+            window.location.href = url;
+        }
+
     });
+
+// ================= UNSAVED CHANGES MODAL =================
+
+document.getElementById("stayOnPage")
+    .addEventListener("click", () => {
+        closeModal("unsavedChangesModal");
+        pendingNavigationUrl = null;
+    });
+
+document.getElementById("leaveWithoutSaving")
+    .addEventListener("click", () => {
+        hasUnsavedInlineChanges = false;
+        closeModal("unsavedChangesModal");
+
+        if (pendingNavigationUrl) {
+            window.location.href = pendingNavigationUrl;
+        }
+    });
+
+    document.getElementById("saveAllInline")
+        .addEventListener("click", () => {
+            isSavingInlineChanges = true;
+
+            document
+                .querySelectorAll(".assignments-table-card")
+                .forEach(clearInvalidGradeHighlights);
+
+            let valid = true;
+            document
+                .querySelectorAll(".assignments-table-card")
+                .forEach(card => {
+                    if (!validateInlineGrades(card)) valid = false;
+                });
+
+            if (!valid) {
+                closeModal("unsavedChangesModal");
+                showModal("invalidGradeModal");
+                return;
+            }
+
+            const assignments = collectAllInlineAssignments();
+            const missingFinishDates = assignments.filter(a => !a.finished_at);
+
+            closeModal("unsavedChangesModal");
+
+            if (missingFinishDates.length === 0) {
+                saveInlineGrades(assignments);
+            } else {
+                openInlineFinishDatesModal(missingFinishDates);
+            }
+        });
+
+
+
 
 
     let deleteAssignmentState = {
@@ -969,6 +1085,17 @@ document.addEventListener("DOMContentLoaded", () => {
             // remove row from DOM + close modal
         });
 
+    document.querySelectorAll(".nav-link").forEach(link => {
+        link.addEventListener("click", e => {
+            if (!hasUnsavedInlineChanges) return;
+
+            e.preventDefault();
+            pendingNavigationUrl = link.href;
+            showModal("unsavedChangesModal");
+        });
+    });
+
+       
 
 
 });
