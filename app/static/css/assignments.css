@@ -384,3 +384,17 @@
 :root[data-theme="dark"] .inline-grade-input.invalid {
     background: rgba(244, 67, 54, 0.18);
 }
+
+/* ================= DELETE MODE ================= */
+.table-delete-btn.active {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+    border: 1px solid rgba(244, 67, 54, 0.45);
+}
+
+.assignments-table tr.delete-hover {
+    cursor: pointer;
+    transform: scale(1.015);
+    box-shadow: 0 6px 18px rgba(244, 67, 54, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}

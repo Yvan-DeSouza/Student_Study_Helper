@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, render_template, abort
+from flask import Blueprint, request, redirect, url_for, render_template, abort, jsonify
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.assignment import Assignment, AssignmentExpectedGrade
@@ -275,12 +275,41 @@ def change_grade(assignment_id):
 @assignment.route("/assignments/<int:assignment_id>", methods=["DELETE"])
 @login_required
 def delete_assignment(assignment_id):
-    assignment = Assignment.query.filter_by(
-        assignment_id=assignment_id,
-        user_id=current_user.user_id
-    ).first_or_404()
+    assignment = (
+        db.session.query(Assignment)
+        .filter_by(
+            assignment_id=assignment_id,
+            user_id=current_user.user_id
+        )
+        .first_or_404()
+    )
 
     db.session.delete(assignment)
     db.session.commit()
 
-    return {"status": "assignment deleted"}, 200
+    return jsonify({"success": True})
+
+
+
+
+
+@assignment.route("/assignments/<int:assignment_id>/summary", methods=["GET"])
+@login_required
+def assignment_summary(assignment_id):
+    assignment = (
+        db.session.query(Assignment)
+        .filter_by(
+            assignment_id=assignment_id,
+            user_id=current_user.user_id
+        )
+        .first_or_404()
+    )
+
+    return jsonify({
+        "assignment_id": assignment.assignment_id,
+        "title": assignment.title,
+        "study_session_count": assignment.study_session_count,
+        "study_minutes": assignment.study_minutes
+    })
+
+

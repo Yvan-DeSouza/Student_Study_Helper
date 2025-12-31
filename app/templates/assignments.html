@@ -612,6 +612,78 @@
 </div>
 
 
+<!-- ================= DELETE ASSIGNMENT MODAL ================= -->
+<div class="modal-overlay hidden" id="deleteAssignmentModal">
+  <div class="modal card">
+
+    <h2>Delete Assignment</h2>
+
+    <!-- STEP TEXT -->
+    <p id="deleteAssignmentStepText" class="modal-message"></p>
+
+    <!-- STEP 2: IMPACT -->
+    <div id="deleteAssignmentImpactBox" class="hidden">
+      <p>This action will permanently delete:</p>
+      <ul>
+        <li>
+          <strong id="deleteAssignmentSessionCount">—</strong> study sessions
+        </li>
+        <li>
+          <strong id="deleteAssignmentStudyMinutes">—</strong> total study minutes
+        </li>
+      </ul>
+    </div>
+
+    <!-- STEP 3: CONFIRM INPUT -->
+    <div id="deleteAssignmentInputBox" class="hidden">
+      <label class="input-label">
+        Type <strong id="deleteAssignmentConfirmName"></strong> to confirm
+      </label>
+      <input
+        type="text"
+        id="deleteAssignmentConfirmInput"
+        class="input-field"
+        placeholder="Assignment name"
+      >
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="modal-actions">
+      <button
+        class="btn ghost-btn hidden"
+        id="deleteAssignmentBackBtn"
+      >
+        Back
+      </button>
+
+      <button
+        class="btn ghost-btn"
+        data-close-modal
+      >
+        Cancel
+      </button>
+
+      <button
+        class="btn full-btn"
+        id="deleteAssignmentNextBtn"
+      >
+        Next
+      </button>
+
+      <button
+        class="btn full-btn hidden"
+        id="deleteAssignmentConfirmBtn"
+        disabled
+      >
+        Delete
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
 {% endblock %}
 
 {% block extra_js %}

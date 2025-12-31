@@ -2,6 +2,13 @@ from app.extensions import db
 from datetime import datetime, timezone
 from sqlalchemy import func, text
 from sqlalchemy.orm import validates
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import select
+from app.models.study_session import StudySession
+
+
+
+
 
 
 class Assignment(db.Model):
@@ -38,6 +45,32 @@ class Assignment(db.Model):
         "AssignmentExpectedGrade", back_populates="assignment", cascade="all, delete-orphan"
     )
     user = db.relationship("User")
+
+
+    @hybrid_property
+    def study_session_count(self):
+        return len(self.study_sessions)
+
+    @study_session_count.expression
+    def study_session_count(cls):
+        return (
+            select([func.count(StudySession.session_id)])
+            .where(StudySession.assignment_id == cls.assignment_id)
+            .label("study_session_count")
+        )
+
+    @hybrid_property
+    def study_minutes(self):
+        return sum(s.duration_minutes or 0 for s in self.study_sessions)
+
+    @study_minutes.expression
+    def study_minutes(cls):
+        return (
+            select([func.coalesce(func.sum(StudySession.duration_minutes), 0)])
+            .where(StudySession.assignment_id == cls.assignment_id)
+            .label("study_minutes")
+        )
+
 
     # ---------------------- VALIDATIONS ----------------------
     @validates('grade')

@@ -166,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!editInlineBtn) return;
 
         editInlineBtn.addEventListener("click", () => {
+            exitDeleteMode();
             // Exit normal edit mode if active
             card.dataset.editing = "false";
             editBtn?.classList.remove("active");
@@ -213,6 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Cancel button (visual reset only for now)
         cancelBtn.addEventListener("click", () => {
+            exitDeleteMode();
             card.dataset.inlineEditing = "false";
 
             editInlineBtn.classList.remove("hidden");
@@ -267,7 +269,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return; // HARD STOP — nothing saved
             }
 
-            // TEMP: fake assignments to show modal
             const assignments = collectInlineGradedAssignments(card);
 
             // All already have finish dates → save immediately
@@ -281,6 +282,79 @@ document.addEventListener("DOMContentLoaded", () => {
 
         });
 
+        // Delete mode toggle
+        card.dataset.deleteMode = "false";
+        // Helper: exit delete mode
+        function exitDeleteMode() {
+            card.dataset.deleteMode = "false";
+            deleteBtn.classList.remove("active");
+            rows.forEach(r => r.classList.remove("delete-hover"));
+        }
+        deleteBtn.addEventListener("click", () => {
+            const enabled = card.dataset.deleteMode === "true";
+
+            // Always exit other modes
+            card.dataset.editing = "false";
+            card.dataset.inlineEditing = "false";
+
+            editBtn?.classList.remove("active");
+            rows.forEach(r => {
+                r.classList.remove("editable", "inline-graded", "inline-not-graded");
+            });
+
+            // Toggle delete mode
+            card.dataset.deleteMode = (!enabled).toString();
+            deleteBtn.classList.toggle("active", !enabled);
+
+
+
+            rows.forEach(row => {
+                row.addEventListener("mouseenter", () => {
+                    if (card.dataset.deleteMode === "true") {
+                        row.classList.add("delete-hover");
+                    }
+                });
+
+                row.addEventListener("mouseleave", () => {
+                    row.classList.remove("delete-hover");
+                });
+
+                row.addEventListener("click", e => {
+                    if (card.dataset.deleteMode !== "true") return;
+
+                    // Prevent edit / checkbox / inline actions
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    // (Later → open delete modal)
+                    openDeleteAssignmentModal(row);
+                });
+            });
+
+        });
+
+
+
+        if (!editBtn) return;
+
+        editBtn.addEventListener("click", () => {
+            exitDeleteMode();
+            const enabled = card.dataset.editing === "true";
+            card.dataset.editing = (!enabled).toString();
+            editBtn.classList.toggle("active", !enabled);
+
+            rows.forEach(row => {
+                row.classList.toggle("editable", !enabled);
+            });
+        });
+
+        rows.forEach(row => {
+            row.addEventListener("click", e => {
+                if (card.dataset.editing !== "true") return;
+                if (e.target.closest("input, select, button, label")) return;
+                openEditModal(row);
+            });
+        });
 
 
 
@@ -322,6 +396,31 @@ document.addEventListener("DOMContentLoaded", () => {
             ? new Date(finishedAt).toISOString().split("T")[0]
             : "—";
     }
+
+    // Will be called to populate delete modal for a specific assignment.
+    async function populateDeleteModal(assignmentId) {
+        try {
+            const res = await fetch(`/assignments/${assignmentId}/summary`);
+            if (!res.ok) {
+                throw new Error("Failed to fetch assignment summary");
+            }
+
+            const data = await res.json();
+
+            // Assuming your modal has elements with these IDs to show the info
+            document.getElementById("deleteAssignmentTitle").innerText = `Assignment ID: ${data.assignment_id}`;
+            document.getElementById("deleteSessionCount").innerText = data.study_session_count;
+            document.getElementById("deleteSessionMinutes").innerText = data.study_minutes;
+
+        } catch (err) {
+            console.error(err);
+            // Optional: show error in modal
+            document.getElementById("deleteSessionCount").innerText = "—";
+            document.getElementById("deleteSessionMinutes").innerText = "—";
+        }
+    }
+
+
 
 
 
@@ -387,30 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-    document.querySelectorAll(".assignments-table-card").forEach(card => {
-        const editBtn = card.querySelector(".table-edit-btn");
-        const rows = card.querySelectorAll(".assignments-table tbody tr");
 
-        if (!editBtn) return;
-
-        editBtn.addEventListener("click", () => {
-            const enabled = card.dataset.editing === "true";
-            card.dataset.editing = (!enabled).toString();
-            editBtn.classList.toggle("active", !enabled);
-
-            rows.forEach(row => {
-                row.classList.toggle("editable", !enabled);
-            });
-        });
-
-        rows.forEach(row => {
-            row.addEventListener("click", e => {
-                if (card.dataset.editing !== "true") return;
-                if (e.target.closest("input, select, button, label")) return;
-                openEditModal(row);
-            });
-        });
-    });
 
 
 
@@ -746,6 +822,152 @@ document.addEventListener("DOMContentLoaded", () => {
         saveInlineGrades(finishModalState.assignments);
     });
 
+
+    let deleteAssignmentState = {
+    step: 1,
+    assignmentId: null,
+    title: "",
+    studySessions: 0,
+    studyMinutes: 0
+    };
+    async function openDeleteAssignmentModal(row) {
+        deleteAssignmentState = {
+            step: 1,
+            assignmentId: row.dataset.assignmentId,
+            title: row.dataset.title,
+            studySessions: 0,
+            studyMinutes: 0
+        };
+
+        document.getElementById("deleteAssignmentConfirmName").innerText =
+            `"${deleteAssignmentState.title}"`;
+
+        // Fetch real impact data
+        try {
+            const res = await fetch(
+                `/assignments/${deleteAssignmentState.assignmentId}/summary`
+            );
+
+            if (!res.ok) throw new Error("Failed to fetch delete summary");
+
+            const data = await res.json();
+
+            deleteAssignmentState.studySessions = data.study_session_count;
+            deleteAssignmentState.studyMinutes = data.study_minutes;
+
+        } catch (err) {
+            console.error(err);
+            deleteAssignmentState.studySessions = "—";
+            deleteAssignmentState.studyMinutes = "—";
+        }
+
+        updateDeleteAssignmentStep();
+        showModal("deleteAssignmentModal");
+    }
+
+
+
+
+    function updateDeleteAssignmentStep() {
+        const stepText = document.getElementById("deleteAssignmentStepText");
+        const impactBox = document.getElementById("deleteAssignmentImpactBox");
+        const inputBox = document.getElementById("deleteAssignmentInputBox");
+
+        const backBtn = document.getElementById("deleteAssignmentBackBtn");
+        const nextBtn = document.getElementById("deleteAssignmentNextBtn");
+        const confirmBtn = document.getElementById("deleteAssignmentConfirmBtn");
+
+        // Reset visibility
+        impactBox.classList.add("hidden");
+        inputBox.classList.add("hidden");
+        backBtn.classList.add("hidden");
+        nextBtn.classList.remove("hidden");
+        confirmBtn.classList.add("hidden");
+
+        if (deleteAssignmentState.step === 1) {
+            stepText.innerText =
+            `You are about to permanently delete "${deleteAssignmentState.title}".`;
+        }
+
+        if (deleteAssignmentState.step === 2) {
+            backBtn.classList.remove("hidden");
+            impactBox.classList.remove("hidden");
+
+            document.getElementById("deleteAssignmentSessionCount").innerText =
+            deleteAssignmentState.studySessions;
+
+            document.getElementById("deleteAssignmentStudyMinutes").innerText =
+            deleteAssignmentState.studyMinutes;
+
+            stepText.innerText =
+            "This assignment has the following impact:";
+        }
+
+        if (deleteAssignmentState.step === 3) {
+            backBtn.classList.remove("hidden");
+            inputBox.classList.remove("hidden");
+
+            nextBtn.classList.add("hidden");
+            confirmBtn.classList.remove("hidden");
+
+            stepText.innerText =
+            "This action cannot be undone.";
+        }
+    }
+
+
+    document.getElementById("deleteAssignmentNextBtn")
+        .addEventListener("click", () => {
+            deleteAssignmentState.step++;
+            updateDeleteAssignmentStep();
+    });
+
+    document.getElementById("deleteAssignmentBackBtn")
+        .addEventListener("click", () => {
+            deleteAssignmentState.step--;
+            updateDeleteAssignmentStep();
+    });
+
+
+    const confirmInput = document.getElementById("deleteAssignmentConfirmInput");
+    const confirmBtn = document.getElementById("deleteAssignmentConfirmBtn");
+
+    confirmInput.addEventListener("input", () => {
+        const matches =
+            confirmInput.value.trim() === deleteAssignmentState.title;
+
+        confirmBtn.disabled = !matches;
+    });
+
+    document
+        .getElementById("deleteAssignmentConfirmBtn")
+        .addEventListener("click", async () => {
+
+            const csrf = document
+                .querySelector("meta[name='csrf-token']")
+                .content;
+
+            const res = await fetch(
+                `/assignments/${deleteAssignmentState.assignmentId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRFToken": csrf
+                    }
+                }
+            );
+
+            if (!res.ok) {
+                alert("Failed to delete assignment");
+                return;
+            }
+
+            // Option A (simple, safe)
+            location.reload();
+
+            // Option B (optional later):
+            // remove row from DOM + close modal
+        });
 
 
 
