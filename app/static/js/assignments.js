@@ -211,80 +211,80 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
-    // Cancel button (visual reset only for now)
-    cancelBtn.addEventListener("click", () => {
-        card.dataset.inlineEditing = "false";
+        // Cancel button (visual reset only for now)
+        cancelBtn.addEventListener("click", () => {
+            card.dataset.inlineEditing = "false";
 
-        editInlineBtn.classList.remove("hidden");
-        editBtn.classList.remove("hidden");
-        deleteBtn.classList.remove("hidden");
+            editInlineBtn.classList.remove("hidden");
+            editBtn.classList.remove("hidden");
+            deleteBtn.classList.remove("hidden");
 
-        saveBtn.classList.add("hidden");
-        cancelBtn.classList.add("hidden");
+            saveBtn.classList.add("hidden");
+            cancelBtn.classList.add("hidden");
 
-        rows.forEach(row => {
-            row.classList.remove("inline-graded", "inline-not-graded");
+            rows.forEach(row => {
+                row.classList.remove("inline-graded", "inline-not-graded");
 
-            const gradeCell = row.children[5];
-            const original = row.dataset.grade || "—";
-            gradeCell.innerText = original;
-        });
-    });
-
-    function collectInlineGradedAssignments(card) {
-        const assignments = [];
-
-        card.querySelectorAll("tbody tr").forEach(row => {
-            const input = row.querySelector(".inline-grade-input");
-            if (!input) return;
-
-            const value = input.value.trim();
-            if (value === "") return;
-
-            assignments.push({
-                id: row.dataset.assignmentId,
-                title: row.dataset.title,
-                due_at: row.dataset.dueAt !== "null" ? row.dataset.dueAt : null,
-                grade: Number(value),
-                finished_at: row.dataset.finishedAt || null
+                const gradeCell = row.children[5];
+                const original = row.dataset.grade || "—";
+                gradeCell.innerText = original;
             });
         });
 
-        return assignments;
-    }
+        function collectInlineGradedAssignments(card) {
+            const assignments = [];
 
+            card.querySelectorAll("tbody tr").forEach(row => {
+                const input = row.querySelector(".inline-grade-input");
+                if (!input) return;
 
+                const value = input.value.trim();
+                if (value === "") return;
 
+                assignments.push({
+                    id: row.dataset.assignmentId,
+                    title: row.dataset.title,
+                    due_at: row.dataset.dueAt !== "null" ? row.dataset.dueAt : null,
+                    grade: Number(value),
+                    finished_at: row.dataset.finishedAt || null
+                });
+            });
 
-    saveBtn.addEventListener("click", () => {
-        // Remove old highlights first
-        clearInvalidGradeHighlights(card);
-
-        const isValid = validateInlineGrades(card);
-
-        if (!isValid) {
-            showModal("invalidGradeModal");
-            return; // HARD STOP — nothing saved
+            return assignments;
         }
 
-        // TEMP: fake assignments to show modal
-        const assignments = collectInlineGradedAssignments(card);
 
-        // All already have finish dates → save immediately
-        const missingFinishDates = assignments.filter(a => !a.finished_at);
 
-        if (missingFinishDates.length === 0) {
-            saveInlineGrades(assignments);
-        } else {
-            openInlineFinishDatesModal(missingFinishDates);
-        }
+
+        saveBtn.addEventListener("click", () => {
+            // Remove old highlights first
+            clearInvalidGradeHighlights(card);
+
+            const isValid = validateInlineGrades(card);
+
+            if (!isValid) {
+                showModal("invalidGradeModal");
+                return; // HARD STOP — nothing saved
+            }
+
+            // TEMP: fake assignments to show modal
+            const assignments = collectInlineGradedAssignments(card);
+
+            // All already have finish dates → save immediately
+            const missingFinishDates = assignments.filter(a => !a.finished_at);
+
+            if (missingFinishDates.length === 0) {
+                saveInlineGrades(assignments);
+            } else {
+                openInlineFinishDatesModal(missingFinishDates);
+            }
+
+        });
+
+
+
 
     });
-
-
-
-
-});
 
 
 
@@ -295,12 +295,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(`/assignments/${id}/completion`, {
             method: "PATCH",
             headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content
             },
             body: JSON.stringify({
-            is_completed: isCompleted,
-            finished_at: finishedAt
+                is_completed: isCompleted,
+                finished_at: finishedAt
             })
         });
 
@@ -309,9 +309,20 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // ✅ Update completion state
         pendingRow.dataset.completed = isCompleted.toString();
         pendingCheckbox.checked = isCompleted;
+
+        // ✅ Update finished_at in dataset
+        pendingRow.dataset.finishedAt = finishedAt || "";
+
+        // ✅ Update table cell immediately
+        const finishedAtCell = pendingRow.children[9];
+        finishedAtCell.innerText = finishedAt
+            ? new Date(finishedAt).toISOString().split("T")[0]
+            : "—";
     }
+
 
 
 
@@ -339,8 +350,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         await sendCompletionUpdate(true, finishedAt);
         closeModal("completeAssignmentModal");
-        pendingCheckbox.checked = true;
-        pendingRow.dataset.completed = "true";
+        pendingRow = null;
+        pendingCheckbox = null;
     });
 
 
