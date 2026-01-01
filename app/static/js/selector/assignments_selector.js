@@ -1,4 +1,7 @@
 import { applyVisibilityAndOrder as applyClassesFX } from './selector_apply.js';
+const csrfToken = document
+    .querySelector('meta[name="csrf-token"]')
+    ?.getAttribute("content");
 
 const IMPORTANCE_RANK = { high: 3, medium: 2, low: 1 };
 
@@ -244,6 +247,28 @@ export function initAssignmentsSelector() {
     let lastAppliedClassFilters = getClassFilters();
     let lastAppliedAssignmentFilters = getAssignmentFilters();
 
+    let personalClassPrefs = null;
+    let personalAssignmentPrefs = null;
+
+    // defaults
+    const DEFAULT_CLASS = {
+        sortBy: 'name_asc',
+        status: 'all',
+        importance: { high: true, medium: true, low: true },
+        classTypes: [...document.querySelectorAll("input[name='class_type_selector']")].map(cb => cb.id.replace('class_type_selector_', ''))
+    };
+
+    const DEFAULT_ASSIGNMENT = {
+        tableLayout: 'single',
+        dueStatus: 'all',
+        completion: 'all',
+        graded: 'all',
+        created: 'all',
+        assignmentTypes: [...document.querySelectorAll('.selector-group .selector-checks.grid input')].map(cb => cb.value),
+        sortCategory: 'name',
+        sortBy: document.querySelector("#assignmentSortBy option[data-cat='name']")?.value || 'name_asc'
+    };
+
     // Show/hide classSortBy depending on layout
     const updateClassSortVisibility = () => {
         const layout = document.getElementById('tableLayout')?.value;
@@ -377,6 +402,186 @@ export function initAssignmentsSelector() {
     // initialize UI to current selections but do not auto-apply filters
     updateClassSortVisibility();
     updateAssignmentSortOptions();
+
+    // Helpers to set controls from pref objects
+    function setControlsFromClassPrefs(pref) {
+        if (!pref) return;
+        const sortBy = pref.sort_by || DEFAULT_CLASS.sortBy;
+        document.getElementById('classSortBy').value = sortBy;
+        document.getElementById('classStatusFilter').value = pref.status_filter || DEFAULT_CLASS.status;
+        const imp = pref.filter_importance || DEFAULT_CLASS.importance;
+        document.querySelector(".selector-group input[value='high']").checked = !!imp.high;
+        document.querySelector(".selector-group input[value='medium']").checked = !!imp.medium;
+        document.querySelector(".selector-group input[value='low']").checked = !!imp.low;
+        const types = pref.filter_class_types || DEFAULT_CLASS.classTypes;
+        document.querySelectorAll("input[name='class_type_selector']").forEach(cb => {
+            const key = cb.id.replace('class_type_selector_', '');
+            cb.checked = types.includes(key);
+        });
+    }
+
+    function setControlsFromAssignmentPrefs(pref) {
+        if (!pref) return;
+        document.getElementById('tableLayout').value = pref.table_layout || DEFAULT_ASSIGNMENT.tableLayout;
+        document.getElementById('dueStatusFilter').value = pref.due_status_filter || DEFAULT_ASSIGNMENT.dueStatus;
+        document.getElementById('completionFilter').value = pref.completion_filter || DEFAULT_ASSIGNMENT.completion;
+        document.getElementById('gradedFilter').value = pref.graded_filter || DEFAULT_ASSIGNMENT.graded;
+        document.getElementById('createdFilter').value = pref.created_filter || DEFAULT_ASSIGNMENT.created;
+
+        const types = pref.filter_assignment_types || DEFAULT_ASSIGNMENT.assignmentTypes || [];
+        document.querySelectorAll('.selector-group .selector-checks.grid input').forEach(cb => cb.checked = types.includes(cb.value));
+
+        // set sort category and sortBy
+        if (pref.sort_by) {
+            const opt = [...document.querySelectorAll('#assignmentSortBy option')].find(o => o.value === pref.sort_by);
+            if (opt) {
+                const cat = opt.dataset.cat || 'name';
+                const radio = document.querySelector(`input[name='sortCategory'][value='${cat}']`);
+                if (radio) radio.checked = true;
+                updateAssignmentSortOptions();
+                document.getElementById('assignmentSortBy').value = pref.sort_by;
+            }
+        }
+
+        updateClassSortVisibility();
+    }
+
+    async function loadPersonalPrefs() {
+        // load class prefs
+        try {
+            const res = await fetch('/api/preferences/classes');
+            if (res.ok) {
+                const data = await res.json();
+                if (data) {
+                    personalClassPrefs = data;
+                    setControlsFromClassPrefs(personalClassPrefs);
+                    lastAppliedClassFilters = getClassFilters();
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load class preferences', e);
+        }
+
+        // load assignment prefs
+        try {
+            const res = await fetch('/api/preferences/assignments');
+            if (res.ok) {
+                const data = await res.json();
+                if (data) {
+                    personalAssignmentPrefs = data;
+                    setControlsFromAssignmentPrefs(personalAssignmentPrefs);
+                    lastAppliedAssignmentFilters = getAssignmentFilters();
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load assignment preferences', e);
+        }
+
+        // Apply loaded preferences immediately
+        applyAll();
+    }
+
+    async function savePreferences() {
+        // class prefs
+        try {
+            const body = {
+                sort_by: document.getElementById('classSortBy')?.value,
+                status_filter: document.getElementById('classStatusFilter')?.value,
+                filter_importance: {
+                    high: !!document.querySelector(".selector-group input[value='high']")?.checked,
+                    medium: !!document.querySelector(".selector-group input[value='medium']")?.checked,
+                    low: !!document.querySelector(".selector-group input[value='low']")?.checked
+                },
+                filter_class_types: [...document.querySelectorAll("input[name='class_type_selector']:checked")].map(cb => cb.id.replace('class_type_selector_', ''))
+            };
+            await fetch('/api/preferences/classes', { 
+                method: 'PUT', 
+                headers: { 
+                    'Content-Type': 'application/json',
+                     'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(body), 
+                keepalive: true 
+            });
+        } catch (e) {
+            console.error('Failed to save class preferences', e);
+        }
+
+        // assignment prefs
+        try {
+            const body = {
+                due_status_filter: document.getElementById('dueStatusFilter')?.value,
+                completion_filter: document.getElementById('completionFilter')?.value,
+                graded_filter: document.getElementById('gradedFilter')?.value,
+                created_filter: document.getElementById('createdFilter')?.value,
+                filter_assignment_types: [...document.querySelectorAll('.selector-group .selector-checks.grid input:checked')].map(cb => cb.value),
+                sort_by: document.getElementById('assignmentSortBy')?.value,
+                table_layout: document.getElementById('tableLayout')?.value
+            };
+            await fetch('/api/preferences/assignments', { 
+                method: 'PUT', 
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                 }, 
+                 body: JSON.stringify(body), 
+                 keepalive: true 
+            });
+        } catch (e) {
+            console.error('Failed to save assignment preferences', e);
+        }
+    }
+
+    // Reset buttons
+    document.getElementById('resetSystemClassFilters')?.addEventListener('click', () => {
+        setControlsFromClassPrefs({
+            sort_by: DEFAULT_CLASS.sortBy,
+            status_filter: DEFAULT_CLASS.status,
+            filter_importance: DEFAULT_CLASS.importance,
+            filter_class_types: DEFAULT_CLASS.classTypes
+        });
+        lastAppliedClassFilters = getClassFilters();
+        applyAll();
+    });
+
+    document.getElementById('resetPersonalClassFilters')?.addEventListener('click', async () => {
+        if (!personalClassPrefs) await loadPersonalPrefs();
+        if (personalClassPrefs) {
+            setControlsFromClassPrefs(personalClassPrefs);
+            lastAppliedClassFilters = getClassFilters();
+            applyAll();
+        }
+    });
+
+    document.getElementById('resetSystemAssignmentFilters')?.addEventListener('click', () => {
+        setControlsFromAssignmentPrefs({
+            table_layout: DEFAULT_ASSIGNMENT.tableLayout,
+            due_status_filter: DEFAULT_ASSIGNMENT.dueStatus,
+            completion_filter: DEFAULT_ASSIGNMENT.completion,
+            graded_filter: DEFAULT_ASSIGNMENT.graded,
+            created_filter: DEFAULT_ASSIGNMENT.created,
+            filter_assignment_types: DEFAULT_ASSIGNMENT.assignmentTypes,
+            sort_by: DEFAULT_ASSIGNMENT.sortBy
+        });
+        lastAppliedAssignmentFilters = getAssignmentFilters();
+        applyAll();
+    });
+
+    document.getElementById('resetPersonalAssignmentFilters')?.addEventListener('click', async () => {
+        if (!personalAssignmentPrefs) await loadPersonalPrefs();
+        if (personalAssignmentPrefs) {
+            setControlsFromAssignmentPrefs(personalAssignmentPrefs);
+            lastAppliedAssignmentFilters = getAssignmentFilters();
+            applyAll();
+        }
+    });
+
+    // Save on pagehide / beforeunload (keepalive if possible)
+    window.addEventListener('pagehide', () => { savePreferences().catch(e => console.error(e)); });
+    window.addEventListener('beforeunload', () => { savePreferences().catch(e => console.error(e)); });
+
+    // Load personal prefs (if any) and apply them
+    loadPersonalPrefs();
 }
 
 // Auto-initialize on load
