@@ -5,6 +5,7 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assignments.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/selector.css') }}">
 {% endblock %}
 
 {% block navbar %}
@@ -72,100 +73,203 @@
     </div>
 </section>
 
-<!-- ================= FILTER PANEL ================= -->
-<section class="assignments-filters card">
-    <div class="filter-group">
-        <label for="dueFilter" class="input-label">Due Status</label>
-        <select id="dueFilter" name="due_status" class="input-field">
-            <option value="all">All</option>
-            <option value="overdue">Overdue</option>
-            <option value="not_due">Not Due</option>
-        </select>
-    </div>
+        <!-- ================= CLASS FILTERS ================= -->
+    <section class="selector-bar">
 
-    <div class="filter-group">
-        <label for="completionFilter" class="input-label">Completion</label>
-        <select id="completionFilter" name="completion" class="input-field">
-            <option value="all">All</option>
-            <option value="completed">Completed</option>
-            <option value="uncompleted">Uncompleted</option>
-        </select>
-    </div>
-
-    <div class="filter-group">
-        <label for="gradedFilter" class="input-label">Graded</label>
-        <select id="gradedFilter" name="graded" class="input-field">
-            <option value="all">All</option>
-            <option value="graded">Graded</option>
-            <option value="not_graded">Not Graded</option>
-        </select>
-    </div>
-
-    <fieldset class="filter-group wide">
-        <legend class="input-label">Assignment Type</legend>
-
-        <div class="checkbox-row">
-
-            <label for="type-homework">
-                <input type="checkbox" id="type-homework" name="assignment_type" value="homework" checked>
-                Homework
-            </label>
-
-            <label for="type-test">
-                <input type="checkbox" id="type-test" name="assignment_type" value="test" checked>
-                Test
-            </label>
-
-            <label for="type-quiz">
-                <input type="checkbox" id="type-quiz" name="assignment_type" value="quiz" checked>
-                Quiz
-            </label>
-
-            <label for="type-project">
-                <input type="checkbox" id="type-project" name="assignment_type" value="project" checked>
-                Project
-            </label>
-
-            <label for="type-lab-report">
-                <input type="checkbox" id="type-lab-report" name="assignment_type" value="lab_report" checked>
-                Lab Report
-            </label>
-
-            <label for="type-writing">
-                <input type="checkbox" id="type-writing" name="assignment_type" value="writing" checked>
-                Writing
-            </label>
-
-            <label for="type-exam">
-                <input type="checkbox" id="type-exam" name="assignment_type" value="exam" checked>
-                Exam
-            </label>
-            <label for="type-presentation">
-                <input type="checkbox" id="type-presentation" name="assignment_type" value="presentation" checked>
-                Presentation
-            </label>
-            <label for="type-reading">
-                <input type="checkbox" id="type-reading" name="assignment_type" value="reading" checked>
-                Reading
-            </label>
-
-            <label for="type-other">
-                <input type="checkbox" id="type-other" name="assignment_type" value="other" checked>
-                Other
-            </label>
-
+        <!-- Sort (only relevant if per_class, but always visible) -->
+        <div class="selector-group">
+            <label class="selector-label">Class sort</label>
+            <select class="selector-select" id="classSortBy">
+                <option value="name_asc">Name (A → Z)</option>
+                <option value="name_desc">Name (Z → A)</option>
+                <option value="importance_high_low">Importance (High → Low)</option>
+                <option value="importance_low_high">Importance (Low → High)</option>
+                <option value="difficulty_high_low">Difficulty (High → Low)</option>
+                <option value="difficulty_low_high">Difficulty (Low → High)</option>
+                <option value="grade_high_low">Grade (High → Low)</option>
+                <option value="grade_low_high">Grade (Low → High)</option>
+                <option value="created_newest">Newest</option>
+                <option value="created_oldest">Oldest</option>
+            </select>
         </div>
-    </fieldset>
+
+        <!-- Status -->
+        <div class="selector-group">
+            <label class="selector-label">Class status</label>
+            <select class="selector-select" id="classStatusFilter">
+                <option value="all">All</option>
+                <option value="in_progress">In progress</option>
+                <option value="finished">Finished</option>
+            </select>
+        </div>
+
+        <!-- Importance -->
+        <div class="selector-group wide">
+            <span class="selector-label">Importance</span>
+            <div class="selector-checks">
+                <label class="selector-check"><input type="checkbox" value="high" checked> High</label>
+                <label class="selector-check"><input type="checkbox" value="medium" checked> Medium</label>
+                <label class="selector-check"><input type="checkbox" value="low" checked> Low</label>
+            </div>
+        </div>
+
+        <!-- Class Types (JS can inject actual user types later) -->
+        <div class="selector-group wide">
+            <span class="selector-label">Class type</span>
+            <div class="selector-checks grid">
+                <label class="selector-check" for="class_type_selector_math"><input type="checkbox" name="class_type_selector" id="class_type_selector_math" checked> Math</label>
+                <label class="selector-check" for="class_type_selector_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_science" checked> Science</label>
+                <label class="selector-check" for="class_type_selector_language"><input type="checkbox" name="class_type_selector" id="class_type_selector_language" checked> Language</label>
+                <label class="selector-check" for="class_type_selector_social_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_social_science" checked> Social Science</label>
+                <label class="selector-check" for="class_type_selector_art"><input type="checkbox" name="class_type_selector" id="class_type_selector_art" checked> Art</label>
+                <label class="selector-check" for="class_type_selector_engineering"><input type="checkbox" name="class_type_selector" id="class_type_selector_engineering" checked> Engineering</label>
+                <label class="selector-check" for="class_type_selector_technology"><input type="checkbox" name="class_type_selector" id="class_type_selector_technology" checked> Tech</label>
+                <label class="selector-check" for="class_type_selector_finance"><input type="checkbox" name="class_type_selector" id="class_type_selector_finance" checked> Finance</label>
+                <label class="selector-check" for="class_type_selector_other"><input type="checkbox" name="class_type_selector" id="class_type_selector_other"checked> Other</label>
+            </div>
+        </div>
+
+        <!-- Actions (STACKED) -->
+        <div class="selector-actions stacked">
+            <button class="btn-tiny primary" id="applyClassFilters">
+                Apply filters
+            </button>
+        </div>
+
+    </section>
 
 
-    <div class="filter-group">
-        <label for="tableMode" class="input-label">Table Mode</label>
-        <select id="tableMode" name="table_mode" class="input-field">
-            <option value="single">Single Table</option>
-            <option value="per_class">One Table per Class</option>
-        </select>
-    </div>
-</section>
+
+    <!-- ================= ASSIGNMENT FILTERS ================= -->
+    <section class="selector-bar">
+
+        <!-- Table layout -->
+        <div class="selector-group">
+            <label class="selector-label">Table layout</label>
+            <select class="selector-select" id="tableLayout">
+                <option value="single">Single table</option>
+                <option value="per_class">One table per class</option>
+            </select>
+        </div>
+
+        <!-- Due status -->
+        <div class="selector-group">
+            <label class="selector-label">Due status</label>
+            <select class="selector-select" id="dueStatusFilter">
+                <option value="all">All</option>
+                <option value="overdue">Overdue</option>
+                <option value="not_due">Not due</option>
+            </select>
+        </div>
+
+        <!-- Completion -->
+        <div class="selector-group">
+            <label class="selector-label">Completion</label>
+            <select class="selector-select" id="completionFilter">
+                <option value="all">All</option>
+                <option value="completed">Completed</option>
+                <option value="uncompleted">Uncompleted</option>
+            </select>
+        </div>
+
+        <!-- Graded -->
+        <div class="selector-group">
+            <label class="selector-label">Graded</label>
+            <select class="selector-select" id="gradedFilter">
+                <option value="all">All</option>
+                <option value="graded">Graded</option>
+                <option value="ungraded">Ungraded</option>
+            </select>
+        </div>
+
+        <!-- Created -->
+        <div class="selector-group">
+            <label class="selector-label">Created</label>
+            <select class="selector-select" id="createdFilter">
+                <option value="all">All</option>
+                <option value="last_7_days">Last 7 days</option>
+                <option value="last_30_days">Last 30 days</option>
+            </select>
+        </div>
+
+        <!-- Assignment types -->
+        <div class="selector-group wide">
+            <span class="selector-label">Assignment type</span>
+            <div class="selector-checks grid">
+                <label class="selector-check"><input type="checkbox" value="homework" checked> Homework</label>
+                <label class="selector-check"><input type="checkbox" value="quiz" checked> Quiz</label>
+                <label class="selector-check"><input type="checkbox" value="project" checked> Project</label>
+                <label class="selector-check"><input type="checkbox" value="test" checked> Test</label>
+                <label class="selector-check"><input type="checkbox" value="exam" checked> Exam</label>
+                <label class="selector-check"><input type="checkbox" value="lab_report" checked> Lab report</label>
+                <label class="selector-check"><input type="checkbox" value="presentation" checked> Presentation</label>
+                <label class="selector-check"><input type="checkbox" value="reading" checked> Reading</label>
+                <label class="selector-check"><input type="checkbox" value="other" checked> Other</label>
+            </div>
+        </div>
+
+        <!-- Sort category radios -->
+        <div class="selector-group wide">
+            <span class="selector-label">Sort category</span>
+            <div class="selector-checks">
+                <label class="selector-check">
+                    <input type="radio" name="sortCategory" value="name" checked> Name
+                </label>
+                <label class="selector-check">
+                    <input type="radio" name="sortCategory" value="academic"> Academic
+                </label>
+                <label class="selector-check">
+                    <input type="radio" name="sortCategory" value="dates"> Dates
+                </label>
+                <label class="selector-check">
+                    <input type="radio" name="sortCategory" value="time"> Time
+                </label>
+            </div>
+        </div>
+
+        <!-- Sort by -->
+        <div class="selector-group">
+            <label class="selector-label">Sort by</label>
+            <select class="selector-select" id="assignmentSortBy">
+                <!-- JS will control visibility -->
+                <option value="name_asc" data-cat="name">Name (A → Z)</option>
+                <option value="name_desc" data-cat="name">Name (Z → A)</option>
+
+                <option value="grade_high_low" data-cat="academic">Grade (High → Low)</option>
+                <option value="grade_low_high" data-cat="academic">Grade (Low → High)</option>
+                <option value="ponderation_high_low" data-cat="academic">Ponderation (High → Low)</option>
+                <option value="ponderation_low_high" data-cat="academic">Ponderation (Low → High)</option>
+
+                <option value="due_date_soonest" data-cat="dates">Due date (Soonest)</option>
+                <option value="due_date_latest" data-cat="dates">Due date (Latest)</option>
+                <option value="created_newest" data-cat="dates">Created (Newest)</option>
+                <option value="created_oldest" data-cat="dates">Created (Oldest)</option>
+
+                <option value="difficulty_high_low" data-cat="time">Difficulty (High → Low)</option>
+                <option value="difficulty_low_high" data-cat="time">Difficulty (Low → High)</option>
+                <option value="estimated_minutes_high_low" data-cat="time">Estimated Time (High → Low)</option>
+                <option value="estimated_minutes_low_high" data-cat="time">Estimated Time (Low → High)</option>
+                <option value="study_minutes_high_low" data-cat="time">Time (High → Low)</option>
+                <option value="study_minutes_low_high" data-cat="time">Time (Low → High)</option>
+            </select>
+        </div>
+
+        <!-- Actions (STACKED) -->
+        <div class="selector-actions stacked">
+            <button class="btn-tiny primary" id="applyAssignmentFilters">
+                Apply filters
+            </button>
+
+            <button
+                class="btn-tiny"
+                data-open-modal="addAssignmentModal"
+            >
+                + Add Assignment
+            </button>
+        </div>
+
+    </section>
+
 
 
 
@@ -223,7 +327,12 @@
         {% endfor %}
     </div>
 
+
+
+
 </section>
+
+
 
 
 
@@ -726,5 +835,6 @@
 
 <script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/selector/assignments_selector.js') }}"></script>
 
 {% endblock %}

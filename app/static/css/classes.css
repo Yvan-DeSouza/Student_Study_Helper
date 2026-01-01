@@ -37,6 +37,9 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    /* enable smooth reordering and fade-in */
+    transition: transform 350ms ease, opacity 250ms ease;
+    will-change: transform, opacity;
 }
 
 /* Header */

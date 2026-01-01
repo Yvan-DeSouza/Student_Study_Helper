@@ -54,10 +54,11 @@ class Assignment(db.Model):
     @study_session_count.expression
     def study_session_count(cls):
         return (
-            select([func.count(StudySession.session_id)])
+            select(func.count(StudySession.session_id))
             .where(StudySession.assignment_id == cls.assignment_id)
-            .label("study_session_count")
+            .scalar_subquery()
         )
+
 
     @hybrid_property
     def study_minutes(self):
@@ -66,10 +67,11 @@ class Assignment(db.Model):
     @study_minutes.expression
     def study_minutes(cls):
         return (
-            select([func.coalesce(func.sum(StudySession.duration_minutes), 0)])
+            select(func.coalesce(func.sum(StudySession.duration_minutes), 0))
             .where(StudySession.assignment_id == cls.assignment_id)
-            .label("study_minutes")
+            .scalar_subquery()
         )
+
 
 
     # ---------------------- VALIDATIONS ----------------------

@@ -84,13 +84,13 @@
                 <span class="selector-label">Importance</span>
                 <div class="selector-checks">
                     <label class="selector-check">
-                        <input type="checkbox" checked> High
+                        <input type="checkbox" value="high" checked> High
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" checked> Medium
+                        <input type="checkbox" value="medium" checked> Medium
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" checked> Low
+                        <input type="checkbox" value="low" checked> Low
                     </label>
                 </div>
             </div>
@@ -99,19 +99,20 @@
             <div class="selector-group wide">
                 <span class="selector-label">Class type</span>
                 <div class="selector-checks grid">
-                    <label class="selector-check"><input type="checkbox" checked> Math</label>
-                    <label class="selector-check"><input type="checkbox" checked> Science</label>
-                    <label class="selector-check"><input type="checkbox" checked> Language</label>
-                    <label class="selector-check"><input type="checkbox" checked> Social Sci</label>
-                    <label class="selector-check"><input type="checkbox" checked> Art</label>
-                    <label class="selector-check"><input type="checkbox" checked> Engineering</label>
-                    <label class="selector-check"><input type="checkbox" checked> Tech</label>
-                    <label class="selector-check"><input type="checkbox" checked> Other</label>
+                    <label class="selector-check" for="class_type_selector_math"><input type="checkbox" name="class_type_selector" id="class_type_selector_math" checked> Math</label>
+                    <label class="selector-check" for="class_type_selector_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_science" checked> Science</label>
+                    <label class="selector-check" for="class_type_selector_language"><input type="checkbox" name="class_type_selector" id="class_type_selector_language" checked> Language</label>
+                    <label class="selector-check" for="class_type_selector_social_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_social_science" checked> Social Science</label>
+                    <label class="selector-check" for="class_type_selector_art"><input type="checkbox" name="class_type_selector" id="class_type_selector_art" checked> Art</label>
+                    <label class="selector-check" for="class_type_selector_engineering"><input type="checkbox" name="class_type_selector" id="class_type_selector_engineering" checked> Engineering</label>
+                    <label class="selector-check" for="class_type_selector_technology"><input type="checkbox" name="class_type_selector" id="class_type_selector_technology" checked> Tech</label>
+                    <label class="selector-check" for="class_type_selector_finance"><input type="checkbox" name="class_type_selector" id="class_type_selector_finance" checked> Finance</label>
+                    <label class="selector-check" for="class_type_selector_other"><input type="checkbox" name="class_type_selector" id="class_type_selector_other"checked> Other</label>
                 </div>
             </div>
 
             <!-- Action -->
-            <div class="selector-actions">
+            <div class="selector-actions stacked">
                 <button
                     class="btn-tiny"
                     data-open-modal="addClassModal"
@@ -119,6 +120,17 @@
                 >
                     + Add Class
                 </button>
+                <div style="display:flex; gap:8px; width:100%;">
+                  <button class="btn-tiny primary" id="applyClassFilters">
+                      Apply filters
+                  </button>
+
+                  <button class="btn-tiny ghost-btn" id="resetClassFilters" type="button">
+                      Reset filters
+                  </button>
+                </div>
+            </div>
+
 
         </section>
 
@@ -146,9 +158,15 @@
         {% for c in classes %}
         <div class="card class-card"
             data-class-id="{{ c.class_id }}"
-            data-importance="{{ c.importance }}"
-            data-finished="{{ c.is_finished }}"
-            data-name="{{ c.class_name }}">
+            data-name="{{ c.class_name | lower }}"
+            data-importance="{{ c.importance or '' }}"
+            data-difficulty="{{ c.difficulty or '' }}"
+            data-grade="{{ c.grade or '' }}"
+            data-finished="{{ 'finished' if c.is_finished else 'in_progress' }}"
+            data-class-type="{{ c.class_type }}"
+            data-created-at="{{ c.created_at.timestamp() if c.created_at else '' }}"
+        >
+
 
 
             <div class="class-card-header">
@@ -446,6 +464,6 @@
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/add_class.js') }}"></script>
-<script src="{{ url_for('static', filename='js/classes.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/classes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

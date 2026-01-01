@@ -1100,4 +1100,34 @@ document.getElementById("leaveWithoutSaving")
        
 
 
+
+     // ================= SORT CATEGORY LOGIC =================
+    document.addEventListener("DOMContentLoaded", () => {
+        const radios = document.querySelectorAll("input[name='sortCategory']");
+        const sortSelect = document.getElementById("assignmentSortBy");
+
+        function updateSortOptions(category) {
+            [...sortSelect.options].forEach(opt => {
+                opt.hidden = opt.dataset.cat !== category;
+            });
+
+            // Select first visible option
+            const firstVisible = [...sortSelect.options].find(o => !o.hidden);
+            if (firstVisible) sortSelect.value = firstVisible.value;
+        }
+
+        radios.forEach(radio => {
+            radio.addEventListener("change", e => {
+                updateSortOptions(e.target.value);
+            });
+        });
+
+        // Init on load
+        const checked = document.querySelector("input[name='sortCategory']:checked");
+        if (checked) updateSortOptions(checked.value);
+    });
+
+
+
+
 });

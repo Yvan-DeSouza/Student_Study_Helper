@@ -129,6 +129,23 @@
     padding: 0;
 }
 
+/* Animations for per-class cards and rows */
+.per-class-card {
+    transition: transform 300ms ease, opacity 250ms ease;
+}
+
+.assignments-table tbody tr {
+    transition: transform 300ms ease, opacity 220ms ease;
+}
+
+.per-class-card.hidden, .assignments-table-card.hidden {
+    display: none !important; /* ensure hidden state */
+}
+
+.assignments-table tbody tr.hidden {
+    display: none; /* rows hidden via JS should be removed from flow */
+}
+
 /* Table */
 .assignments-table {
     width: 100%;

@@ -75,7 +75,12 @@ def list_assignments():
     assignments = (
         db.session.query(
             Assignment,
-            Class.class_name
+            Class.class_name,
+            Class.importance.label('class_importance'),
+            Class.class_type.label('class_type'),
+            Class.is_finished.label('class_is_finished'),
+            Assignment.created_at.label('created_at'),
+            Assignment.study_minutes.label('study_minutes')
         )
         .join(Class, Assignment.class_id == Class.class_id)
         .filter(Class.user_id == current_user.user_id)
@@ -85,7 +90,7 @@ def list_assignments():
 
     # Normalize data for template
     assignment_rows = []
-    for a, class_name in assignments:
+    for a, class_name, class_importance, class_type, class_is_finished, created_at, study_minutes in assignments:
         assignment_rows.append({
             "assignment_id": a.assignment_id,
             "title": a.title,
@@ -101,7 +106,12 @@ def list_assignments():
             "difficulty": a.difficulty,
             "finished_at": a.finished_at,
             "pass_grade": a.pass_grade,
-            "class_name": class_name
+            "class_name": class_name,
+            "class_importance": class_importance,
+            "class_type": class_type,
+            "class_is_finished": class_is_finished,
+            "created_at": created_at,
+            "study_minutes": study_minutes
         })
 
     # <----- ADD THIS: fetch classes for modal dropdown

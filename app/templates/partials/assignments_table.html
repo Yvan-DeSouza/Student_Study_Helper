@@ -36,6 +36,11 @@
             data-ponderation="{{ a.ponderation or '' }}"
             data-difficulty="{{ a.difficulty or '' }}"
             data-estimated-minutes="{{ a.estimated_minutes or '' }}"
+            data-class-importance="{{ a.class_importance or '' }}"
+            data-class-type="{{ a.class_type or '' }}"
+            data-class-finished="{{ 'finished' if a.class_is_finished else 'in_progress' }}"
+            data-created-at="{{ a.created_at.timestamp() if a.created_at else '' }}"
+            data-study-minutes="{{ a.study_minutes or 0 }}"
         >
             <td>{{ a.title }}</td>
             {% if show_class_column %}

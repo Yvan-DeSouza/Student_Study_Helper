@@ -133,3 +133,15 @@
         min-width: 100%;
     }
 }
+
+
+/* ---- Stacked selector actions ---- */
+.selector-actions.stacked {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.selector-actions.stacked .btn-tiny {
+    width: 100%;
+}

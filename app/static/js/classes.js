@@ -1,6 +1,7 @@
+import { initClassSelector } from "./selector/selector_init.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-
+    initClassSelector();
 
 
 
@@ -980,6 +981,8 @@ document.addEventListener("DOMContentLoaded", () => {
         deleteModal.classList.remove("active");
         deleteModal.classList.add("hidden")
     });
+
+
 
 
 });
