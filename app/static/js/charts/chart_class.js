@@ -29,11 +29,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const scatterData = await scatterRes.json();
 
     if (scatterData.data.length === 0) {
-        scatterWrapper.innerHTML = `
-            <div class="chart-empty">
-                Start completing study sessions for classes with grades to see this graph.
-            </div>
-        `;
+        showEmptyMessage(
+            scatterWrapper,
+            "Start completing study sessions for classes with grades to see this graph."
+        );
+        return;
     } else {
         new Chart(scatterCtx, {
             type: "bubble",
@@ -111,36 +111,53 @@ document.addEventListener("DOMContentLoaded", async () => {
         classSelect.innerHTML = '<option value="all">All</option>' + classes.map(c => `\n            <option value="${c.class_id}">${c.class_name}</option>`).join('');
     }
 
-    function showEmptyMessage(wrapper, message) {
-        wrapper.querySelectorAll('.chart-empty').forEach(n => n.remove());
-        const empty = document.createElement('div');
-        empty.className = 'chart-empty';
-        empty.textContent = message;
-        wrapper.appendChild(empty);
-        const canvas = wrapper.querySelector('canvas');
-        if (canvas) canvas.style.display = 'none';
-    }
+    function showEmptyMessage(chartWrapper, message) {
+        clearEmptyMessage(chartWrapper);
 
-    function clearEmptyMessage(wrapper) {
-        wrapper.querySelectorAll('.chart-empty').forEach(n => n.remove());
-        const canvas = wrapper.querySelector('canvas');
-        if (canvas) canvas.style.display = '';
-    }
-
-    function ensureCanvasExists() {
-        if (!document.getElementById('classHealthGraph')) {
-            // recreate canvas inside wrapper
-            const canvas = document.createElement('canvas');
-            canvas.id = 'classHealthGraph';
-            healthWrapper.appendChild(canvas);
+        let empty = chartWrapper.querySelector('.chart-empty');
+        if (!empty) {
+            empty = document.createElement('div');
+            empty.className = 'chart-empty';
+            chartWrapper.appendChild(empty);
         }
+
+        empty.textContent = message;
+
+        const canvas = chartWrapper.querySelector('canvas');
+        if (canvas) canvas.style.visibility = 'hidden';
     }
+
+
+
+
+    function clearEmptyMessage(chartWrapper) {
+        chartWrapper.querySelectorAll('.chart-empty').forEach(n => n.remove());
+
+        const canvas = chartWrapper.querySelector('canvas');
+        if (canvas) canvas.style.visibility = 'visible';
+    }
+
+
+
+
+
+
 
     async function renderHealthChart(type = 'bar', classId = 'all', timeWindow = 'all') {
-        if (healthChart) healthChart.destroy();
+        if (healthChart) {
+            healthChart.destroy();
+            healthChart = null;
+        }
+
+        // 🔑 LOCK LAYOUT FIRST
+        if (type === 'pie') {
+            classTitle.classList.remove('hidden');
+        } else {
+            classTitle.classList.add('hidden');
+        }
+
         clearEmptyMessage(healthWrapper);
-        ensureCanvasExists();
-        classTitle.classList.add('hidden');
+
 
         // If pie -> ask for summary for the selected class
         if (type === 'pie') {
@@ -148,18 +165,32 @@ document.addEventListener("DOMContentLoaded", async () => {
             classTitle.classList.remove('hidden');
             const res = await fetch(`/charts/classes/class_health_summary?class_id=${classId}&time_window=${timeWindow}`);
             const data = await res.json();
+       
+  
+
             if (data.empty) {
-                healthWrapper.innerHTML = `\n                    <div class="chart-empty">\n                        Start logging assignments to see this graph.\n                    </div>\n                `;
+                showEmptyMessage(
+                    healthWrapper,
+                    "Start logging assignments to see this graph."
+                );
                 return;
             }
-            const total = data.total || (data.completed + data.in_progress + data.not_started);
-            const values = [data.completed, data.in_progress, data.not_started];
 
+
+            const total = data.total || (data.completed_count + data.in_progress_count + data.not_started_count);
+
+            const values = [
+                data.completed_pct,
+                data.in_progress_pct,
+                data.not_started_pct
+            ];
+
+            console.log(values)
             // Set title
             if (classId === 'all') classTitle.textContent = 'All classes';
             else classTitle.textContent = data.class_name || 'Class';
 
-            healthChart = new Chart(document.getElementById('classHealthGraph').getContext('2d'), {
+            healthChart = new Chart(healthCtx, {
                 type: 'pie',
                 data: {
                     labels: ['Completed', 'In Progress', 'Not Started'],
@@ -167,24 +198,28 @@ document.addEventListener("DOMContentLoaded", async () => {
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
-                    aspectRatio: 1,
+                    maintainAspectRatio: false,   // 🔑 ALWAYS false
                     animation: { duration: 600, easing: 'easeOutCubic' },
                     plugins: {
+                        legend: {position: 'bottom'},
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
-                                    const v = context.parsed || 0;
-                                    const pct = total ? ((v / total) * 100).toFixed(1) : '0.0';
-                                    return [`Total assignments: ${v}`, `Percent: ${pct}%`];
-                                },
-                                title: function(context) {
-                                    return context[0]?.label || '';
+                                label(context) {
+                                    const label = context.label;
+                                    const pct = context.parsed ?? 0;
+
+                                    let count = 0;
+                                    if (label === 'Completed') count = data.completed_count;
+                                    else if (label === 'In Progress') count = data.in_progress_count;
+                                    else if (label === 'Not Started') count = data.not_started_count;
+
+                                    return `${label}: ${pct}% (${count})`;
                                 }
                             }
-                        }
+                        },
                     }
                 }
+
             });
             return;
         }
@@ -197,13 +232,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             const res = await fetch(`/charts/classes/class_health?time_window=${timeWindow}`);
             const healthData = await res.json();
             if (!healthData || healthData.length === 0) {
-                healthWrapper.innerHTML = `\n                    <div class="chart-empty">\n                        Start logging assignments to see this graph.\n                    </div>\n                `;
+                showEmptyMessage(
+                    healthWrapper,
+                    "Start logging assignments to see this graph."
+                ); 
                 return;
             }
             const labels = healthData.map(c => c.class_name);
             const completedData = healthData.map(c => c.completed);
             const inProgressData = healthData.map(c => c.in_progress);
             const notStartedData = healthData.map(c => c.not_started);
+
 
             const completedCounts = healthData.map(c => c.completed_count || 0);
             const inProgressCounts = healthData.map(c => c.in_progress_count || 0);
@@ -243,66 +282,62 @@ document.addEventListener("DOMContentLoaded", async () => {
             const res = await fetch(`/charts/classes/class_health_summary?class_id=${classId}&time_window=${timeWindow}`);
             const data = await res.json();
             if (data.empty) {
-                healthWrapper.innerHTML = `\n                    <div class="chart-empty">\n                        Start logging assignments to see this graph.\n                    </div>\n                `;
+                showEmptyMessage(
+                    healthWrapper,
+                    "Start logging assignments to see this graph."
+                );
                 return;
             }
+
             const labels = [data.class_name || 'Class'];
             const datasets = [
-                { label: 'Completed', data: [data.completed], backgroundColor: '#22c55e' },
-                { label: 'In Progress', data: [data.in_progress], backgroundColor: '#facc15' },
-                { label: 'Not Started', data: [data.not_started], backgroundColor: '#ef4444' }
+                {
+                    label: 'Completed',
+                    data: [data.completed_pct],
+                    backgroundColor: '#22c55e',
+                    counts: [data.completed_count]
+                },
+                {
+                    label: 'In Progress',
+                    data: [data.in_progress_pct],
+                    backgroundColor: '#facc15',
+                    counts: [data.in_progress_count]
+                },
+                {
+                    label: 'Not Started',
+                    data: [data.not_started_pct],
+                    backgroundColor: '#ef4444',
+                    counts: [data.not_started_count]
+                }
             ];
 
-            healthChart = new Chart(document.getElementById('classHealthGraph').getContext('2d'), {
+
+            healthChart = new Chart(healthCtx, {
                 type: 'bar',
                 data: { labels, datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: { duration: 600, easing: 'easeOutCubic' },
-                    scales: { x: { stacked: true }, y: { stacked: true, max: 100, title: { display: true, text: 'Percentage of Assignments (%)' } } }
+                    scales: { x: { stacked: true }, y: { stacked: true, max: 100, title: { display: true, text: 'Percentage of Assignments (%)' } } },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label(context) {
+                                    const pct = context.parsed.y;
+                                    const count = context.dataset.counts?.[0] ?? 0;
+                                    return `${context.dataset.label}: ${pct}% (${count})`;
+                                }
+                            }
+                        }
+                    }
+
                 }
             });
         }
     }
 
-    // Helper to adjust single-class bar to be percentages + tooltip counts
-    async function adjustSingleClassBar(classId, timeWindow = 'all') {
-        if (!classId || classId === 'all') return;
-        try {
-            const res = await fetch(`/charts/classes/class_health_summary?class_id=${classId}&time_window=${timeWindow}`);
-            if (!res.ok) return;
-            const data = await res.json();
-            if (!data || data.empty) return;
-            const total = data.total || (data.completed + data.in_progress + data.not_started) || 0;
-            const pct = (n) => total ? Math.round((n / total) * 1000) / 10 : 0;
-            const completedPct = pct(data.completed);
-            const inProgPct = pct(data.in_progress);
-            const notStartedPct = pct(data.not_started);
 
-            if (!healthChart) return;
-            // replace dataset values with percentages and attach raw counts
-            healthChart.data.datasets = [
-                { label: 'Completed', data: [completedPct], backgroundColor: '#22c55e', counts: [data.completed || 0] },
-                { label: 'In Progress', data: [inProgPct], backgroundColor: '#facc15', counts: [data.in_progress || 0] },
-                { label: 'Not Started', data: [notStartedPct], backgroundColor: '#ef4444', counts: [data.not_started || 0] }
-            ];
-            // set tooltip to show percent and counts
-            healthChart.options.plugins = healthChart.options.plugins || {};
-            healthChart.options.plugins.tooltip = healthChart.options.plugins.tooltip || {};
-            healthChart.options.plugins.tooltip.callbacks = {
-                label: function(context) {
-                    const label = context.dataset.label || '';
-                    const pctVal = context.parsed.y;
-                    const count = (context.dataset.counts && context.dataset.counts[context.dataIndex]) || 0;
-                    return `${label}: ${pctVal}% (${count})`;
-                }
-            };
-            healthChart.update();
-        } catch (e) {
-            console.error('adjustSingleClassBar', e);
-        }
-    }
 
     // Toggle buttons
     document.querySelectorAll('.health-widget .chart-toggle button').forEach(btn => {
@@ -311,27 +346,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             btn.classList.add('active');
             currentHealthType = btn.dataset.chart;
             await renderHealthChart(currentHealthType, classSelect?.value || 'all', timeFilter?.value || 'all');
-            // if single-class bar mode, adjust to percentages + counts
-            if (currentHealthType === 'bar' && classSelect?.value && classSelect.value !== 'all') {
-                await adjustSingleClassBar(classSelect.value, timeFilter?.value || 'all');
-            }
+
+
         });
     });
 
     // Dropdowns
     classSelect?.addEventListener('change', async () => {
         await renderHealthChart(currentHealthType, classSelect.value, timeFilter?.value || 'all');
-        if (currentHealthType === 'bar' && classSelect.value !== 'all') await adjustSingleClassBar(classSelect.value, timeFilter?.value || 'all');
     });
     timeFilter?.addEventListener('change', async () => {
         await renderHealthChart(currentHealthType, classSelect?.value || 'all', timeFilter.value);
-        if (currentHealthType === 'bar' && classSelect?.value && classSelect.value !== 'all') await adjustSingleClassBar(classSelect?.value, timeFilter.value);
     });
 
     // Initial population and render
     await fetchAndPopulateClassDropdown();
     await renderHealthChart('bar', 'all', 'all');
-    // ensure adjustment if a specific class is selected on load
-    if (classSelect?.value && classSelect.value !== 'all') await adjustSingleClassBar(classSelect.value, timeFilter?.value || 'all');
 
 });

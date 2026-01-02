@@ -146,7 +146,7 @@ def class_health_breakdown():
 def class_health_summary():
     class_id = request.args.get("class_id", "all")
     time_window = request.args.get('time_window', 'all')
-    from datetime import timedelta
+
     since = None
     if time_window == 'last_7_days':
         since = datetime.now(timezone.utc) - timedelta(days=7)
@@ -164,8 +164,16 @@ def class_health_summary():
         query = query.filter(Assignment.created_at >= since)
 
     total = query.count()
+    class_name = "All classes"
+    if class_id != "all":
+        cl = Class.query.get(class_id)
+        if cl:
+            class_name = cl.class_name
     if total == 0:
-        return jsonify({"empty": True})
+        return jsonify({
+            "empty": True,
+            "class_name": class_name,
+            })
 
     completed = query.filter(Assignment.is_completed == True).count()
 
@@ -178,18 +186,29 @@ def class_health_summary():
 
     not_started = total - completed - in_progress
 
-    # include class_name when single class requested
-    class_name = 'All classes'
-    if class_id != 'all':
+    # ✅ percent calculation ALWAYS here
+    def pct(n): 
+        return round((n / total) * 100, 1)
+
+    class_name = "All classes"
+    if class_id != "all":
         cl = Class.query.get(class_id)
         if cl:
             class_name = cl.class_name
 
     return jsonify({
         "empty": False,
-        "completed": completed,
-        "in_progress": in_progress,
-        "not_started": not_started,
+        "class_name": class_name,
         "total": total,
-        "class_name": class_name
+
+        # percentages
+        "completed_pct": pct(completed),
+        "in_progress_pct": pct(in_progress),
+        "not_started_pct": pct(not_started),
+
+        # raw counts (for tooltip)
+        "completed_count": completed,
+        "in_progress_count": in_progress,
+        "not_started_count": not_started
     })
+
