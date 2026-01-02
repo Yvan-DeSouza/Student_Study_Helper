@@ -82,8 +82,9 @@ def create_app():
         calendar_routes,
         preferences_routes
     )
+    from .routes.charts import charts as charts_routes
 
-
+    app.register_blueprint(charts_routes, url_prefix="/charts")
     app.register_blueprint(auth_routes.auth)
     app.register_blueprint(class_routes.classes)
     app.register_blueprint(assignment_routes.assignment)

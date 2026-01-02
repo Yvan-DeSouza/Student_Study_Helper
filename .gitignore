@@ -8,4 +8,4 @@ instance/
 .vscode/
 .idea/
 migrations/
-
+node_modules/

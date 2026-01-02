@@ -305,10 +305,16 @@
                 </div>
             </div>
 
-            <div class="card widget">
-                <h3>Recent Assignments</h3>
-                <div class="chart-placeholder">
-                    <span>Recently added assignments will appear here</span>
+            <div class="card widget chart-widget">
+                <div class="chart-header">
+                    <h3>Assignment Load</h3>
+                    <div class="chart-toggle">
+                        <button class="btn-tiny active" id="loadDailyBtn">Daily</button>
+                        <button class="btn-tiny" id="loadWeeklyBtn">Weekly</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="assignmentLoad"></canvas>
                 </div>
             </div>
 
@@ -324,35 +330,29 @@
                         Add Class
                     </button>
                 </div>
-                <div class="chart-placeholder">
-                    <span>Charts coming soon</span>
-                </div>
+                    <div class="chart-container">
+                        <canvas id="timePerClassChart"></canvas>
+                    </div>
             </div>
 
-            <div class="split-row">
-                <div class="card widget small-stat">
-                    <h3>Study Time</h3>
-                    <div class="chart-placeholder small">
-                        <span>—</span>
-                    </div>
-                </div>
 
-                <div class="card widget small-stat">
+            <div class="card widget chart-widget">
+                <div class="chart-header">
                     <h3>Weekly Study Hours</h3>
-                    <div class="chart-placeholder small">
-                        <span>—</span>
-                    </div>
+
                 </div>
+                    <div class="chart-container">
+                        <canvas id="weeklyStudyTime"></canvas>
+                    </div>
             </div>
 
-            <div class="card widget performance-widget">
-                <h3>Performance Snapshot</h3>
-                <div class="chart-placeholder">
-                    <span>Performance analytics coming soon</span>
+            <div class="card widget chart-widget">
+                <div class="chart-header">
+                    <h3>Performance Snapshot</h3>
                 </div>
-                <button class="btn pill-btn full-width-pill" type="button">
-                    Go to Calendar
-                </button>
+                    <div class="chart-container">
+                        <canvas id="StudyEffByCls"></canvas>
+                    </div>
             </div>
 
         </div>
@@ -363,7 +363,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/charts/chart_home.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form_lock.js') }}"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 <script src="{{ url_for('static', filename='js/study_sessions.js') }}"></script>
