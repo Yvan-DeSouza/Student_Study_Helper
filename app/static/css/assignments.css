@@ -32,11 +32,26 @@
 
 /* ================= REMINDERS ================= */
 
+
 .assignments-reminders {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 25px;
     margin-bottom: 30px;
+}
+
+/* 2 cards per row */
+@media (max-width: 1100px) {
+    .assignments-reminders {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* 1 card per row (stacked) */
+@media (max-width: 700px) {
+    .assignments-reminders {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 900px) {
@@ -44,6 +59,11 @@
         grid-template-columns: 1fr;
     }
 }
+.assignments-reminders > .card {
+    display: flex;
+    flex-direction: column;
+}
+
 
 .upcoming-deadlines ul {
     padding-left: 18px;

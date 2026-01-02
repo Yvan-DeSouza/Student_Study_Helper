@@ -130,7 +130,11 @@ def class_health_breakdown():
             "color": c.color,
             "completed": round((completed / total_assignments) * 100, 1),
             "in_progress": round((in_progress / total_assignments) * 100, 1),
-            "not_started": round((not_started / total_assignments) * 100, 1)
+            "not_started": round((not_started / total_assignments) * 100, 1),
+            "total_assignments": total_assignments,
+            "completed_count": completed,
+            "in_progress_count": in_progress,
+            "not_started_count": not_started
         })
 
     return jsonify(payload)

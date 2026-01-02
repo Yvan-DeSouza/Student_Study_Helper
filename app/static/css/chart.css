@@ -22,7 +22,7 @@
 
 .chart-wrapper {
     position: relative;
-    height: 260px; /* slightly more than half of previous 420 */
+    height: 300px; /* slightly more than half of previous 420 */
     width: 100%;
 }
 

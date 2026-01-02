@@ -6,6 +6,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assignments.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/selector.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+
 {% endblock %}
 
 {% block navbar %}
@@ -66,9 +68,21 @@
     </div>
         <div class="card upcoming-deadlines">
         <h3>Assignment Due Timeline</h3>
-        <ul class="deadline-list">
-            <!-- JS inject upcoming assignments -->
-        </ul>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+            <div style="display:flex; gap:6px; align-items:center;">
+                <label class="selector-label">Mode</label>
+                <select id="dueTimelineMode" class="chart-select">
+                    <option value="days">Days (7)</option>
+                    <option value="weeks">Weeks (4)</option>
+                </select>
+            </div>
+            <div id="dueTimelineClassFilters" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                <!-- JS inject class checkboxes (All + per-class) -->
+            </div>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="assignmentDueTimelineChart"></canvas>
+        </div>
     </div>
     <div class="card calendar-preview">
         <h3>This Month</h3>
@@ -346,12 +360,21 @@
 <!-- ================= ANALYTICS ================= -->
 <section class="assignments-analytics">
     <div class="card chart-card">
-        <h3>Completion Breakdown</h3>
-        <div class="chart-toggle">
-            <button class="btn-tiny active">Simple</button>
-            <button class="btn-tiny">Detailed</button>
+        <h3>Assignment Type Load Breakdown</h3>
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+            <div class="chart-toggle" style="margin-right:auto;">
+                <button class="btn-tiny active" data-metric="count">Count</button>
+                <button class="btn-tiny" data-metric="study_time">Study Time</button>
+            </div>
+            <select id="assignmentTypeTimeFilter" class="chart-select">
+                <option value="all">All time</option>
+                <option value="last_7_days">Last 7 days</option>
+                <option value="last_30_days">Last 30 days</option>
+            </select>
         </div>
-        <canvas id="assignmentCompletionChart"></canvas>
+        <div class="chart-wrapper">
+            <canvas id="assignmentTypeLoad"></canvas>
+        </div>
     </div>
 
     <div class="card chart-card">
@@ -831,11 +854,12 @@
 {% endblock %}
 
 {% block extra_js %}
+
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="{{ url_for('static', filename='js/charts/chart_assignment.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
