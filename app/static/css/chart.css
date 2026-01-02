@@ -1,0 +1,73 @@
+/* ================= Charts ================= */
+
+.chart-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Layout for analytics area: two columns on wide screens, stack on small */
+.analytics-section {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(300px, 48%));
+    gap: 18px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .analytics-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 260px; /* slightly more than half of previous 420 */
+    width: 100%;
+}
+
+/* Pie charts should stay square and scale responsively */
+.chart-wrapper.pie {
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-toggle {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.chart-select {
+    margin-bottom: 10px;
+    padding: 6px;
+    border-radius: 8px;
+}
+
+.chart-select.hidden {
+    display: none;
+}
+
+.chart-title {
+    text-align: center;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.chart-empty {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.95rem;
+}

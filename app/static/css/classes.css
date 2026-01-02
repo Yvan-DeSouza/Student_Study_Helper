@@ -90,20 +90,9 @@
     color: #f44336;
 }
 
-/* Analytics placeholders */
-.analytics-section {
-    margin-top: 40px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 25px;
-}
 
-.chart-card canvas {
-    height: 180px;
-    width: 100%;
-    background: rgba(0,0,0,0.05);
-    border-radius: 15px;
-}
+
+
 
 
 .class-dot {
@@ -194,3 +183,6 @@
 .inline-grade-input.invalid {
     border-color: #ef4444;
 }
+
+
+

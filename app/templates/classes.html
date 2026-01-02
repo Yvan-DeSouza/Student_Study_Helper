@@ -5,6 +5,8 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/classes.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/selector.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+
 {% endblock %}
 
 {% block navbar %}
@@ -341,22 +343,41 @@
     <!-- ================= ANALYTICS ================= -->
     <section class="analytics-section">
 
-        <div class="card chart-card">
+        <div class="card widget chart-widget scatter-widget">
             <div class="chart-header">
-                <h3>Study Time Distribution</h3>
-                <div class="chart-toggle">
+                <h3>Grade vs Study Time Scatter</h3>
+            </div>
+            <div class="chart-wrapper bar">
+                <canvas id="gradeStudyScatter"></canvas>
+            </div>
+        </div>
+
+        <div class="card widget chart-widget health-widget">
+            <div class="chart-header">
+                <h3>Class Health Breakdown</h3>
+            </div>
+            <div class="chart-controls" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                <div class="chart-toggle" style="margin-right:auto;">
                     <button class="btn-tiny active" data-chart="pie">Pie</button>
                     <button class="btn-tiny" data-chart="bar">Bar</button>
                 </div>
+
+                <select id="classHealthSelect" class="chart-select">
+                    <option value="all">All</option>
+                </select>
+
+                <select id="classHealthTimeFilter" class="chart-select">
+                    <option value="all">All time</option>
+                    <option value="last_7_days">Last 7 days</option>
+                    <option value="last_30_days">Last 30 days</option>
+                </select>
             </div>
 
-            <canvas id="timePerClassChart"></canvas>
-        </div>
-
-        <div class="card chart-card">
-            <h3>Assignments per Class</h3>
-            <canvas id="assignmentsPerClassChart"></canvas>
-        </div>
+            <h4 id="classHealthTitle" class="chart-title hidden"></h4>
+            <div class="chart-wrapper pie">
+                <canvas id="classHealthGraph"></canvas>
+            </div>
+        </div> 
     </section>
 </div>
 <!-- ================= INVALID GRADE MODAL ================= -->
@@ -464,7 +485,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/charts/chart_class.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/add_class.js') }}"></script>
