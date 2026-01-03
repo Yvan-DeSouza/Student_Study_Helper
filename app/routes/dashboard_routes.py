@@ -1,11 +1,10 @@
 from flask import Blueprint, render_template
-from app.utils import login_required
-from flask_login import current_user
+from flask_login import current_user, login_required
+
 dashboard = Blueprint("dashboard", __name__)
-@dashboard.route("/")
+@dashboard.route("/dashboard")
 @login_required
 def graphs():
     return render_template(
-        "dashboard.html",
-        user=current_user
+        "dashboard.html"
     )

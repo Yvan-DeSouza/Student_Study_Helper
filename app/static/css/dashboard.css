@@ -1,8 +1,9 @@
 .dashboard-container {
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+    display:flex;
+    flex-direction:column;
     gap:2rem;
     padding:2rem;
+    width:100%;
 }
 
 .welcome-card h1 { font-size:1.8rem; }

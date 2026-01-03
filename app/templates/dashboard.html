@@ -1,38 +1,84 @@
 {% extends "base.html" %}
-
-{% block title %}Dashboard - {{ user.username }}{% endblock %}
+{% block title %}Dashboard | StudyMate{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 {% endblock %}
 
+{% block navbar %}
+<nav class="navbar card">
+    <div class="nav-left">
+        <!-- OPTIONAL IMAGE: study_logo.png -->
+        <img src="{{ url_for('static', filename='images/study_logo.png') }}"
+             class="nav-logo"
+             alt="StudyMate logo">
+        <span class="brand-name">StudyMate</span>
+    </div>
+
+    <div class="nav-center">
+        <a href="{{ url_for('main.home') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('classes.list_classes') }}" class="nav-link">Classes</a>
+        <a href="{{ url_for('assignment.list_assignments') }}" class="nav-link">Assignments</a>
+        <a href="{{ url_for('study.study_sessions') }}" class="nav-link">Study Sessions</a>
+        <a href="{{ url_for('dashboard.graphs') }}" class="nav-link active">Dashboard</a>
+        <a href="{{ url_for('calendar.home') }}" class="nav-link">Calendar</a>
+    </div>
+
+    <div class="nav-right">
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+
+        <!-- OPTIONAL IMAGE: user_avatar.png -->
+        <div class="user-avatar">
+            <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User avatar">
+        </div>
+
+        <button class="theme-toggle" aria-label="Toggle theme">
+            <span class="toggle-icon">☀️</span>
+        </button>
+    </div>
+</nav>
+{% endblock %}
+
+
 {% block content %}
-<div class="dashboard-container">
-    <div class="card welcome-card">
-        <h1>Welcome, {{ user.username }}!</h1>
-        <p>Email: {{ user.email }}</p>
-    </div>
 
-    <div class="card stats-card">
-        <h2>Total Study Time</h2>
-        <p>{{ user.total_study_time or 0 }} minutes</p>
-    </div>
+<div class="dashboard-shell">
+  <aside class="dashboard-side-nav" id="dashboardSideNav">
+    <div class="side-nav-inner">
+      <button class="side-nav-icon" data-target="performance" aria-label="Performance & Trends">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="4" height="14" rx="1" fill="#0ea5e9"/><rect x="9" y="8" width="4" height="9" rx="1" fill="#0ea5e9"/><rect x="15" y="11" width="4" height="6" rx="1" fill="#0ea5e9"/></svg>
+        <span class="side-nav-label">Performance</span>
+      </button>
 
-    <div class="card chart-card">
-        <h2>Study Progress</h2>
-        <p>Charts coming soon…</p>
-        <canvas id="studyChart"></canvas>
-    </div>
+      <button class="side-nav-icon" data-target="risk" aria-label="Risk & Urgency">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L2 21h20L12 3z" fill="#0ea5e9"/></svg>
+        <span class="side-nav-label">Risk</span>
+      </button>
 
-    <div class="card actions-card">
-        <h2>Quick Actions</h2>
-        <a href="{{ url_for('study.study_sessions') }}" class="btn">Log Study Session</a>
-        <a href="{{ url_for('assignment.add_assignment') }}" class="btn">View Assignments</a>
-        <a href="{{ url_for('auth.logout') }}" class="btn logout-btn">Logout</a>
+      <button class="side-nav-icon" data-target="effort" aria-label="Effort & Efficiency">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="3" fill="#0ea5e9"/><rect x="4" y="14" width="16" height="6" rx="1" fill="#0ea5e9"/></svg>
+        <span class="side-nav-label">Effort</span>
+      </button>
     </div>
+  </aside>
+
+  <main class="dashboard-content">
+    <div class="dashboard-container">
+      {% include 'partials/dashboard/perfomance.html' %}
+      {% include 'partials/dashboard/risk.html' %}
+      {% include 'partials/dashboard/effort.html' %}
+    </div>
+  </main>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/charts/chart_effort.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts/chart_performance.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts/chart_risk.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
 {% endblock %}

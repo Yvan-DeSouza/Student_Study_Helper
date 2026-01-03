@@ -12,7 +12,7 @@ classes = Blueprint("classes", __name__)
 @login_required
 def list_classes():
     classes = Class.query.filter_by(user_id=current_user.user_id).all()
-    return render_template("classes.html", classes=classes)
+    return render_template("classes.html", classes=classes, user=current_user.user_id)
 
 
 @classes.route("/classes/new", methods=["POST"])

@@ -4,4 +4,4 @@ from flask import Blueprint
 charts = Blueprint("charts", __name__)
 
 # Import routes here to register with the blueprint
-from . import home_charts_routes, class_charts_routes, assignment_charts_routes
+from . import home_charts_routes, class_charts_routes, assignment_charts_routes, effort_routes, performance_routes, risk_routes
