@@ -18,3 +18,298 @@
 }
 
 .logout-btn { background: #e63946; }
+
+/* =================== GRAPH CARDS =================== */
+.graph-card {
+  background: var(--card-bg, #fff);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(16,24,40,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 280px;
+  position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.flip-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 6px;
+  transition: transform 0.3s ease;
+}
+
+.flip-btn:hover {
+  transform: rotate(180deg);
+}
+
+.card-body {
+  position: relative;
+  flex: 1;
+  min-height: 220px;
+  transform-style: preserve-3d;
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  overflow: auto;
+}
+
+.card-front {
+  transform: rotateY(0deg);
+  opacity: 1;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  /* Remove flex centering to allow custom content */
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Flipped state - card rotates, but header stays normal */
+.graph-card.flipped {
+  transform: rotateY(180deg);
+}
+
+/* When flipped, hide front and show back */
+.graph-card.flipped .card-front {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.graph-card.flipped .card-back {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Counter-rotate the header so it stays readable */
+.graph-card.flipped .card-header {
+  transform: rotateY(180deg);
+}
+
+/* Counter-rotate the card-body so content inside (especially card-back) is readable */
+.graph-card.flipped .card-body {
+  transform: rotateY(180deg);
+}
+
+.chart-wrapper {
+  height: 220px;
+  width: 100%;
+}
+
+/* =================== DASHBOARD LAYOUT =================== */
+.dashboard-shell {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 32px;
+  position: relative;
+}
+
+/* =================== SIDE NAVIGATION =================== */
+.dashboard-side-nav {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 9999;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  
+  width: 60px;
+  padding: 16px 8px;
+  
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+  
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.dashboard-side-nav:hover {
+  width: 200px;
+  padding: 16px;
+}
+
+.side-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  
+  width: 100%;
+  padding: 10px;
+  
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  
+  transition: background 0.2s ease;
+}
+
+.side-nav-btn:hover {
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.side-nav-btn.active {
+  background: rgba(14, 165, 233, 0.15);
+}
+
+.nav-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  color: #0ea5e9;
+}
+
+.nav-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0ea5e9;
+  white-space: nowrap;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease, max-width 0.3s ease;
+}
+
+.dashboard-side-nav:hover .nav-label {
+  opacity: 1;
+  max-width: 150px;
+}
+
+.dashboard-side-nav:hover .side-nav-btn {
+  justify-content: flex-start;
+}
+
+/* =================== CONTENT AREA =================== */
+.dashboard-content {
+  margin-left: 100px;
+  width: calc(100% - 124px);
+  max-width: none;
+}
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* =================== SECTION LAYOUT =================== */
+.dashboard-section {
+  width: 100%;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.section-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+/* =================== THEME SUPPORT =================== */
+:root[data-theme="light"] .dashboard-side-nav,
+:root[data-theme="light"] .graph-card {
+  background: var(--card-light);
+}
+
+:root[data-theme="dark"] .dashboard-side-nav,
+:root[data-theme="dark"] .graph-card {
+  background: var(--card-dark);
+}
+
+:root[data-theme="dark"] .section-header h2 {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .card-header h4 {
+  color: #fff;
+}
+
+/* =================== RESPONSIVE =================== */
+@media (max-width: 1200px) {
+  .section-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-shell {
+    padding: 20px;
+  }
+  
+  .dashboard-side-nav {
+    left: 20px;
+  }
+  
+  .dashboard-content {
+    margin-left: 90px;
+    width: calc(100% - 110px);
+  }
+}
+
+/* Only hide labels when screen is very narrow (less than ~450px) */
+@media (max-width: 450px) {
+  .dashboard-shell {
+    padding: 16px;
+  }
+  
+  .dashboard-side-nav {
+    left: 16px;
+    width: 50px;
+    padding: 12px 6px;
+  }
+  
+  .dashboard-side-nav:hover {
+    width: 50px;
+  }
+  
+  .nav-label {
+    display: none;
+  }
+  
+  .dashboard-content {
+    margin-left: 70px;
+    width: calc(100% - 86px);
+  }
+}

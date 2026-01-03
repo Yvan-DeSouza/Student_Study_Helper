@@ -3,7 +3,6 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 {% endblock %}
 
@@ -68,6 +67,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+
 <script src="{{ url_for('static', filename='js/charts/chart_effort.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts/chart_performance.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts/chart_risk.js') }}"></script>
