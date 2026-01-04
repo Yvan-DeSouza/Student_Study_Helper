@@ -69,73 +69,79 @@ def spent_vs_expected_time():
         StudySession.duration_minutes.isnot(None)
     ).all()
     
-    # Get incomplete assignments for expected time
-    incomplete = db.session.query(
-        Assignment.class_id,
-        Assignment.estimated_minutes
-    ).filter(
-        Assignment.user_id == current_user.user_id,
-        Assignment.is_completed == False
-    ).all()
+
     
     # Get historical data for estimation
-    completed_assignments = db.session.query(
-        Assignment.class_id,
-        Assignment.assignment_type,
-        Class.class_type
-    ).join(
-        Class, Class.class_id == Assignment.class_id
-    ).join(
-        StudySession, StudySession.assignment_id == Assignment.assignment_id
-    ).filter(
-        Assignment.user_id == current_user.user_id,
-        Assignment.is_completed == True,
-        StudySession.duration_minutes.isnot(None)
-    ).all()
+    completed_assignments = (
+        db.session.query(Assignment)
+        .join(Class, Class.class_id == Assignment.class_id)
+        .join(StudySession, StudySession.assignment_id == Assignment.assignment_id)
+        .filter(
+            Assignment.user_id == current_user.user_id,
+            Assignment.is_completed == True,
+            StudySession.duration_minutes.isnot(None)
+        )
+        .all()
+    )
+
     
     # Aggregate actual time per class
     actual_by_class = {}
     for s in sessions:
         actual_by_class[s.class_id] = actual_by_class.get(s.class_id, 0) + s.duration_minutes
     
-    # Aggregate expected time per class
-    expected_by_class = {}
+
     
     # Build past assignments for estimation
     past_assignments = []
-    for ca in completed_assignments:
-        # Get actual time spent
-        actual_time = db.session.query(
+    study_times = dict(
+        db.session.query(
+            StudySession.assignment_id,
             db.func.sum(StudySession.duration_minutes)
-        ).filter(
-            StudySession.assignment_id == Assignment.assignment_id,
-            StudySession.user_id == current_user.user_id
-        ).join(
-            Assignment
-        ).filter(
-            Assignment.class_id == ca.class_id
-        ).scalar()
-        
+        )
+        .filter(
+            StudySession.user_id == current_user.user_id,
+            StudySession.is_completed == True
+        )
+        .group_by(StudySession.assignment_id)
+        .all()
+    )
+
+    # Aggregate expected time per class
+    expected_by_class = {}
+
+    #Compute the past_assignments to be used by estimate_expected_minutes
+    for ca in completed_assignments:
+        actual_time = study_times.get(ca.assignment_id)
+
         if actual_time:
             past_assignments.append({
-                'class_type': ca.class_type,
+                'class_type': ca.class_.class_type,
                 'assignment_type': ca.assignment_type,
                 'class_id': ca.class_id,
                 'actual_minutes': actual_time
             })
-    
-    for inc in incomplete:
-        if inc.estimated_minutes:
-            expected_by_class[inc.class_id] = expected_by_class.get(inc.class_id, 0) + inc.estimated_minutes
+
+    for ca in completed_assignments:
+        # 1. Determine expected time
+        if ca.estimated_minutes:
+            expected_minutes = ca.estimated_minutes
         else:
-            # Use estimation if we have enough data
-            if has_enough_data(past_assignments):
-                cls = next((c for c in classes if c.class_id == inc.class_id), None)
-                if cls:
-                    estimated = estimate_expected_minutes(
-                        cls.class_type, "other", cls.class_id, past_assignments
-                    )
-                    expected_by_class[inc.class_id] = expected_by_class.get(inc.class_id, 0) + estimated
+            if not has_enough_data(past_assignments):
+                continue
+
+            expected_minutes = estimate_expected_minutes(
+                ca.class_.class_type,
+                ca.assignment_type,
+                ca.class_id,
+                past_assignments
+            )
+
+        # 2. Aggregate by class
+        expected_by_class[ca.class_id] = (
+            expected_by_class.get(ca.class_id, 0) + expected_minutes
+        )
+
     
     # Build response
     labels = []
@@ -147,6 +153,7 @@ def spent_vs_expected_time():
             labels.append(cls.class_name)
             actual.append(actual_by_class.get(cls.class_id, 0))
             expected.append(expected_by_class.get(cls.class_id, 0))
+
     
     if not labels:
         return jsonify({"empty": True, "message": "No data available"})

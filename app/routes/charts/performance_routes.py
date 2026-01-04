@@ -52,6 +52,7 @@ def rolling_grade_trend():
     # ✅ Weekly buckets
     df['week'] = (
         df['finished_at']
+        .dt.tz_localize(None)
         .dt.to_period('W')
         .apply(lambda p: p.start_time)
     )
@@ -211,6 +212,7 @@ def performance_stability_index():
 
     df['week'] = (
         df['created_at']
+        .dt.tz_localize(None)
         .dt.to_period('W')
         .apply(lambda p: p.start_time)
     )
@@ -356,6 +358,7 @@ def effort_outcome_timeline():
         study_df['started_at'] = pd.to_datetime(study_df['started_at'], utc=True)
         study_df['week'] = (
             study_df['started_at']
+            .dt.tz_localize(None)
             .dt.to_period('W')
             .apply(lambda p: p.start_time)
         )
@@ -375,6 +378,7 @@ def effort_outcome_timeline():
         grade_df['finished_at'] = pd.to_datetime(grade_df['finished_at'], utc=True)
         grade_df['week'] = (
             grade_df['finished_at']
+            .dt.tz_localize(None)
             .dt.to_period('W')
             .apply(lambda p: p.start_time)
         )
@@ -465,6 +469,7 @@ def lag_correlation_heatmap():
         study_df['started_at'] = pd.to_datetime(study_df['started_at'], utc=True)
         study_df['week'] = (
             study_df['started_at']
+            .dt.tz_localize(None)
             .dt.to_period('W')
             .apply(lambda x: x.start_time)
         )
@@ -474,9 +479,12 @@ def lag_correlation_heatmap():
             'finished_at': r.finished_at,
             'grade': float(r.grade)
         } for r in grade_results])
+
+
         grade_df['finished_at'] = pd.to_datetime(grade_df['finished_at'], utc=True)
         grade_df['week'] = (
             grade_df['finished_at']
+            .dt.tz_localize(None)
             .dt.to_period('W')
             .apply(lambda x: x.start_time)
         )

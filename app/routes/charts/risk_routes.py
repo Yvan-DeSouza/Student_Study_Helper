@@ -133,7 +133,7 @@ def risk_composition_evolution():
     df['due_at'] = pd.to_datetime(df['due_at'], utc=True)
     
     # Bucket by week (using created_at for temporal alignment)
-    df['week'] = df['created_at'].dt.to_period('W').apply(lambda x: x.start_time)
+    df['week'] = df['created_at'].dt.tz_localize(None).dt.to_period('W').apply(lambda x: x.start_time)
     
     # Compute components per assignment
     df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now))
