@@ -1,36 +1,13 @@
+// static/js/dashboard.js
+import { initFlipCards } from './flip_card.js';
+
 document.addEventListener("DOMContentLoaded", () => {
   const sideNav = document.getElementById('dashboardSideNav');
   const navButtons = sideNav?.querySelectorAll('.side-nav-btn') || [];
   const sections = Array.from(document.querySelectorAll('.dashboard-section'));
 
-  // Flip state map (persist only while on dashboard)
-  const flipState = new Map();
-
-  // Initialize flip buttons
-  document.querySelectorAll('.flip-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const card = btn.closest('.graph-card');
-      if (!card) return;
-      
-      const cardId = card.dataset.cardId;
-      const isFlipped = card.classList.toggle('flipped');
-      
-      // Update title - only change it, don't modify card-back content
-      const title = card.querySelector('.card-title');
-      if (title) {
-        if (isFlipped) {
-          title.dataset.originalTitle = title.textContent;
-          title.textContent = `Description ${title.textContent}`;
-        } else {
-          title.textContent = title.dataset.originalTitle || title.textContent.replace('Description ', '');
-        }
-      }
-      
-      // Store flip state
-      flipState.set(cardId, isFlipped);
-    });
-  });
+  // Initialize flip card functionality
+  const { reapplyFlipStates } = initFlipCards();
 
   // Navigation: click buttons to scroll to section
   navButtons.forEach(btn => {
@@ -41,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!section) return;
       
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Active state will be updated by IntersectionObserver
     });
   });
 
@@ -86,26 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         // Reapply flip states when section comes into view
-        const cards = entry.target.querySelectorAll('.graph-card');
-        cards.forEach(card => {
-          const cardId = card.dataset.cardId;
-          const shouldFlip = flipState.get(cardId);
-          
-          if (shouldFlip) {
-            card.classList.add('flipped');
-            const title = card.querySelector('.card-title');
-            if (title && !title.dataset.originalTitle) {
-              title.dataset.originalTitle = title.textContent;
-              title.textContent = `Description ${title.textContent}`;
-            }
-          } else {
-            card.classList.remove('flipped');
-            const title = card.querySelector('.card-title');
-            if (title && title.dataset.originalTitle) {
-              title.textContent = title.dataset.originalTitle;
-            }
-          }
-        });
+        reapplyFlipStates(entry.target);
       }
     });
   }, {
@@ -115,29 +72,4 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   sections.forEach(section => observer.observe(section));
-
-  // Reset flip states when leaving the dashboard
-  window.addEventListener('beforeunload', () => {
-    flipState.clear();
-  });
-
-  // Expose helper to reset flips
-  window.resetDashboardFlips = function() {
-    document.querySelectorAll('.graph-card.flipped').forEach(card => {
-      card.classList.remove('flipped');
-      const title = card.querySelector('.card-title');
-      if (title && title.dataset.originalTitle) {
-        title.textContent = title.dataset.originalTitle;
-        delete title.dataset.originalTitle;
-      }
-    });
-    flipState.clear();
-  };
-
-  // Reset on visibility change
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-      window.resetDashboardFlips();
-    }
-  });
 });
