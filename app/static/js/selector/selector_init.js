@@ -43,7 +43,7 @@ export function initClassSelector() {
 
     async function loadPersonalPrefs() {
         try {
-            const res = await fetch('/api/preferences/classes');
+            const res = await fetch('/api/preferences/classes?page=classes');
             if (!res.ok) return;
             const data = await res.json();
             if (data) {
@@ -111,13 +111,14 @@ export function initClassSelector() {
     const saveClassPrefs = async () => {
         const state = getClassSelectorState();
         const payload = {
+            page_name: 'classes',
             sort_by: state.sortBy,
             status_filter: state.status,
             filter_importance: state.importance,
             filter_class_types: state.classTypes
         };
         try {
-            await fetch('/api/preferences/classes', {
+            await fetch('/api/preferences/classes?page=classes', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

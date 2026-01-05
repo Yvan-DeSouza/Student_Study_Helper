@@ -5,14 +5,21 @@ from app.models.user import (
     ClassViewPreferences,
     AssignmentViewPreferences
 )
+ALLOWED_CLASS_PREF_PAGES = {"classes", "assignments"}
+
 preferences = Blueprint("preferences", __name__)
 @preferences.route("/api/preferences/classes", methods=["GET"])
 @login_required
 def get_class_preferences():
+    page_name = request.args.get("page", "classes")
+
+    if page_name not in ALLOWED_CLASS_PREF_PAGES:
+        return jsonify({"error": "Invalid page_name"}), 400
     pref = ClassViewPreferences.query.filter_by(
         user_id=current_user.user_id,
-        page_name="classes"
+        page_name=page_name
     ).first()
+    print("hello")
 
     if not pref:
         return jsonify(None), 200
@@ -33,10 +40,14 @@ def get_class_preferences():
 @login_required
 def save_class_preferences():
     data = request.get_json()
+    page_name = data.get("page_name")
+
+    if page_name not in ALLOWED_CLASS_PREF_PAGES:
+        return jsonify({"error": "Invalid or missing page_name"}), 400
 
     pref = ClassViewPreferences.query.filter_by(
         user_id=current_user.user_id,
-        page_name="classes"
+        page_name=page_name
     ).first()
 
     if not pref:

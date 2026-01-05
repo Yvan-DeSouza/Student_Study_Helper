@@ -488,7 +488,7 @@ def assignment_risk_breakdown():
         'history': '#8b5cf6',
         'overlap': '#3b82f6'
     }
-    
+     
     datasets = []
     for key in component_keys:
         datasets.append({

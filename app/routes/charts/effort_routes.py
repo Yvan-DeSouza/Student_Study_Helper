@@ -1,12 +1,11 @@
-from flask import jsonify, request
+from flask import jsonify
 from flask_login import login_required, current_user
 from app.routes.charts import charts
 from app.models.course import Class
 from app.models.study_session import StudySession
 from app.models.assignment import Assignment
 from app.extensions import db
-import pandas as pd
-import numpy as np
+
 
 from app.services.expected_utils import (
     has_enough_data,

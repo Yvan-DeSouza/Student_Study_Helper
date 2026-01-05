@@ -1,4 +1,12 @@
 import { applyVisibilityAndOrder as applyClassesFX } from './selector_apply.js';
+function normalizeClassType(v) {
+    return (v || '')
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/-/g, '_');
+}
+
 const csrfToken = document
     .querySelector('meta[name="csrf-token"]')
     ?.getAttribute("content");
@@ -6,6 +14,7 @@ const csrfToken = document
 const IMPORTANCE_RANK = { high: 3, medium: 2, low: 1 };
 
 function getClassFilters(root = document) {
+
     return {
         sortBy: root.querySelector('#classSortBy')?.value,
         status: root.querySelector('#classStatusFilter')?.value,
@@ -14,13 +23,13 @@ function getClassFilters(root = document) {
             medium: !!root.querySelector(".selector-group input[value='medium']")?.checked,
             low: !!root.querySelector(".selector-group input[value='low']")?.checked
         },
-        classTypes: [...root.querySelectorAll("input[name='class_type_selector']:checked")]
-            .map(cb => cb.id.replace('class_type_selector_', ''))
+        classTypes: [...root.querySelectorAll("input[name='class_type_selector']")]
+            .map(cb => normalizeClassType(cb.id.replace('class_type_selector_', '')))
     };
 }
 
 function getAssignmentFilters(root = document) {
-    const assignmentTypes = [...root.querySelectorAll('.selector-group .selector-checks.grid input')]
+    const assignmentTypes = [...root.querySelectorAll("input[name='assignment_type_selector']")]
         .filter(cb => cb.checked)
         .map(cb => cb.value);
 
@@ -48,7 +57,7 @@ function classMatches(filters, classData) {
 
     // classTypes
     if (filters.classTypes.length > 0) {
-        const normalized = (classData.classType || '').toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+        const normalized = normalizeClassType(classData.classType);
         if (!filters.classTypes.includes(normalized)) return false;
     }
 
@@ -252,11 +261,22 @@ export function initAssignmentsSelector() {
 
     // defaults
     const DEFAULT_CLASS = {
-        sortBy: 'name_asc',
-        status: 'all',
-        importance: { high: true, medium: true, low: true },
-        classTypes: [...document.querySelectorAll("input[name='class_type_selector']")].map(cb => cb.id.replace('class_type_selector_', ''))
+    sortBy: 'name_asc',
+    status: 'all',
+    importance: { high: true, medium: true, low: true },
+    classTypes: [
+        "math",
+        "science",
+        "language",
+        "social_science",
+        "art",
+        "engineering",
+        "technology",
+        "finance",
+        "other"
+    ]
     };
+
 
     const DEFAULT_ASSIGNMENT = {
         tableLayout: 'single',
@@ -264,7 +284,7 @@ export function initAssignmentsSelector() {
         completion: 'all',
         graded: 'all',
         created: 'all',
-        assignmentTypes: [...document.querySelectorAll('.selector-group .selector-checks.grid input')].map(cb => cb.value),
+        assignmentTypes: [...document.querySelectorAll("input[name='assignment_type_selector']")].map(cb => cb.value),
         sortCategory: 'name',
         sortBy: document.querySelector("#assignmentSortBy option[data-cat='name']")?.value || 'name_asc'
     };
@@ -413,12 +433,25 @@ export function initAssignmentsSelector() {
         document.querySelector(".selector-group input[value='high']").checked = !!imp.high;
         document.querySelector(".selector-group input[value='medium']").checked = !!imp.medium;
         document.querySelector(".selector-group input[value='low']").checked = !!imp.low;
-        const types = pref.filter_class_types || DEFAULT_CLASS.classTypes;
+        let types;
+        console.log(pref.filter_class_types);
+
+        if (Array.isArray(pref.filter_class_types)) {
+            // Use exactly what the user saved (even if empty)
+            types = pref.filter_class_types;
+        } else if (pref.filter_class_types === undefined) {
+            // No preference exists → system default
+            types = DEFAULT_CLASS.classTypes;
+        } else {
+            // Any other weird value → treat as empty
+            types = [];
+        }
         document.querySelectorAll("input[name='class_type_selector']").forEach(cb => {
             const key = cb.id.replace('class_type_selector_', '');
             cb.checked = types.includes(key);
         });
     }
+
 
     function setControlsFromAssignmentPrefs(pref) {
         if (!pref) return;
@@ -429,7 +462,7 @@ export function initAssignmentsSelector() {
         document.getElementById('createdFilter').value = pref.created_filter || DEFAULT_ASSIGNMENT.created;
 
         const types = pref.filter_assignment_types || DEFAULT_ASSIGNMENT.assignmentTypes || [];
-        document.querySelectorAll('.selector-group .selector-checks.grid input').forEach(cb => cb.checked = types.includes(cb.value));
+        document.querySelectorAll("input[name='assignment_type_selector']").forEach(cb => cb.checked = types.includes(cb.value));
 
         // set sort category and sortBy
         if (pref.sort_by) {
@@ -449,9 +482,10 @@ export function initAssignmentsSelector() {
     async function loadPersonalPrefs() {
         // load class prefs
         try {
-            const res = await fetch('/api/preferences/classes');
+            const res = await fetch('/api/preferences/classes?page=assignments');
             if (res.ok) {
                 const data = await res.json();
+                console.log(data)
                 if (data) {
                     personalClassPrefs = data;
                     setControlsFromClassPrefs(personalClassPrefs);
@@ -485,6 +519,7 @@ export function initAssignmentsSelector() {
         // class prefs
         try {
             const body = {
+                page_name: 'assignments',
                 sort_by: document.getElementById('classSortBy')?.value,
                 status_filter: document.getElementById('classStatusFilter')?.value,
                 filter_importance: {
@@ -494,7 +529,7 @@ export function initAssignmentsSelector() {
                 },
                 filter_class_types: [...document.querySelectorAll("input[name='class_type_selector']:checked")].map(cb => cb.id.replace('class_type_selector_', ''))
             };
-            await fetch('/api/preferences/classes', { 
+            await fetch('/api/preferences/classes?page=assignments', { 
                 method: 'PUT', 
                 headers: { 
                     'Content-Type': 'application/json',
@@ -514,7 +549,7 @@ export function initAssignmentsSelector() {
                 completion_filter: document.getElementById('completionFilter')?.value,
                 graded_filter: document.getElementById('gradedFilter')?.value,
                 created_filter: document.getElementById('createdFilter')?.value,
-                filter_assignment_types: [...document.querySelectorAll('.selector-group .selector-checks.grid input:checked')].map(cb => cb.value),
+                filter_assignment_types: [...document.querySelectorAll("input[name='assignment_type_selector']:checked")].map(cb => cb.value),
                 sort_by: document.getElementById('assignmentSortBy')?.value,
                 table_layout: document.getElementById('tableLayout')?.value
             };

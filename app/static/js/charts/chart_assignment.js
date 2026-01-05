@@ -151,11 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await renderTypeLoad();
     })();
 
-    // Auto-refresh every 15s
-    setInterval(() => {
-        renderDueTimeline();
-        renderTypeLoad();
-    }, 15000);
+
 
     // Allow external trigger
     window.refreshAssignmentCharts = () => { renderDueTimeline(); renderTypeLoad(); };
