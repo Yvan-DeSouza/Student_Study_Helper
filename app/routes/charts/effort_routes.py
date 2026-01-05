@@ -13,8 +13,6 @@ from app.services.expected_utils import (
     estimate_expected_minutes
 )
 from app.services.effort_utils import (
-    effort_ratio,
-    compute_effort_score,
     cumulative_effort_outcome,
     smooth_marginal_returns,
     effort_allocation_by_class,

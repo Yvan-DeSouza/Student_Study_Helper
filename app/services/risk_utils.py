@@ -1,5 +1,5 @@
 # app/services/risk_utils.py
-
+from app.services.expected_utils import composite_assignment_similarity
 from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
@@ -95,18 +95,61 @@ def compute_workload_overlap(active_assignments_per_day, max_seen):
     return min(1.0, active_assignments_per_day / max_seen)
 
 
-def historical_risk(rolling_grade, min_grade=50, max_grade=100):
+def grade_to_risk(grade, min_grade=50, max_grade=100):
     """
-    Higher risk for lower historical performance.
-    Output ∈ [0,1]
+    Convert a numeric grade into a normalized risk score ∈ [0,1].
     """
-    if rolling_grade is None or pd.isna(rolling_grade):
+    if grade is None or pd.isna(grade):
         return 0.0
 
-    norm = (rolling_grade - min_grade) / (max_grade - min_grade)
+    norm = (grade - min_grade) / (max_grade - min_grade)
     norm = max(0, min(1, norm))
+    return 1 - norm
 
-    return 1 - norm  # Invert: lower grade = higher risk
+
+def historical_risk_from_history(
+    target_class_type,
+    target_assignment_type,
+    target_class_id,
+    past_risk_assignments,
+    min_total_weight=1.0
+):
+    """
+    Compute historical risk using similarity-weighted past grades.
+    """
+
+    weighted_sum = 0.0
+    weight_total = 0.0
+
+    for past in past_risk_assignments:
+        grade = past.get("grade")
+        if grade is None:
+            continue
+
+        w = composite_assignment_similarity(
+            target_class_type,
+            target_assignment_type,
+            target_class_id,
+            past["class_type"],
+            past["assignment_type"],
+            past["class_id"]
+        )
+
+        if w <= 0:
+            continue
+
+        weighted_sum += w * grade
+        weight_total += w
+
+    # Not enough reliable signal
+    if weight_total < min_total_weight:
+        return 0.0
+
+    avg_grade = weighted_sum / weight_total
+    return grade_to_risk(avg_grade)
+
+
+
 
 
 # =================== ASSIGNMENT RISK COMPUTATION ===================
