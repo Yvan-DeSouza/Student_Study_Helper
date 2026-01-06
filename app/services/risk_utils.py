@@ -60,9 +60,9 @@ def deadline_proximity_bucket(days_until_due):
 # =================== NORMALIZATION ===================
 
 def min_max_normalize(series):
-    """
-    Safe min-max normalization to [0,1].
-    """
+    series = series.astype(float)
+    series = series.fillna(series.mean())
+
     if series.empty:
         return series
 
@@ -73,6 +73,7 @@ def min_max_normalize(series):
         return pd.Series(0.5, index=series.index)
 
     return (series - min_val) / (max_val - min_val)
+
 
 
 # =================== RISK COMPONENTS ===================

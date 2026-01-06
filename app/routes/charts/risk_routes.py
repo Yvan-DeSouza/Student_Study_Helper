@@ -7,6 +7,7 @@ from app.models.assignment import Assignment
 from app.extensions import db
 from sqlalchemy import func
 import pandas as pd
+import numpy as np
 from datetime import datetime, timezone, timedelta
 
 from app.services.risk_utils import (
@@ -214,9 +215,7 @@ def risk_composition_evolution():
     
     if not results:
         return jsonify({"empty": True, "message": "No assignments yet"})
-    
     past_assignments = build_past_assignments(current_user.user_id)
-
     df = pd.DataFrame([{
         'assignment_id': r.assignment_id,
         'title': r.title,
@@ -274,6 +273,7 @@ def risk_composition_evolution():
     max_active = active_df['active_count'].max() if not active_df.empty else 1
     
     df = df.merge(active_df, on='week', how='left')
+    df['active_count'] = df['active_count'].fillna(0)
     df['overlap'] = df['active_count'].apply(lambda x: compute_workload_overlap(x, max_active))
     past_risk_assignments = build_past_risk_assignments(current_user.user_id)
 
@@ -285,7 +285,8 @@ def risk_composition_evolution():
             past_risk_assignments
         ),
         axis=1
-)
+    )
+    print('computed history')
  
     
     # Aggregate by week
@@ -334,6 +335,12 @@ def risk_composition_evolution():
     
     for component in ['history', 'overlap', 'difficulty', 'time_pressure']:  # Bottom to top
         if component in weekly_risk.columns:
+            weekly_risk = (
+                weekly_risk
+                .replace([np.inf, -np.inf], 0)
+                .fillna(0)
+            )
+
             datasets.append({
                 'label': labels[component],
                 'data': [
@@ -344,7 +351,7 @@ def risk_composition_evolution():
                 'borderColor': colors[component].replace('0.7', '1.0'),
                 'borderWidth': 1
             })
-    
+
     return jsonify({
         "empty": False,
         "datasets": datasets
