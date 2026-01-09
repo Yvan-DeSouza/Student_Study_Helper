@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+
     document.querySelectorAll("tr[data-completed]").forEach(row => {
         const raw = row.dataset.completed;
         row.dataset.completed =

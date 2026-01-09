@@ -4,6 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flip_card.css') }}">
 
 {% endblock %}
 
@@ -305,16 +306,27 @@
                 </div>
             </div>
 
-            <div class="card widget chart-widget">
-                <div class="chart-header">
+            <div class="card widget chart-widget" data-card-id="home-assignment-load">
+                <div class="card-header">
                     <h3>Assignment Load</h3>
-                    <div class="chart-toggle">
-                        <button class="btn-tiny active" id="loadDailyBtn">Daily</button>
-                        <button class="btn-tiny" id="loadWeeklyBtn">Weekly</button>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <div class="chart-toggle">
+                            <button class="btn-tiny active" id="loadDailyBtn">Daily</button>
+                            <button class="btn-tiny" id="loadWeeklyBtn">Weekly</button>
+                        </div>
+                        <button class="flip-btn" title="Flip">🔁</button>
                     </div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="assignmentLoad"></canvas>
+                <div class="card-body">
+                    <div class="card-front">
+                        <div class="chart-container">
+                            <canvas id="assignmentLoad"></canvas>
+                        </div>
+                    </div>
+                    <div class="card-back">
+                        <p><strong>About Assignment Load:</strong></p>
+                        <p>Visualize how many assignments are due each day or week to better plan your study schedule.</p>
+                    </div>
                 </div>
             </div>
 
@@ -323,37 +335,65 @@
         <!-- ===== RIGHT COLUMN ===== -->
         <div class="col-right">
 
-            <div class="card widget chart-widget">
-                <div class="chart-header">
-                    <h3>Time per Class</h3>
-                    <button class="btn-tiny" data-open-modal ="addClassModal" type="button">
+        <div class="card widget chart-widget" data-card-id="home-time-per-class">
+            <div class="card-header">
+                <h3>Time per Class</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button class="btn-tiny" data-open-modal="addClassModal" type="button">
                         Add Class
                     </button>
+                    <button class="flip-btn" title="Flip">🔁</button>
                 </div>
+            </div>
+            <div class="card-body">
+                <div class="card-front">
                     <div class="chart-container">
                         <canvas id="timePerClassChart"></canvas>
                     </div>
-            </div>
-
-
-            <div class="card widget chart-widget">
-                <div class="chart-header">
-                    <h3>Weekly Study Hours</h3>
-
                 </div>
+                <div class="card-back">
+                    <p><strong>About Time per Class:</strong></p>
+                    <p>This chart shows the total study time you've logged for each class, helping you understand where you're investing your effort.</p>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card widget chart-widget" data-card-id="home-weekly-study">
+            <div class="card-header">
+                <h3>Weekly Study Hours</h3>
+                <button class="flip-btn" title="Flip">🔁</button>
+            </div>
+            <div class="card-body">
+                <div class="card-front">
                     <div class="chart-container">
                         <canvas id="weeklyStudyTime"></canvas>
                     </div>
-            </div>
-
-            <div class="card widget chart-widget">
-                <div class="chart-header">
-                    <h3>Performance Snapshot</h3>
                 </div>
+                <div class="card-back">
+                    <p><strong>About Weekly Study Hours:</strong></p>
+                    <p>Track your total study hours per week to identify patterns and maintain consistent study habits.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card widget chart-widget" data-card-id="home-performance">
+            <div class="card-header">
+                <h3>Performance Snapshot</h3>
+                <button class="flip-btn" title="Flip">🔁</button>
+            </div>
+            <div class="card-body">
+                <div class="card-front">
                     <div class="chart-container">
                         <canvas id="StudyEffByCls"></canvas>
                     </div>
+                </div>
+                <div class="card-back">
+                    <p><strong>About Performance Snapshot:</strong></p>
+                    <p>View your study efficiency across different classes to optimize your study strategies.</p>
+                </div>
             </div>
+        </div>
 
         </div>
     </div>
@@ -363,6 +403,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts/chart_home.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form_lock.js') }}"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>

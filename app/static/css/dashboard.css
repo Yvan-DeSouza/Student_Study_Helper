@@ -47,58 +47,7 @@
   font-weight: 600;
 }
 
-.flip-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  padding: 6px;
-  transition: transform 0.3s ease;
-}
 
-.flip-btn:hover {
-  transform: rotate(180deg);
-}
-
-.card-body {
-  position: relative;
-  flex: 1;
-  min-height: 220px;
-}
-
-.card-front,
-.card-back {
-  position: absolute;
-  inset: 0;
-  overflow: auto;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
-}
-
-.card-front {
-  opacity: 1;
-  visibility: visible;
-  z-index: 1;
-}
-
-.card-back {
-  padding: 20px;
-  opacity: 0;
-  visibility: hidden;
-  z-index: 0;
-}
-
-/* Flipped state */
-.graph-card.flipped .card-front {
-  opacity: 0;
-  visibility: hidden;
-  z-index: 0;
-}
-
-.graph-card.flipped .card-back {
-  opacity: 1;
-  visibility: visible;
-  z-index: 1;
-}
 
 .chart-wrapper {
   height: 220px;

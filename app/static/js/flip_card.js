@@ -1,21 +1,21 @@
 // static/js/flip_card.js
 // Card flip functionality for dashboard graph cards
 
-export function initFlipCards() {
+function initFlipCards() {
   // Flip state map (persist only while on dashboard)
   const flipState = new Map();
 
-  // Initialize flip buttons
+  // Initialize flip buttons - look for BOTH .graph-card and .chart-widget
   document.querySelectorAll('.flip-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const card = btn.closest('.graph-card');
+      const card = btn.closest('.graph-card, .chart-widget');
       if (!card) return;
-      
+     
       const cardId = card.dataset.cardId;
       const isFlipped = card.classList.toggle('flipped');
-      
-      // Update title
+     
+      // Update title (for dashboard cards that have .card-title)
       const title = card.querySelector('.card-title');
       if (title) {
         if (isFlipped) {
@@ -25,7 +25,7 @@ export function initFlipCards() {
           title.textContent = title.dataset.originalTitle || title.textContent.replace('Description ', '');
         }
       }
-      
+     
       // Store flip state
       flipState.set(cardId, isFlipped);
     });
@@ -33,11 +33,11 @@ export function initFlipCards() {
 
   // Reapply flip states when sections come into view
   function reapplyFlipStates(section) {
-    const cards = section.querySelectorAll('.graph-card');
+    const cards = section.querySelectorAll('.graph-card, .chart-widget');
     cards.forEach(card => {
       const cardId = card.dataset.cardId;
       const shouldFlip = flipState.get(cardId);
-      
+     
       if (shouldFlip) {
         card.classList.add('flipped');
         const title = card.querySelector('.card-title');
@@ -57,7 +57,7 @@ export function initFlipCards() {
 
   // Reset flip states
   function resetFlipStates() {
-    document.querySelectorAll('.graph-card.flipped').forEach(card => {
+    document.querySelectorAll('.graph-card.flipped, .chart-widget.flipped').forEach(card => {
       card.classList.remove('flipped');
       const title = card.querySelector('.card-title');
       if (title && title.dataset.originalTitle) {
@@ -86,3 +86,13 @@ export function initFlipCards() {
   // Return reapply function for use by observer
   return { reapplyFlipStates };
 }
+
+// Auto-initialize on pages that aren't dashboard
+if (!window.location.pathname.includes('/dashboard')) {
+  document.addEventListener('DOMContentLoaded', () => {
+    initFlipCards();
+  });
+}
+
+// Make function globally available for dashboard.js
+window.initFlipCards = initFlipCards;

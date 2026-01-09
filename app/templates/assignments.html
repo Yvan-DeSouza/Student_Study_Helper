@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/selector.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flip_card.css') }}">
 
 {% endblock %}
 
@@ -46,51 +47,64 @@
 <div class="assignments-container">
 
 
-<!-- ================= TOP ACTIONS ================= -->
-<section class="assignments-top card">
-    <div class="top-left">
-        <h1>Your Assignments</h1>
-        <p class="muted">Track deadlines, grades, and completion</p>
-    </div>
-    <div class="top-right">
-        <button class="btn-tiny" data-open-modal="addAssignmentModal">+ Add Assignment</button>
-    </div>
-</section>
+    <!-- ================= TOP ACTIONS ================= -->
+    <section class="assignments-top card">
+        <div class="top-left">
+            <h1>Your Assignments</h1>
+            <p class="muted">Track deadlines, grades, and completion</p>
+        </div>
+        <div class="top-right">
+            <button class="btn-tiny" data-open-modal="addAssignmentModal">+ Add Assignment</button>
+        </div>
+    </section>
 
-<!-- ================= REMINDERS ================= -->
-<section class="assignments-reminders">
-    <div class="card upcoming-deadlines">
-        <h3>Upcoming Deadlines</h3>
-        <ul class="deadline-list">
-            <!-- JS inject upcoming assignments -->
-            <li class="placeholder">No upcoming deadlines</li>
-        </ul>
-    </div>
+    <!-- ================= REMINDERS ================= -->
+    <section class="assignments-reminders">
         <div class="card upcoming-deadlines">
-        <h3>Assignment Due Timeline</h3>
-        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
-            <div style="display:flex; gap:6px; align-items:center;">
-                <label class="selector-label">Mode</label>
-                <select id="dueTimelineMode" class="chart-select">
-                    <option value="days">Days (7)</option>
-                    <option value="weeks">Weeks (4)</option>
-                </select>
+            <h3>Upcoming Deadlines</h3>
+            <ul class="deadline-list">
+                <!-- JS inject upcoming assignments -->
+                <li class="placeholder">No upcoming deadlines</li>
+            </ul>
+        </div>
+            
+        <div class="card upcoming-deadlines chart-widget" data-card-id="assignment-timeline">
+            <div class="card-header">
+                <h3>Assignment Due Timeline</h3>
+                <button class="flip-btn" title="Flip">🔁</button>
             </div>
-            <div id="dueTimelineClassFilters" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                <!-- JS inject class checkboxes (All + per-class) -->
+            <div class="card-body">
+                <div class="card-front">
+                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <label class="selector-label">Mode</label>
+                            <select id="dueTimelineMode" class="chart-select">
+                                <option value="days">Days (7)</option>
+                                <option value="weeks">Weeks (4)</option>
+                            </select>
+                        </div>
+                        <div id="dueTimelineClassFilters" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <!-- JS inject class checkboxes (All + per-class) -->
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="assignmentDueTimelineChart"></canvas>
+                    </div>
+                </div>
+                <div class="card-back">
+                    <p><strong>About Assignment Timeline:</strong></p>
+                    <p>View upcoming assignment deadlines over the next days or weeks to plan your workload effectively.</p>
+                </div>
             </div>
         </div>
-        <div class="chart-wrapper">
-            <canvas id="assignmentDueTimelineChart"></canvas>
+
+        <div class="card calendar-preview">
+            <h3>This Month</h3>
+            <div class="calendar-grid">
+                <!-- Calendar scaffold only -->
+            </div>
         </div>
-    </div>
-    <div class="card calendar-preview">
-        <h3>This Month</h3>
-        <div class="calendar-grid">
-            <!-- Calendar scaffold only -->
-        </div>
-    </div>
-</section>
+    </section>
 
         <!-- ================= CLASS FILTERS ================= -->
     <section class="selector-bar">
@@ -359,27 +373,51 @@
 
 <!-- ================= ANALYTICS ================= -->
 <section class="assignments-analytics">
-    <div class="card chart-card">
-        <h3>Assignment Type Load Breakdown</h3>
-        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-            <div class="chart-toggle" style="margin-right:auto;">
-                <button class="btn-tiny active" data-metric="count">Count</button>
-                <button class="btn-tiny" data-metric="study_time">Study Time</button>
-            </div>
-            <select id="assignmentTypeTimeFilter" class="chart-select">
-                <option value="all">All time</option>
-                <option value="last_7_days">Last 7 days</option>
-                <option value="last_30_days">Last 30 days</option>
-            </select>
+    <div class="card chart-card chart-widget" data-card-id="assignment-type-load">
+        <div class="card-header">
+            <h3>Assignment Type Load Breakdown</h3>
+            <button class="flip-btn" title="Flip">🔁</button>
         </div>
-        <div class="chart-wrapper">
-            <canvas id="assignmentTypeLoad"></canvas>
+        <div class="card-body">
+            <div class="card-front">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                    <div class="chart-toggle" style="margin-right:auto;">
+                        <button class="btn-tiny active" data-metric="count">Count</button>
+                        <button class="btn-tiny" data-metric="study_time">Study Time</button>
+                    </div>
+                    <select id="assignmentTypeTimeFilter" class="chart-select">
+                        <option value="all">All time</option>
+                        <option value="last_7_days">Last 7 days</option>
+                        <option value="last_30_days">Last 30 days</option>
+                    </select>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="assignmentTypeLoad"></canvas>
+                </div>
+            </div>
+            <div class="card-back">
+                <p><strong>About Assignment Type Load:</strong></p>
+                <p>Understand how different assignment types (homework, quizzes, projects, etc.) contribute to your overall workload by count or study time.</p>
+            </div>
         </div>
     </div>
 
-    <div class="card chart-card">
-        <h3>Grade Distribution</h3>
-        <canvas id="assignmentGradeChart"></canvas>
+    <div class="card chart-card chart-widget" data-card-id="assignment-grade-dist">
+        <div class="card-header">
+            <h3>Grade Distribution</h3>
+            <button class="flip-btn" title="Flip">🔁</button>
+        </div>
+        <div class="card-body">
+            <div class="card-front">
+                <div class="chart-wrapper">
+                    <canvas id="assignmentGradeChart"></canvas>
+                </div>
+            </div>
+            <div class="card-back">
+                <p><strong>About Grade Distribution:</strong></p>
+                <p>See how your assignment grades are distributed across different ranges to identify your performance patterns.</p>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -854,6 +892,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
+
 
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>

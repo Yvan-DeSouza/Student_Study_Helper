@@ -1,5 +1,4 @@
 // static/js/dashboard.js
-import { initFlipCards } from './flip_card.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   const sideNav = document.getElementById('dashboardSideNav');

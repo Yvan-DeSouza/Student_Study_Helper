@@ -1,7 +1,10 @@
 import { initClassSelector } from "./selector/selector_init.js";
 
+
 document.addEventListener("DOMContentLoaded", () => {
     initClassSelector();
+
+
 
 
 

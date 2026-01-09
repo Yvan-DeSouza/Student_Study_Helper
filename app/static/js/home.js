@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+
+
     const openBtn = document.getElementById("openAddAssignmentModal");
     const modal = document.getElementById("addAssignmentModal");
     const closeBtn = modal.querySelector(".ghost-btn");
