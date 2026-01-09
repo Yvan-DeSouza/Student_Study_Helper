@@ -80,7 +80,8 @@ def create_app():
         dashboard_routes,
         main_routes,
         calendar_routes,
-        preferences_routes
+        preferences_routes,
+        upcoming_deadlines_routes
     )
     from .routes.charts import charts as charts_routes
 
@@ -93,6 +94,8 @@ def create_app():
     app.register_blueprint(main_routes.main)
     app.register_blueprint(calendar_routes.calendar)
     app.register_blueprint(preferences_routes.preferences)
+    app.register_blueprint(upcoming_deadlines_routes.upcoming_deadlines)
+
 
 
 

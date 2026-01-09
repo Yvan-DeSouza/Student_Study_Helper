@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/selector.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/flip_card.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upcoming_deadlines.css') }}">
 
 {% endblock %}
 
@@ -61,13 +62,9 @@
     <!-- ================= REMINDERS ================= -->
     <section class="assignments-reminders">
         <div class="card upcoming-deadlines">
-            <h3>Upcoming Deadlines</h3>
-            <ul class="deadline-list">
-                <!-- JS inject upcoming assignments -->
-                <li class="placeholder">No upcoming deadlines</li>
-            </ul>
+            <div id="upcoming-deadlines-assignments"></div>
         </div>
-            
+
         <div class="card upcoming-deadlines chart-widget" data-card-id="assignment-timeline">
             <div class="card-header">
                 <h3>Assignment Due Timeline</h3>
@@ -904,5 +901,5 @@
 <script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/selector/assignments_selector.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/upcoming_deadlines.js') }}"></script>
 {% endblock %}

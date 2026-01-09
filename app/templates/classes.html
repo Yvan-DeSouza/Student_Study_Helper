@@ -2,11 +2,11 @@
 {% block title %}Classes | StudyMate{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flip_card.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/classes.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/selector.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/flip_card.css') }}">
 
 {% endblock %}
 
@@ -367,7 +367,7 @@
                 <h3>Class Health Breakdown</h3>
                 <button class="flip-btn" title="Flip">🔁</button>
             </div>
-            <div class="card-body">
+            <div class="card-body" >
                 <div class="card-front">
                     <div class="chart-controls" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
                         <div class="chart-toggle" style="margin-right:auto;">
