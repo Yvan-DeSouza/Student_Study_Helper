@@ -106,12 +106,18 @@ function assignmentMatches(filters, row) {
 function hideWithAnimation(el) {
     if (el.classList.contains('hidden') || el.dataset.hiding === 'true') return;
     el.dataset.hiding = 'true';
+
+    // animate
     el.style.transition = 'transform 180ms ease, opacity 180ms ease';
     el.style.opacity = 0;
     el.style.transform = 'scale(0.98)';
+
     const onEnd = (e) => {
         if (e && e.propertyName !== 'opacity' && e.propertyName !== 'transform') return;
+        // fully hide
+        el.style.display = 'none';
         el.classList.add('hidden');
+
         el.style.transition = '';
         el.style.opacity = '';
         el.style.transform = '';
@@ -123,15 +129,19 @@ function hideWithAnimation(el) {
 
 function showWithAnimation(el) {
     if (!el.classList.contains('hidden')) return;
+    el.style.display = ''; // restore default display
     el.classList.remove('hidden');
+
     el.style.opacity = 0;
     el.style.transform = 'scale(0.98)';
-    void el.offsetWidth;
+    void el.offsetWidth; // force reflow
+
     requestAnimationFrame(() => {
         el.style.transition = 'transform 220ms ease, opacity 200ms ease';
         el.style.opacity = '';
         el.style.transform = '';
     });
+
     const onEnd = () => {
         el.style.transition = '';
         el.style.opacity = '';
@@ -140,6 +150,7 @@ function showWithAnimation(el) {
     };
     el.addEventListener('transitionend', onEnd);
 }
+
 
 function sortPerClassCards(wrapper, sortBy) {
     const cards = [...wrapper.querySelectorAll('.per-class-card')];
