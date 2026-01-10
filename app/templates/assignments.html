@@ -316,45 +316,56 @@
     <section class="assignments-table-wrapper">
 
 
-
-        <!-- ===== SINGLE TABLE MODE ===== -->
-        <div class="card assignments-table-card" data-table-mode="single">
-            <div class="table-actions">
-                <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
-                <button class="btn-tiny table-edit-btn">✏ Edit</button>
-                <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
-
-                <!-- hidden initially -->
-                <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
-                <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
-            </div>
-
-
-            {% set rows = assignments %}
-            {% set show_class_column = true %}
-            {% include "partials/assignments_table.html" %}
-        </div>
-
-
-        <!-- ===== PER CLASS MODE ===== -->
-        <div class="per-class-wrapper hidden" data-table-mode="per_class">
-            {% for class_name, rows in assignments_by_class.items() %}
-            <div class="card assignments-table-card per-class-card">
-                <h3 class="class-table-title">{{ class_name }}</h3>
+    <!-- ===== SINGLE TABLE MODE ===== -->
+    <div class="card assignments-table-card" data-table-mode="single">
+        <div class="assignments-table-scroll">
+            <!-- TABLE HEADER BAR -->
+            <div class="table-header-bar">
+                <h3 class="table-title">All Classes</h3>
 
                 <div class="table-actions">
                     <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
                     <button class="btn-tiny table-edit-btn">✏ Edit</button>
                     <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
 
-                    <!-- hidden initially -->
                     <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
                     <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
                 </div>
-                {% set rows = rows %}
-                {% set show_class_column = false %}
-                {% include "partials/assignments_table.html" %}
             </div>
+
+            {% set rows = assignments %}
+            {% set show_class_column = true %}
+            {% include "partials/assignments_table.html" %}
+        </div>
+    </div>
+
+
+
+        <!-- ===== PER CLASS MODE ===== -->
+        <div class="per-class-wrapper hidden" data-table-mode="per_class">
+            {% for class_name, rows in assignments_by_class.items() %}
+                <div class="card assignments-table-card per-class-card">
+                    <div class="assignments-table-scroll">
+
+                        <div class="table-header-bar">
+                            <h3 class="table-title">{{ class_name }}</h3>
+
+                            <div class="table-actions">
+                                <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
+                                <button class="btn-tiny table-edit-btn">✏ Edit</button>
+                                <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
+
+                                <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
+                                <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
+                            </div>
+                        </div>
+
+                        {% set rows = rows %}
+                        {% set show_class_column = false %}
+                        {% include "partials/assignments_table.html" %}
+                    </div>
+                </div>
+
             {% endfor %}
         </div>
 
