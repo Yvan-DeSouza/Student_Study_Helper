@@ -185,4 +185,17 @@
 }
 
 
+.modal-overlay{
+    display:none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+}
+.modal-overlay.modal-top{
+    z-index: 1100;
+}
 
+
+.modal-overlay.visible{
+    display:flex;
+}

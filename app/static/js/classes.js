@@ -6,7 +6,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+    function showModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
 
+        // Remove top status from all modals
+        document.querySelectorAll(".modal-overlay")
+            .forEach(m => m.classList.remove("modal-top"));
+
+        // Bring this modal to front
+        modal.classList.add("modal-top");
+
+        modal.classList.remove("hidden");
+        modal.classList.add("visible");
+    }
+
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove("visible");
+        modal.classList.add("hidden");
+    }
 
     document.querySelectorAll(".class-dot").forEach(dot => {
         const color = dot.dataset.color;
@@ -697,150 +718,170 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+    let pendingClassCard = null;
+    let pendingFinishCheckbox = null;
 
 
-
-
+    //Finished checkbox logic
     document.querySelectorAll(".finish-checkbox").forEach(cb => {
-        cb.addEventListener("change", async () => {
+        cb.addEventListener("change", e => {
+            e.preventDefault();
+            e.stopPropagation();
+
             const card = cb.closest(".class-card");
-            const statusEl = card.querySelector(".status");
-            const editBtn = card.querySelector(".edit-btn");
-            const inlineEditBtn = card.querySelector(".edit-inline-btn"); // only the inline edit button
+            const wasFinished = card.dataset.finished === "finished";
+            const wantsFinished = cb.checked;
 
+            // Always revert until confirmed
+            cb.checked = wasFinished;
 
-            const classId = cb.dataset.classId;
-            const isFinished = cb.checked;
-            card.dataset.finished = isFinished ? "finished" : "in_progress";
+            pendingClassCard = card;
+            pendingFinishCheckbox = cb;
 
+            const className = card.querySelector("h3").innerText;
 
-
-            // Update UI immediately
-            if (isFinished) {
-                statusEl.textContent = "Finished ✓";
-                statusEl.classList.remove("in-progress");
-                statusEl.classList.add("finished");
-
-
-                // Main edit button stays normal
-                if (editBtn) {
-                    editBtn.disabled = false; // keep it usable
-                    editBtn.style.opacity = "1";
-                    editBtn.title = "";
-                }
-
-
-                // Inline edit button is blurred/disabled
-                if (inlineEditBtn) {
-                    inlineEditBtn.disabled = true;
-                    inlineEditBtn.style.opacity = "0.5";
-                    inlineEditBtn.title = "Cannot edit the grade of a class that is already finished";
-                }
-
-                const hint = card.querySelector(".hint-icon");
-                if (hint){
-                    hint.style.display = "inline-flex"
-                }
-
-                // Also hide save/cancel if currently editing
-                const saveBtn = card.querySelector(".save-inline-btn");
-                const cancelBtn = card.querySelector(".cancel-inline-btn");
-                if (saveBtn) saveBtn.style.display = "none";
-                if (cancelBtn) cancelBtn.style.display = "none";
-
-
-            } else {
-                statusEl.textContent = "In Progress";
-                statusEl.classList.remove("finished");
-                statusEl.classList.add("in-progress");
-
-
-                // Re-enable buttons
-                if (editBtn) {
-                    editBtn.disabled = false;
-                    editBtn.style.opacity = "1";
-                    editBtn.title = "";
-                }
-
-
-                if (inlineEditBtn) {
-                    inlineEditBtn.disabled = false;
-                    inlineEditBtn.style.opacity = "1";
-                    inlineEditBtn.title = "";
-                }
-
-                const hint = card.querySelector(".hint-icon");
-                if (hint) {
-                    hint.style.display = "none"
-                }
+            if (!wasFinished && wantsFinished) {
+                openCompleteClassModal(className);
             }
 
-
-
-
-            const input = card.querySelector(".inline-grade-input");
-            const isEditing = input && input.style.display === "inline-block";
-
-
-
-
-            if (isFinished && isEditing && input.value !== "") {
-                const value = parseFloat(input.value);
-
-
-                if (!isNaN(value) && value >= 0 && value <= 100) {
-                    const csrfToken = document
-                        .querySelector('meta[name="csrf-token"]')
-                        .getAttribute("content");
-
-
-                    await fetch(`/classes/${classId}/grade`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            "X-CSRFToken": csrfToken
-                        },
-                        body: `grade=${encodeURIComponent(value)}`
-                    });
-
-
-                    // Update UI immediately
-                    const display = card.querySelector(".grade-display");
-                    display.textContent = value.toFixed(1);
-                    display.dataset.grade = value;
-                }
-
-
-                inlineEdits.delete(classId);
-                clearDirty();
-            }
-
-
-            if (isFinished) {
-                forceCloseInlineEdit(card, { disable: true });
-            } else {
-                forceCloseInlineEdit(card, { disable: false });
-            }
-
-
-
-
-            // Send request to server
-            try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-                await fetch(`/classes/${classId}/toggle-finished`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        "X-CSRFToken": csrfToken
-                    },
-                    body: `is_finished=${isFinished ? "true" : "false"}`
-                });
-            } catch (err) {
-                console.error("Failed to update finish status:", err);
+            if (wasFinished && !wantsFinished) {
+                openUncompleteClassModal(className);
             }
         });
     });
+
+    //Modal when a class is marked as completed
+    function openCompleteClassModal(className) {
+        document.getElementById("completeMessage").innerText =
+            `You have marked your "${className}" class as finished. Please indicate the date/time of completion.`;
+
+        // Reset modal state
+        document.querySelector('input[name="completion_time"][value="now"]').checked = true;
+        document.getElementById("pickedCompletionDate").classList.add("hidden");
+        document.getElementById("pickedCompletionDate").value = "";
+
+        showModal("completeAssignmentModal");
+    }
+
+    //Modal when a class is marked as uncompleted
+    function openUncompleteClassModal(className) {
+        document.getElementById("uncompleteMessage").innerText =
+            `Are you sure you want to mark your "${className}" class as unfinished? This will remove the finish date.`;
+
+        showModal("uncompleteConfirmModal");
+    }
+
+    // Radio button behavior when a user marks a class as completed
+    document.querySelectorAll('input[name="completion_time"]').forEach(radio => {
+        radio.addEventListener("change", e => {
+            document
+                .getElementById("pickedCompletionDate")
+                .classList.toggle("hidden", e.target.value !== "pick");
+        });
+    });
+
+    //When a user confirms a class as completed
+    document.getElementById("confirmComplete").addEventListener("click", async () => {
+        if (!pendingClassCard || !pendingFinishCheckbox) return;
+
+        const classId = pendingClassCard.dataset.classId;
+        const option = document.querySelector('input[name="completion_time"]:checked').value;
+
+        let finishedAt = null;
+
+        if (option === "now") {
+            finishedAt = new Date().toISOString();
+        }
+
+        if (option === "pick") {
+            const picked = document.getElementById("pickedCompletionDate").value;
+            if (!picked) return;
+
+            const pickedDate = new Date(picked);
+            if (pickedDate > new Date()) {
+                showModal("futureFinishDateModal");
+                return;
+            }
+
+            finishedAt = pickedDate.toISOString();
+        }
+
+        await sendClassFinishedUpdate(true, finishedAt);
+
+        pendingFinishCheckbox.checked = true;
+        pendingClassCard.dataset.finished = "finished";
+
+        updateClassFinishedUI(pendingClassCard, true);
+
+        closeModal("completeAssignmentModal");
+
+        pendingClassCard = null;
+        pendingFinishCheckbox = null;
+    });
+
+    //When a user marks an assignment as uncompleted
+    document.getElementById("confirmUncomplete").addEventListener("click", async () => {
+        if (!pendingClassCard || !pendingFinishCheckbox) return;
+
+        const classId = pendingClassCard.dataset.classId;
+
+        await sendClassFinishedUpdate(false, null);
+
+        pendingFinishCheckbox.checked = false;
+        pendingClassCard.dataset.finished = "in_progress";
+
+        updateClassFinishedUI(pendingClassCard, false);
+
+        closeModal("uncompleteConfirmModal");
+
+        pendingClassCard = null;
+        pendingFinishCheckbox = null;
+    });
+
+
+
+
+    async function sendClassFinishedUpdate(isFinished, finishedAt) {
+        const classId = pendingClassCard.dataset.classId;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        await fetch(`/classes/${classId}/completion`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({
+                is_finished: isFinished,
+                finished_at: finishedAt
+            })
+        });
+    }
+
+    // Ui updater when an assignment is marked as finished/unfinished
+    function updateClassFinishedUI(card, isFinished) {
+        const statusEl = card.querySelector(".status");
+        const inlineEditBtn = card.querySelector(".edit-inline-btn");
+        const hint = card.querySelector(".hint-icon");
+
+        if (isFinished) {
+            statusEl.textContent = "Finished ✓";
+            statusEl.className = "status finished";
+            inlineEditBtn.disabled = true;
+            inlineEditBtn.style.opacity = "0.5";
+            hint.style.display = "inline-flex";
+            forceCloseInlineEdit(card, { disable: true });
+        } else {
+            statusEl.textContent = "In Progress";
+            statusEl.className = "status in-progress";
+            inlineEditBtn.disabled = false;
+            inlineEditBtn.style.opacity = "1";
+            hint.style.display = "none";
+            forceCloseInlineEdit(card, { disable: false });
+        }
+    }
+
+
 
 
 

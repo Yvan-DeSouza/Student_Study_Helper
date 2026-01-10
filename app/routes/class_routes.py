@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, abort
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.course import Class
 from app.models.assignment import Assignment
 from sqlalchemy import and_
 from datetime import datetime, timezone
+from dateutil import parser
+
 
 classes = Blueprint("classes", __name__)
 
@@ -107,33 +109,33 @@ def edit_class(class_id):
 
 
 
-@classes.route("/classes/<int:class_id>/toggle-finished", methods=["POST"])
+@classes.route("/classes/<int:class_id>/completion", methods=["PATCH"])
 @login_required
-def toggle_finished(class_id):
-    cls = Class.query.filter_by(
+def toggle_class_completion(class_id):
+    c = Class.query.filter_by(
         class_id=class_id,
         user_id=current_user.user_id
     ).first_or_404()
 
-    raw = request.form.get("is_finished", "").lower()
-    if raw not in ("true", "false"):
-        return jsonify({"error": "Invalid is_finished value"}), 400
-
-    is_finished = raw == "true"
-
-    cls.is_finished = is_finished
+    data = request.get_json()
+    is_finished = bool(data.get("is_finished"))
+    finished_at = data.get("finished_at")
 
     if is_finished:
-        cls.finished_at= datetime.now(timezone.utc)
+        if not finished_at:
+            abort(400, "finished_at required")
+
+        c.is_finished = True
+        c.finished_at = parser.isoparse(finished_at)
+
     else:
-        cls.finished_at = None
+        c.is_finished = False
+        c.finished_at = None
+        c.grade = None
 
     db.session.commit()
+    return {"status": "ok"}, 200
 
-    return jsonify({
-        "success": True,
-        "is_finished": cls.is_finished
-    })
 
 
 

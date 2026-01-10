@@ -199,47 +199,8 @@ a {
     gap: 10px;
 }
 
-/* Modal Overlay */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.modal-overlay.active {
-    display: flex;
-}
 
 
-
-.modal {
-    position: relative;
-    max-width: 500px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    background: #fff;
-    border-radius: 20px;
-    padding: 30px 40px;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-}
-
-
-
-
-/* Make inputs bigger for better UX */
-.modal .input-field {
-    width: 100%;
-    padding: 15px 12px;
-    font-size: 1rem;
-    margin-bottom: 15px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-}
 
 
 .btn.full-btn {
@@ -260,8 +221,10 @@ a {
     padding: 12px;
     font-size: 1rem;
 }
+
 /* Modal Overlay */
 .modal-overlay {
+    inset: 0;
     position: fixed;
     top: 0;
     left: 0;
@@ -321,6 +284,7 @@ a {
     position: relative;
     vertical-align: middle; /* important for inline alignment */
     line-height: 1; /* remove extra spacing issues */
+    z-index:9999;
 }
 
 :root[data-theme="dark"] .hint-icon {
@@ -345,7 +309,7 @@ a {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
-    z-index: 1000;
+    z-index: 9999;
 }
 
 .hint-icon:hover::after {
