@@ -62,7 +62,9 @@
     <!-- ================= REMINDERS ================= -->
     <section class="assignments-reminders">
         <div class="card upcoming-deadlines">
-            <div id="upcoming-deadlines-assignments"></div>
+            {% set page_id = "assignments" %}
+            {% set deadline_count = deadline_count|default(3) %}
+            {% include "partials/upcoming_deadlines.html" %}
         </div>
 
         <div class="card upcoming-deadlines chart-widget" data-card-id="assignment-timeline">

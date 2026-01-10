@@ -300,7 +300,9 @@
         <div class="col-mid">
 
             <div class="card widget">
-                <div id="upcoming-deadlines-home"></div>
+                {% set page_id = "home" %}
+                {% set deadline_count = deadline_count|default(3) %}
+                {% include "partials/upcoming_deadlines.html" %}
             </div>
 
             <div class="card widget chart-widget" data-card-id="home-assignment-load">

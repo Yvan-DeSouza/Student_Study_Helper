@@ -5,6 +5,7 @@ from app.models.assignment import Assignment, AssignmentExpectedGrade
 from app.models.course import Class
 from datetime import datetime
 from dateutil import parser
+from app.models.user import UserPreferences
 
 
 assignment = Blueprint("assignment", __name__)
@@ -114,13 +115,16 @@ def list_assignments():
             "study_minutes": study_minutes
         })
 
-    # <----- ADD THIS: fetch classes for modal dropdown
+    prefs = UserPreferences.query.filter_by(user_id=current_user.user_id).first()
+    deadline_count = prefs.default_upcoming_deadlines_count if prefs else 3
+    # <-----fetch classes for modal dropdown
     classes = Class.query.filter_by(user_id=current_user.user_id).all()
 
     return render_template(
         "assignments.html",
         assignments=assignment_rows,
-        classes=classes   # <--- pass to template
+        classes=classes,   # <--- pass to template
+        deadline_count=deadline_count
     )
 
 

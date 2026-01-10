@@ -4,7 +4,7 @@ from app.models.course import Class
 from app.models.assignment import Assignment
 
 from datetime import datetime, timezone
-
+from app.models.user import UserPreferences
 main = Blueprint("main", __name__)
 
 @main.route("/main")
@@ -16,6 +16,8 @@ def home():
     assignments = Assignment.query.join(Class).filter(
         Class.user_id == current_user.user_id
     ).all()
+    prefs = UserPreferences.query.filter_by(user_id=current_user.user_id).first()
+    deadline_count = prefs.default_upcoming_deadlines_count if prefs else 3
 
     return render_template(
         "home.html",
@@ -23,5 +25,6 @@ def home():
         user=current_user,
         classes=classes,
         assignments=assignments,
+        deadline_count=deadline_count
     )
 

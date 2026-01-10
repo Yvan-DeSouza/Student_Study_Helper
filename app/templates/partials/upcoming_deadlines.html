@@ -1,7 +1,6 @@
-<!-- static/html/partials/upcoming_deadlines.html -->
 <div class="upcoming-deadlines-header">
   <h3>Upcoming Deadlines</h3>
-  
+ 
   <div class="deadline-legend">
     <span class="legend-item">
       <span class="legend-dot overdue"></span>
@@ -20,24 +19,25 @@
   <div class="deadline-controls">
     <label class="control-label">Choose how many upcoming assignments you want to see:</label>
     <div class="control-row">
-      <input 
-        type="number" 
-        id="deadlines-count-input" 
-        class="input-field" 
-        min="0" 
-        max="10" 
-        value="3"
+      <input
+        type="number"
+        id="deadlines-count-input-{{ page_id }}"
+        class="input-field deadlines-count-input"
+        min="0"
+        max="10"
+        value="{{ deadline_count }}"
         style="width: 80px; padding: 8px;"
+        data-page="{{ page_id }}"
       >
-      <button class="btn-tiny" id="set-deadlines-count">Set amount</button>
+      <button class="btn-tiny set-deadlines-count" data-page="{{ page_id }}">Set amount</button>
     </div>
   </div>
 </div>
 
 <div class="deadlines-table-wrapper">
-  <div id="deadlines-loading" class="deadlines-loading hidden">
+  <div id="deadlines-loading-{{ page_id }}" class="deadlines-loading hidden">
     Loading deadlines...
   </div>
-  
-  <div id="deadlines-content"></div>
+ 
+  <div id="deadlines-content-{{ page_id }}" class="deadlines-content"></div>
 </div>
