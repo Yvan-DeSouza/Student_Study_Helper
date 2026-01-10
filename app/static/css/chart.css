@@ -30,7 +30,8 @@
 .chart-wrapper {
   position: relative;
   width: 100%;
-  height: 360px;   /* PICK ONE HEIGHT */
+  min-height: 360px; 
+  height: auto;
 }
 
 /* Canvas fills wrapper, wrapper never changes */

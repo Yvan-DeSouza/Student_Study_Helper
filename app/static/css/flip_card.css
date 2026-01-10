@@ -17,34 +17,35 @@
 
 
 .card-body {
-  position: relative;
   flex: 1;
   min-height: 220px;
+  display: grid;
+  grid-template-areas: "stack";
+  position: relative;
 }
 
 
 .card-front,
 .card-back {
-  position: absolute;
   inset: 0;
-  overflow: auto;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+  grid-area: stack;
 }
 
-
+/* Allow scrolling ONLY on the back (text explanations) */
 .card-front {
   opacity: 1;
   visibility: visible;
   z-index: 1;
 }
 
-
 .card-back {
-  padding: 20px;
   opacity: 0;
   visibility: hidden;
   z-index: 0;
+  padding: 20px;
+  overflow-y: auto; /* scrolling allowed only here */
 }
+
 
 
 /* Flipped state */
