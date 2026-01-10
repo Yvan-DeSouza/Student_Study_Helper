@@ -9,68 +9,68 @@ class UpcomingDeadlines {
     }
     
     this.currentCount = null;
+    this.isDirty = false; // Track if count has changed
+    this.assignmentTypeColors = {};
     this.init();
   }
 
   async init() {
-    await this.render();
+    await this.loadTemplate();
     await this.loadDeadlines();
+    this.setupBeforeUnloadHandler();
   }
 
-  render() {
-    this.container.innerHTML = `
-      <div class="upcoming-deadlines-header">
-        <h3>Upcoming Deadlines</h3>
-        
-        <div class="deadline-legend">
-          <span class="legend-item">
-            <span class="legend-dot overdue"></span>
-            <span class="legend-text">Overdue</span>
-          </span>
-          <span class="legend-item">
-            <span class="legend-dot soon"></span>
-            <span class="legend-text">Due soon (&lt;2 days)</span>
-          </span>
-          <span class="legend-item">
-            <span class="legend-dot normal"></span>
-            <span class="legend-text">Normal</span>
-          </span>
-        </div>
+  async loadTemplate() {
+    try {
+      const response = await fetch('/static/html/partials/upcoming_deadlines.html');
+      const html = await response.text();
+      this.container.innerHTML = html;
+      
+      // Attach event listeners after loading template
+      this.attachEventListeners();
+    } catch (error) {
+      console.error('Error loading template:', error);
+      this.container.innerHTML = '<p class="error-message">Error loading upcoming deadlines.</p>';
+    }
+  }
 
-        <div class="deadline-controls">
-          <label class="control-label">Choose how many upcoming assignments you want to see:</label>
-          <div class="control-row">
-            <input 
-              type="number" 
-              id="deadlines-count-input" 
-              class="input-field" 
-              min="0" 
-              max="10" 
-              value="3"
-              style="width: 80px; padding: 8px;"
-            >
-            <button class="btn-tiny" id="set-deadlines-count">Set amount</button>
-          </div>
-        </div>
-      </div>
+  attachEventListeners() {
+    const setBtn = document.getElementById('set-deadlines-count');
+    const input = document.getElementById('deadlines-count-input');
+    
+    if (setBtn) {
+      setBtn.addEventListener('click', () => this.handleSetAmount());
+    }
+    
+    if (input) {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          this.handleSetAmount();
+        }
+      });
+      
+      // Track changes
+      input.addEventListener('input', () => {
+        const newCount = parseInt(input.value);
+        if (!isNaN(newCount) && newCount !== this.currentCount) {
+          this.isDirty = true;
+        }
+      });
+    }
+  }
 
-      <div class="deadlines-table-wrapper">
-        <div id="deadlines-loading" class="deadlines-loading hidden">
-          Loading deadlines...
-        </div>
-        
-        <div id="deadlines-content"></div>
-      </div>
-    `;
-
-    // Attach event listeners
-    document.getElementById('set-deadlines-count').addEventListener('click', () => {
-      this.updateCount();
+  setupBeforeUnloadHandler() {
+    // Save to database before leaving page/refreshing
+    window.addEventListener('beforeunload', (e) => {
+      if (this.isDirty) {
+        this.saveCountToDatabase();
+      }
     });
     
-    document.getElementById('deadlines-count-input').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        this.updateCount();
+    // Handle visibility change (tab switch, minimize)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && this.isDirty) {
+        this.saveCountToDatabase();
       }
     });
   }
@@ -78,6 +78,8 @@ class UpcomingDeadlines {
   async loadDeadlines(count = null) {
     const loading = document.getElementById('deadlines-loading');
     const content = document.getElementById('deadlines-content');
+    
+    if (!loading || !content) return;
     
     loading.classList.remove('hidden');
     
@@ -93,11 +95,19 @@ class UpcomingDeadlines {
         throw new Error(data.error || 'Failed to load deadlines');
       }
       
+      // Store assignment type colors
+      this.assignmentTypeColors = data.assignment_type_colors || {};
+      
       this.renderDeadlines(data);
       
-      // Update input field if we got data
-      if (count === null && data.requested !== undefined) {
-        document.getElementById('deadlines-count-input').value = data.requested;
+      // Update input field and current count
+      if (data.requested !== undefined) {
+        const input = document.getElementById('deadlines-count-input');
+        if (input) {
+          input.value = data.requested;
+        }
+        this.currentCount = data.requested;
+        this.isDirty = false; // Reset dirty flag after successful load
       }
       
     } catch (error) {
@@ -110,6 +120,8 @@ class UpcomingDeadlines {
 
   renderDeadlines(data) {
     const content = document.getElementById('deadlines-content');
+    if (!content) return;
+    
     const { assignments, requested, total_uncompleted } = data;
     
     // No uncompleted assignments
@@ -147,7 +159,6 @@ class UpcomingDeadlines {
       
       // Show message if requested more than available
       if (requested > assignments.length) {
-        const diff = requested - assignments.length;
         content.innerHTML += `
           <p class="deadlines-warning">
             Unable to show the next ${requested} upcoming deadlines because you only have ${total_uncompleted} uncompleted assignment${total_uncompleted !== 1 ? 's' : ''}.
@@ -161,7 +172,7 @@ class UpcomingDeadlines {
   }
 
   renderRow(assignment) {
-    const statusClass = assignment.status; // overdue, soon, normal
+    const statusClass = assignment.status;
     const dueDate = assignment.due_at 
       ? this.formatDate(assignment.due_at)
       : 'No due date';
@@ -172,16 +183,21 @@ class UpcomingDeadlines {
     
     const tooltipText = this.generateTooltip(assignment);
     
+    // Get assignment type color
+    const typeColor = this.assignmentTypeColors[assignment.assignment_type] || '#4b8df2';
+    
     return `
       <tr class="deadline-row ${statusClass}" data-assignment-id="${assignment.assignment_id}">
         <td>
-          <span class="class-badge" style="background-color: ${assignment.class_color}20; color: ${assignment.class_color}; border: 1px solid ${assignment.class_color};">
-            ${assignment.class_name}
+          <span class="class-badge" style="background-color: ${assignment.class_color}20; color: black; border: 1px solid black;">
+            ${this.escapeHtml(assignment.class_name)}
           </span>
         </td>
         <td class="assignment-title">${this.escapeHtml(assignment.title)}</td>
         <td>
-          <span class="type-badge">${this.formatType(assignment.assignment_type)}</span>
+          <span class="type-badge" style="background-color: ${typeColor}20; color: black; border: 1px solid black;">
+            ${this.formatType(assignment.assignment_type)}
+          </span>
         </td>
         <td class="due-date">${dueDate}</td>
         <td class="progress-cell" title="${tooltipText}">
@@ -217,7 +233,6 @@ Estimated completion percentage: ${completionPercentage}%`;
     const diffHours = diffMs / (1000 * 60 * 60);
     const diffDays = diffHours / 24;
     
-    // Format as readable date
     const options = { 
       month: 'short', 
       day: 'numeric',
@@ -226,7 +241,6 @@ Estimated completion percentage: ${completionPercentage}%`;
     };
     const formatted = date.toLocaleDateString('en-US', options);
     
-    // Add relative time
     if (diffHours < 0) {
       return `${formatted} (overdue)`;
     } else if (diffHours < 24) {
@@ -248,35 +262,61 @@ Estimated completion percentage: ${completionPercentage}%`;
     return div.innerHTML;
   }
 
-  async updateCount() {
+  handleSetAmount() {
     const input = document.getElementById('deadlines-count-input');
     const count = parseInt(input.value);
     
+    // Validate input
     if (isNaN(count) || count < 0 || count > 10) {
-      alert('Please enter a number between 0 and 10');
+      this.showInvalidAmountModal();
       return;
     }
     
-    // Save preference to backend
+    // Mark as dirty and reload
+    this.isDirty = true;
+    this.loadDeadlines(count);
+  }
+
+  showInvalidAmountModal() {
+    const modal = document.getElementById('invalidDeadlineAmountModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('active');
+    }
+  }
+
+  async saveCountToDatabase() {
+    if (!this.isDirty) return;
+    
+    const input = document.getElementById('deadlines-count-input');
+    if (!input) return;
+    
+    const count = parseInt(input.value);
+    if (isNaN(count) || count < 0 || count > 10) return;
+    
     try {
-      const response = await fetch('/api/user-preferences/deadlines-count', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ count })
-      });
+      // Use sendBeacon for reliability during page unload
+      const data = JSON.stringify({ count });
+      const blob = new Blob([data], { type: 'application/json' });
       
-      if (!response.ok) {
-        throw new Error('Failed to save preference');
+      // Try sendBeacon first (more reliable for unload)
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/user-preferences/deadlines-count', blob);
+      } else {
+        // Fallback to sync fetch
+        await fetch('/api/user-preferences/deadlines-count', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: data,
+          keepalive: true
+        });
       }
       
-      // Reload deadlines with new count
-      await this.loadDeadlines(count);
-      
+      this.isDirty = false;
     } catch (error) {
-      console.error('Error updating count:', error);
-      alert('Error saving preference. Please try again.');
+      console.error('Error saving count:', error);
     }
   }
 }

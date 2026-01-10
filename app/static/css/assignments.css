@@ -35,7 +35,7 @@
 
 .assignments-reminders {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
     gap: 25px;
     margin-bottom: 30px;
 }
@@ -46,6 +46,14 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+/* ================= FIX UPCOMING DEADLINES WIDTH (2-COLUMN CASE) ================= */
+
+@media (max-width: 1100px) and (min-width: 701px) {
+    .assignments-reminders > .upcoming-deadlines {
+        max-width: 100%;
+        width: 100%;
+    }
+}
 
 /* 1 card per row (stacked) */
 @media (max-width: 700px) {
@@ -54,11 +62,7 @@
     }
 }
 
-@media (max-width: 900px) {
-    .assignments-reminders {
-        grid-template-columns: 1fr;
-    }
-}
+
 .assignments-reminders > .card {
     display: flex;
     flex-direction: column;
@@ -435,3 +439,5 @@
     box-shadow: 0 6px 18px rgba(244, 67, 54, 0.25);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+
+

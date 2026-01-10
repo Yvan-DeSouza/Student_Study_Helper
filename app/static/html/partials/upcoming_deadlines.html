@@ -1,0 +1,43 @@
+<!-- static/html/partials/upcoming_deadlines.html -->
+<div class="upcoming-deadlines-header">
+  <h3>Upcoming Deadlines</h3>
+  
+  <div class="deadline-legend">
+    <span class="legend-item">
+      <span class="legend-dot overdue"></span>
+      <span class="legend-text">Overdue</span>
+    </span>
+    <span class="legend-item">
+      <span class="legend-dot soon"></span>
+      <span class="legend-text">Due soon (&lt;2 days)</span>
+    </span>
+    <span class="legend-item">
+      <span class="legend-dot normal"></span>
+      <span class="legend-text">Normal</span>
+    </span>
+  </div>
+
+  <div class="deadline-controls">
+    <label class="control-label">Choose how many upcoming assignments you want to see:</label>
+    <div class="control-row">
+      <input 
+        type="number" 
+        id="deadlines-count-input" 
+        class="input-field" 
+        min="0" 
+        max="10" 
+        value="3"
+        style="width: 80px; padding: 8px;"
+      >
+      <button class="btn-tiny" id="set-deadlines-count">Set amount</button>
+    </div>
+  </div>
+</div>
+
+<div class="deadlines-table-wrapper">
+  <div id="deadlines-loading" class="deadlines-loading hidden">
+    Loading deadlines...
+  </div>
+  
+  <div id="deadlines-content"></div>
+</div>

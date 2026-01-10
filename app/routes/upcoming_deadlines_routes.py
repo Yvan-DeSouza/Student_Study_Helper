@@ -1,16 +1,15 @@
 # routes/upcoming_deadlines_routes.py
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.assignment import Assignment
 from app.models.course import Class
-from app.models.user import UserPreferences
+from app.models.user import UserPreferences, UserAssignmentTypeColor
 from app.services.expected_utils import estimate_expected_minutes
 from datetime import datetime, timezone
 from sqlalchemy import func, case
 
 upcoming_deadlines = Blueprint("upcoming_deadlines", __name__)
-
 
 @upcoming_deadlines.route("/api/upcoming-deadlines", methods=["GET"])
 @login_required
@@ -37,8 +36,19 @@ def get_upcoming_deadlines():
         return jsonify({
             "assignments": [],
             "requested": 0,
-            "total_uncompleted": 0
+            "total_uncompleted": 0,
+            "assignment_type_colors": {}
         })
+    
+    # Get assignment type colors
+    type_colors_query = UserAssignmentTypeColor.query.filter_by(
+        user_id=current_user.user_id
+    ).all()
+    
+    assignment_type_colors = {
+        tc.assignment_type: tc.color
+        for tc in type_colors_query
+    }
     
     # Get all uncompleted assignments with their class info
     assignments_query = db.session.query(
@@ -139,9 +149,9 @@ def get_upcoming_deadlines():
     return jsonify({
         "assignments": assignments_list,
         "requested": count,
-        "total_uncompleted": total_uncompleted
+        "total_uncompleted": total_uncompleted,
+        "assignment_type_colors": assignment_type_colors
     })
-
 
 @upcoming_deadlines.route("/api/user-preferences/deadlines-count", methods=["POST"])
 @login_required
@@ -163,3 +173,4 @@ def update_deadlines_count():
     db.session.commit()
     
     return jsonify({"success": True, "count": count})
+

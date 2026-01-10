@@ -303,43 +303,20 @@
 
 
 
-<!-- ================= Table ================= -->
-{% set assignments_by_class = {} %}
-{% for a in assignments %}
-    {% if a.class_name not in assignments_by_class %}
-        {% set _ = assignments_by_class.update({a.class_name: []}) %}
-    {% endif %}
-    {% set _ = assignments_by_class[a.class_name].append(a) %}
-{% endfor %}
-<section class="assignments-table-wrapper">
+    <!-- ================= Table ================= -->
+    {% set assignments_by_class = {} %}
+    {% for a in assignments %}
+        {% if a.class_name not in assignments_by_class %}
+            {% set _ = assignments_by_class.update({a.class_name: []}) %}
+        {% endif %}
+        {% set _ = assignments_by_class[a.class_name].append(a) %}
+    {% endfor %}
+    <section class="assignments-table-wrapper">
 
 
 
-    <!-- ===== SINGLE TABLE MODE ===== -->
-    <div class="card assignments-table-card" data-table-mode="single">
-        <div class="table-actions">
-            <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
-            <button class="btn-tiny table-edit-btn">✏ Edit</button>
-            <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
-
-            <!-- hidden initially -->
-            <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
-            <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
-        </div>
-
-
-        {% set rows = assignments %}
-        {% set show_class_column = true %}
-        {% include "partials/assignments_table.html" %}
-    </div>
-
-
-    <!-- ===== PER CLASS MODE ===== -->
-    <div class="per-class-wrapper hidden" data-table-mode="per_class">
-        {% for class_name, rows in assignments_by_class.items() %}
-        <div class="card assignments-table-card per-class-card">
-            <h3 class="class-table-title">{{ class_name }}</h3>
-
+        <!-- ===== SINGLE TABLE MODE ===== -->
+        <div class="card assignments-table-card" data-table-mode="single">
             <div class="table-actions">
                 <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
                 <button class="btn-tiny table-edit-btn">✏ Edit</button>
@@ -349,74 +326,97 @@
                 <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
                 <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
             </div>
-            {% set rows = rows %}
-            {% set show_class_column = false %}
+
+
+            {% set rows = assignments %}
+            {% set show_class_column = true %}
             {% include "partials/assignments_table.html" %}
         </div>
-        {% endfor %}
-    </div>
 
 
+        <!-- ===== PER CLASS MODE ===== -->
+        <div class="per-class-wrapper hidden" data-table-mode="per_class">
+            {% for class_name, rows in assignments_by_class.items() %}
+            <div class="card assignments-table-card per-class-card">
+                <h3 class="class-table-title">{{ class_name }}</h3>
 
+                <div class="table-actions">
+                    <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
+                    <button class="btn-tiny table-edit-btn">✏ Edit</button>
+                    <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
 
-</section>
-
-
-
-
-
-
-
-
-<!-- ================= ANALYTICS ================= -->
-<section class="assignments-analytics">
-    <div class="card chart-card chart-widget" data-card-id="assignment-type-load">
-        <div class="card-header">
-            <h3>Assignment Type Load Breakdown</h3>
-            <button class="flip-btn" title="Flip">🔁</button>
+                    <!-- hidden initially -->
+                    <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
+                    <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
+                </div>
+                {% set rows = rows %}
+                {% set show_class_column = false %}
+                {% include "partials/assignments_table.html" %}
+            </div>
+            {% endfor %}
         </div>
-        <div class="card-body">
-            <div class="card-front">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                    <div class="chart-toggle" style="margin-right:auto;">
-                        <button class="btn-tiny active" data-metric="count">Count</button>
-                        <button class="btn-tiny" data-metric="study_time">Study Time</button>
+
+
+
+
+    </section>
+
+
+
+
+
+
+
+
+    <!-- ================= ANALYTICS ================= -->
+    <section class="assignments-analytics">
+        <div class="card chart-card chart-widget" data-card-id="assignment-type-load">
+            <div class="card-header">
+                <h3>Assignment Type Load Breakdown</h3>
+                <button class="flip-btn" title="Flip">🔁</button>
+            </div>
+            <div class="card-body">
+                <div class="card-front">
+                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                        <div class="chart-toggle" style="margin-right:auto;">
+                            <button class="btn-tiny active" data-metric="count">Count</button>
+                            <button class="btn-tiny" data-metric="study_time">Study Time</button>
+                        </div>
+                        <select id="assignmentTypeTimeFilter" class="chart-select">
+                            <option value="all">All time</option>
+                            <option value="last_7_days">Last 7 days</option>
+                            <option value="last_30_days">Last 30 days</option>
+                        </select>
                     </div>
-                    <select id="assignmentTypeTimeFilter" class="chart-select">
-                        <option value="all">All time</option>
-                        <option value="last_7_days">Last 7 days</option>
-                        <option value="last_30_days">Last 30 days</option>
-                    </select>
+                    <div class="chart-wrapper">
+                        <canvas id="assignmentTypeLoad"></canvas>
+                    </div>
                 </div>
-                <div class="chart-wrapper">
-                    <canvas id="assignmentTypeLoad"></canvas>
+                <div class="card-back">
+                    <p><strong>About Assignment Type Load:</strong></p>
+                    <p>Understand how different assignment types (homework, quizzes, projects, etc.) contribute to your overall workload by count or study time.</p>
                 </div>
-            </div>
-            <div class="card-back">
-                <p><strong>About Assignment Type Load:</strong></p>
-                <p>Understand how different assignment types (homework, quizzes, projects, etc.) contribute to your overall workload by count or study time.</p>
             </div>
         </div>
-    </div>
 
-    <div class="card chart-card chart-widget" data-card-id="assignment-grade-dist">
-        <div class="card-header">
-            <h3>Grade Distribution</h3>
-            <button class="flip-btn" title="Flip">🔁</button>
-        </div>
-        <div class="card-body">
-            <div class="card-front">
-                <div class="chart-wrapper">
-                    <canvas id="assignmentGradeChart"></canvas>
+        <div class="card chart-card chart-widget" data-card-id="assignment-grade-dist">
+            <div class="card-header">
+                <h3>Grade Distribution</h3>
+                <button class="flip-btn" title="Flip">🔁</button>
+            </div>
+            <div class="card-body">
+                <div class="card-front">
+                    <div class="chart-wrapper">
+                        <canvas id="assignmentGradeChart"></canvas>
+                    </div>
+                </div>
+                <div class="card-back">
+                    <p><strong>About Grade Distribution:</strong></p>
+                    <p>See how your assignment grades are distributed across different ranges to identify your performance patterns.</p>
                 </div>
             </div>
-            <div class="card-back">
-                <p><strong>About Grade Distribution:</strong></p>
-                <p>See how your assignment grades are distributed across different ranges to identify your performance patterns.</p>
-            </div>
         </div>
-    </div>
-</section>
+    </section>
 
 
 </div>
@@ -885,6 +885,23 @@
   </div>
 </div>
 
+
+<!-- ================= INVALID AMOUNT MODAL ================= -->
+<div class="modal-overlay hidden" id="invalidDeadlineAmountModal">
+  <div class="modal card">
+    <h2>Invalid Amount</h2>
+    
+    <p class="modal-message">
+      Please enter a number between 0 and 10.
+    </p>
+    
+    <div class="modal-actions">
+      <button type="button" class="btn full-btn" data-close-modal>
+        OK
+      </button>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
