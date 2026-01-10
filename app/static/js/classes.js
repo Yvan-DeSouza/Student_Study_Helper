@@ -100,6 +100,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return "#22c55e";                        // green
     }
 
+    // ================== DISABLE INLINE EDIT ON PAGE LOAD FOR FINISHED CLASSES ==================
+    document.querySelectorAll(".class-card").forEach(card => {
+        const isFinished = card.dataset.finished === "finished" || card.dataset.finished === "true";
+        if (isFinished) {
+            forceCloseInlineEdit(card, { disable: true });
+            const hint = card.querySelector(".hint-icon");
+            if (hint) hint.style.display = "inline-flex";
+        }
+    });
+
 
     document.querySelectorAll(".class-card").forEach(card => {
         const display = card.querySelector(".grade-display");
@@ -283,9 +293,8 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", () => {
             const card = btn.closest(".class-card");
 
-            if (card.dataset.finished === "true") {
-                return;
-            }
+            const isFinished = card.dataset.finished === "finished" || card.dataset.finished === "true";
+            if (isFinished) return;
 
             const classId = card.dataset.classId;
             const display = card.querySelector(".grade-display");
@@ -702,6 +711,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const classId = cb.dataset.classId;
             const isFinished = cb.checked;
+            card.dataset.finished = isFinished ? "finished" : "in_progress";
+
 
 
             // Update UI immediately
@@ -728,7 +739,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const hint = card.querySelector(".hint-icon");
                 if (hint){
-                    hint.style.display = "inline-block"
+                    hint.style.display = "inline-flex"
                 }
 
                 // Also hide save/cancel if currently editing

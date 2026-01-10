@@ -315,13 +315,12 @@
                 <button class="icon-btn edit-inline-btn" data-class-id="{{ c.class_id }}">
                     Edit Inline
                 </button>
-
                 <span class="hint-icon"
                     data-hint="Cannot edit the grade of a class that is already finished."
-                    {% if not c.is_finished %}style="display:none;"{% endif %}>
-                          ?
-                    
+                    {% if not c.is_finished %}style="display:none;"{% endif %}>?
                 </span>
+
+
 
                 <button class="icon-btn save-inline-btn" data-class-id="{{ c.class_id }}" style="display:none;">
                     Save

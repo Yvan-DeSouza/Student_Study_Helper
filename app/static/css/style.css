@@ -306,7 +306,7 @@ a {
 /* =================== HINT / TOOLTIP =================== */
 
 .hint-icon {
-    display: inline-flex;
+    display: inline-flex; /* ensure it stays flex */
     align-items: center;
     justify-content: center;
     width: 16px;
@@ -319,6 +319,8 @@ a {
     background: rgba(0,0,0,0.1);
     color: #555;
     position: relative;
+    vertical-align: middle; /* important for inline alignment */
+    line-height: 1; /* remove extra spacing issues */
 }
 
 :root[data-theme="dark"] .hint-icon {
