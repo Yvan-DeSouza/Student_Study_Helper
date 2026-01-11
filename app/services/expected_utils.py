@@ -1,11 +1,10 @@
-# app/services/expected_utils.py
 
-import pandas as pd
-import numpy as np
+
 
 # =================== CONSTANTS ===================
 
 MIN_ASSIGNMENTS_FOR_ESTIMATION = 6
+
 
 BASE_TIME_BY_ASSIGNMENT_TYPE = {
     "quiz": 90,
@@ -20,6 +19,7 @@ BASE_TIME_BY_ASSIGNMENT_TYPE = {
     "other": 180,
 }
 
+
 BASE_DIFFICULTY_BY_ASSIGNMENT_TYPE = {
     "quiz": 4,
     "reading": 4,
@@ -33,6 +33,7 @@ BASE_DIFFICULTY_BY_ASSIGNMENT_TYPE = {
     "other": 5,
 }
 
+
 CLASS_TYPE_COORDINATES = {
     "engineering": 0,
     "math": 10,
@@ -45,11 +46,6 @@ CLASS_TYPE_COORDINATES = {
     "art": 100,
 }
 
-DEFAULT_ASSIGNMENT_TYPES = [
-    "homework", "quiz", "project", "writing",
-    "test", "exam", "lab_report", "presentation",
-    "reading", "other"
-]
 
 GROUPS = {
     "assessment": {"quiz", "test", "exam"},
@@ -57,6 +53,7 @@ GROUPS = {
     "creative": {"project", "presentation"},
     "language": {"reading", "writing"}
 }
+
 
 GROUP_SIMILARITY = {
     ("assessment", "assessment"): 0.85,
@@ -71,32 +68,25 @@ GROUP_SIMILARITY = {
     ("creative", "language"): 0.4
 }
 
+
 OTHER_SCORE = 0.3
 
 
 # =================== DATA SUFFICIENCY ===================
 
 def has_enough_data(past_assignments):
-    """Check if we have enough data for estimation."""
     return len(past_assignments) >= MIN_ASSIGNMENTS_FOR_ESTIMATION
 
 
 # =================== SIMILARITY FUNCTIONS ===================
 
 def class_type_similarity(type_a, type_b):
-    """
-    Compute similarity between class types using coordinate distance.
-    Returns value in [0, 1].
-    """
     a = CLASS_TYPE_COORDINATES.get(type_a, 50)
     b = CLASS_TYPE_COORDINATES.get(type_b, 50)
-    
-    distance = abs(a - b)
-    return round(1 - distance / 100, 3)
+    return round(1 - abs(a - b) / 100, 3)
 
 
 def get_group(assignment_type):
-    """Get the group for an assignment type."""
     for group, items in GROUPS.items():
         if assignment_type in items:
             return group
@@ -104,30 +94,23 @@ def get_group(assignment_type):
 
 
 def assignment_type_similarity(type_a, type_b):
-    """
-    Compute similarity between assignment types.
-    Returns value in [0, 1].
-    """
-    # Same exact type
     if type_a == type_b:
         return 1.0
-    
-    # Handle "other"
     if type_a == "other" or type_b == "other":
         return OTHER_SCORE
-    
+
     group_a = get_group(type_a)
     group_b = get_group(type_b)
-    
-    # If either type is unknown
+
     if group_a is None or group_b is None:
         return OTHER_SCORE
-    
-    # Order groups so lookup works both ways
-    key = (group_a, group_b)
-    reverse_key = (group_b, group_a)
-    
-    return GROUP_SIMILARITY.get(key, GROUP_SIMILARITY.get(reverse_key, 0.0))
+
+    return GROUP_SIMILARITY.get(
+        (group_a, group_b),
+        GROUP_SIMILARITY.get((group_b, group_a), 0.0)
+    )
+
+
 
 
 def composite_assignment_similarity(target_class_type, target_assignment_type, target_class_id,
@@ -139,7 +122,7 @@ def composite_assignment_similarity(target_class_type, target_assignment_type, t
     class_sim = class_type_similarity(target_class_type, past_class_type)
     type_sim = assignment_type_similarity(target_assignment_type, past_assignment_type)
     same_class_bonus = 1.0 if target_class_id == past_class_id else 0.6
-    
+   
     return round(
         0.5 * class_sim +
         0.3 * type_sim +
@@ -148,85 +131,94 @@ def composite_assignment_similarity(target_class_type, target_assignment_type, t
     )
 
 
+# =================== NORMALIZATION HELPERS ===================
+
+def normalize_and_rescale(value, past_type, target_type, base_map):
+    past_base = base_map.get(past_type)
+    target_base = base_map.get(target_type)
+
+    if past_base is None or target_base is None or past_base == 0:
+        return None
+
+    return (value / past_base) * target_base
+
+
 # =================== ESTIMATION FUNCTIONS ===================
 
 def estimate_expected_minutes(target_class_type, target_assignment_type, target_class_id,
                               past_assignments):
-    """
-    Estimate expected minutes for an assignment.
-    
-    past_assignments: list of dicts with keys:
-        - class_type
-        - assignment_type
-        - class_id
-        - actual_minutes (duration spent)
-    """
-    base = BASE_TIME_BY_ASSIGNMENT_TYPE.get(target_assignment_type, 120)
-    
+    base = BASE_TIME_BY_ASSIGNMENT_TYPE.get(target_assignment_type, 180)
+
     if not has_enough_data(past_assignments):
         return base
-    
+
     weighted_sum = 0
     weight_total = 0
-    
+
     for past in past_assignments:
-        if past.get('actual_minutes') is None:
+        actual = past.get("actual_minutes")
+        if actual is None:
             continue
-        
+
+        normalized = normalize_and_rescale(
+            actual,
+            past["assignment_type"],
+            target_assignment_type,
+            BASE_TIME_BY_ASSIGNMENT_TYPE
+        )
+
+        if normalized is None:
+            continue
+
         w = composite_assignment_similarity(
             target_class_type, target_assignment_type, target_class_id,
-            past['class_type'], past['assignment_type'], past['class_id']
+            past["class_type"], past["assignment_type"], past["class_id"]
         )
-        
-        weighted_sum += w * past['actual_minutes']
+
+        weighted_sum += w * normalized
         weight_total += w
-    
+
     if weight_total == 0:
         return base
-    
-    historical_estimate = weighted_sum / weight_total
-    
-    alpha = 0.35  # trust base when data is noisy
-    return round(alpha * base + (1 - alpha) * historical_estimate)
+
+    return int(round(weighted_sum / weight_total))
 
 
 def estimate_expected_difficulty(target_class_type, target_assignment_type, target_class_id,
                                  past_assignments):
-    """
-    Estimate expected difficulty (1-10) for an assignment.
-    
-    past_assignments: list of dicts with keys:
-        - class_type
-        - assignment_type
-        - class_id
-        - difficulty
-    """
     base = BASE_DIFFICULTY_BY_ASSIGNMENT_TYPE.get(target_assignment_type, 5)
-    
+
     if not has_enough_data(past_assignments):
         return base
-    
+
     weighted_sum = 0
     weight_total = 0
-    
+
     for past in past_assignments:
-        if past.get('difficulty') is None:
+        difficulty = past.get("difficulty")
+        if difficulty is None:
             continue
-        
+
+        normalized = normalize_and_rescale(
+            difficulty,
+            past["assignment_type"],
+            target_assignment_type,
+            BASE_DIFFICULTY_BY_ASSIGNMENT_TYPE
+        )
+
+        if normalized is None:
+            continue
+
         w = composite_assignment_similarity(
             target_class_type, target_assignment_type, target_class_id,
-            past['class_type'], past['assignment_type'], past['class_id']
+            past["class_type"], past["assignment_type"], past["class_id"]
         )
-        
-        weighted_sum += w * past['difficulty']
+
+        weighted_sum += w * normalized
         weight_total += w
-    
+
     if weight_total == 0:
         return base
-    
-    estimate = weighted_sum / weight_total
-    
-    alpha = 0.4
-    final = alpha * base + (1 - alpha) * estimate
-    
+
+    final = weighted_sum / weight_total
     return int(round(min(10, max(1, final))))

@@ -23,7 +23,6 @@ from app.services.risk_utils import (
     aggregate_weekly_risk_components
 )
 from app.services.expected_utils import (
-    has_enough_data,
     estimate_expected_minutes, 
     estimate_expected_difficulty
 )
@@ -153,15 +152,14 @@ def deadline_proximity_distribution():
 
         if r.estimated_minutes:
             minutes = r.estimated_minutes
-        elif has_enough_data(past_assignments):
+        else:
             minutes = estimate_expected_minutes(
                 Class.class_type,
                 r.assignment_type,
                 r.assignment_id,
                 past_assignments
             )
-        else:
-            minutes = 60
+
 
         buckets[bucket]["count"] += 1
         buckets[bucket]["minutes"] += minutes
@@ -231,7 +229,7 @@ def risk_composition_evolution():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) if has_enough_data(past_assignments) else 5
+            ) 
         ),
         'estimated_minutes': (
             r.estimated_minutes if r.estimated_minutes is not None else
@@ -240,7 +238,7 @@ def risk_composition_evolution():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) if has_enough_data(past_assignments) else 60
+            ) 
         ),
         'is_completed': r.is_completed,
         'grade': float(r.grade) if r.grade else None
@@ -286,7 +284,7 @@ def risk_composition_evolution():
         ),
         axis=1
     )
-    print('computed history')
+
  
     
     # Aggregate by week
@@ -415,7 +413,7 @@ def assignment_risk_breakdown():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) if has_enough_data(past_assignments) else 3
+            ) 
         ),
         'estimated_minutes': (
             r.estimated_minutes if r.estimated_minutes is not None else
@@ -424,7 +422,7 @@ def assignment_risk_breakdown():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) if has_enough_data(past_assignments) else 60
+            ) 
         ),
         'grade': float(r.grade) if r.grade else None
     } for r in results])
@@ -565,7 +563,7 @@ def urgency_risk_matrix():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) if has_enough_data(past_assignments) else 5
+            ) 
         ),
         'estimated_minutes': (
             r.estimated_minutes if r.estimated_minutes is not None else
@@ -574,7 +572,7 @@ def urgency_risk_matrix():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) if has_enough_data(past_assignments) else 60
+            ) 
         ),
         'grade': float(r.grade) if r.grade else None
     } for r in results])

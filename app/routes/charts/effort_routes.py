@@ -8,7 +8,6 @@ from app.extensions import db
 
 
 from app.services.expected_utils import (
-    has_enough_data,
     estimate_expected_minutes
 )
 from app.services.effort_utils import (
@@ -124,8 +123,6 @@ def spent_vs_expected_time():
         if ca.estimated_minutes:
             expected_minutes = ca.estimated_minutes
         else:
-            if not has_enough_data(past_assignments):
-                continue
 
             expected_minutes = estimate_expected_minutes(
                 ca.class_.class_type,
