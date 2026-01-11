@@ -7,7 +7,11 @@ from app.models.assignment import Assignment
 from app.extensions import db 
 import pandas as pd
 from app.services.analytics.chart_eligibility import (
-    get_rolling_grade_trend_eligibility
+    get_rolling_grade_trend_eligibility,
+    get_effort_outcome_timeline_eligibility,
+    get_performance_stability_index_eligibility,
+    get_lag_correlation_heatmap_eligibility
+
 )
 
 
@@ -26,10 +30,18 @@ def rolling_grade_trend():
             "eligible": False,
             "eligibility": eligibility
         })
+    
+    if eligibility["eligible"] and not eligibility["eligible_classes"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility
+        })
+
 
     eligible_class_ids = [
         c["class_id"] for c in eligibility["eligible_classes"]
     ]
+
    
     # Query all graded assignments
     results = db.session.query(
@@ -183,6 +195,7 @@ def rolling_grade_trend():
 @charts.route("/dashboard/performance_stability_index")
 @login_required
 def performance_stability_index():
+
     """
     Composite metric combining:
     - Grade volatility (lower is better)
@@ -190,7 +203,15 @@ def performance_stability_index():
     - Incomplete ratio (lower is better)
     Higher PSI = more stable performance
     """
-    
+    eligibility = get_performance_stability_index_eligibility(current_user.user_id)
+
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility
+        })
+
+
     # Get all assignments
     results = db.session.query(
         Assignment.assignment_id,
@@ -304,7 +325,8 @@ def performance_stability_index():
     ]
     
     return jsonify({
-        "empty": False,
+        "eligible": True,
+        "eligibility": eligibility,
         "data": data
     })
 
@@ -318,6 +340,13 @@ def effort_outcome_timeline():
     - Study effort (minutes per week)
     - Grade outcomes (weekly average)
     """
+    eligibility = get_effort_outcome_timeline_eligibility(current_user.user_id)
+
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility
+        })
     
     # Get study sessions
     study_results = db.session.query(
@@ -425,7 +454,8 @@ def effort_outcome_timeline():
     ]
     
     return jsonify({
-        "empty": False,
+        "eligible": True,
+        "eligibility": eligibility,
         "effort_data": effort_data,
         "grade_data": grade_data
     })
@@ -439,10 +469,22 @@ def lag_correlation_heatmap():
     Heatmap showing correlation between study effort and grades
     at different time lags (0-3 weeks) for each class.
     """
+    eligibility = get_lag_correlation_heatmap_eligibility(current_user.user_id)
+
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility
+        })
+    
+    eligible_class_ids = [
+        c["class_id"] for c in eligibility["eligible_classes"]
+    ]
     
     # Get all classes
     classes = db.session.query(Class).filter(
-        Class.user_id == current_user.user_id
+        Class.user_id == current_user.user_id,
+        Class.class_id.in_(eligible_class_ids)
     ).all()
     
     if not classes:
@@ -473,9 +515,9 @@ def lag_correlation_heatmap():
             Assignment.finished_at.isnot(None)
         ).all()
         
-        if len(study_results) < 4 or len(grade_results) < 4:
-            # Need minimum data points
+        if len(study_results) < 10 or len(grade_results) < 3:
             continue
+
         
         # Convert to weekly series
         study_df = pd.DataFrame([{
@@ -537,7 +579,8 @@ def lag_correlation_heatmap():
         return jsonify({"empty": True, "message": "Insufficient data for correlation analysis"})
     
     return jsonify({
-        "empty": False,
+        "eligible": True,
+        "eligibility": eligibility,
         "class_labels": class_labels,
         "lag_labels": ["Lag 0", "Lag 1", "Lag 2", "Lag 3"],
         "data": heatmap_data

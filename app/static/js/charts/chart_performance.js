@@ -1,9 +1,15 @@
 import { gateChart } from './chart_gatekeeper.js';
 document.addEventListener('DOMContentLoaded', async () => {
-  function renderPerformanceFront(progress) {
+
+
+  function renderPerformanceFront(progress, representative) {
     return `
       <div class="chart-empty">
         <p><strong>Not enough data yet</strong></p>
+        ${representative
+          ? `<p><em>Currently showing: ${representative.class_name}</em></p>`
+          : ""
+        }
         <ul>
           <li>
             Minimum classes:
@@ -25,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
+
   function renderPerformanceBack(ineligibleClasses) {
     return `
       <p><strong>Why some classes are hidden:</strong></p>
@@ -36,27 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-  // Helper function to show empty message
-  function showEmptyMessage(wrapper, message) {
-    const existing = wrapper.querySelector('.chart-empty');
-    if (existing) existing.remove();
-    
-    const empty = document.createElement('div');
-    empty.className = 'chart-empty';
-    empty.textContent = message;
-    wrapper.appendChild(empty);
-    
-    const canvas = wrapper.querySelector('canvas');
-    if (canvas) canvas.style.visibility = 'hidden';
-  }
-  
-  function clearEmptyMessage(wrapper) {
-    const empty = wrapper.querySelector('.chart-empty');
-    if (empty) empty.remove();
-    
-    const canvas = wrapper.querySelector('canvas');
-    if (canvas) canvas.style.visibility = 'visible';
-  }
+
   
   // Get theme colors
   function getThemeColor(lightColor, darkColor) {
@@ -70,238 +57,275 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   const rollingRes = await fetch('/charts/dashboard/rolling_grade_trend');
   const rollingData = await rollingRes.json();
-  const card = rollingCanvas.closest('.graph-card');
+  const rollingCard = rollingCanvas.closest('.graph-card');
 
-  if (!gateChart(card, rollingData, renderPerformanceFront, renderPerformanceBack)) return;
-
-
-  new Chart(rollingCtx, {
-    type: 'line',
-    data: {
-      datasets: rollingData.datasets.map(ds => ({
-        ...ds,
-        fill: false,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      }))
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 600, easing: 'easeOutCubic' },
-      interaction: {
-        mode: 'index',
-        intersect: false
+  if (gateChart(rollingCard, rollingData, renderPerformanceFront, renderPerformanceBack)) {
+    new Chart(rollingCtx, {
+      type: 'line',
+      data: {
+        datasets: rollingData.datasets.map(ds => ({
+          ...ds,
+          fill: false,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }))
       },
-      scales: {
-        x: {
-          type: 'time',
-          time: {
-            unit: 'week',
-            displayFormats: { week: 'MMM d' }
-          },
-          title: { display: true, text: 'Week' },
-          grid: { color: getThemeColor('#e5e7eb', '#374151') }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600, easing: 'easeOutCubic' },
+        interaction: {
+          mode: 'index',
+          intersect: false
         },
-        y: {
-            min: rollingData.y_bounds.min,
-            max: rollingData.y_bounds.max,
-            title: { display: true, text: 'Rolling Average Grade (%)' },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'week',
+              displayFormats: { week: 'MMM d' }
+            },
+            title: { display: true, text: 'Week' },
             grid: { color: getThemeColor('#e5e7eb', '#374151') }
-        }
+          },
+          y: {
+              min: rollingData.y_bounds.min,
+              max: rollingData.y_bounds.max,
+              title: { display: true, text: 'Rolling Average Grade (%)' },
+              grid: { color: getThemeColor('#e5e7eb', '#374151') }
+          }
 
-      },
-      plugins: {
-        legend: { position: 'bottom' },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return `${context.dataset.label}: ${context.parsed.y}%`;
+        },
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.dataset.label}: ${context.parsed.y}%`;
+              }
             }
           }
         }
       }
-    }
-  });
+    });
+  }
     
     
   // =================== GRAPH 2: Performance Stability Index ===================
   const psiCanvas = document.getElementById('perf-3-canvas');
-  const psiWrapper = psiCanvas.parentElement;
+  const psiCard = psiCanvas.closest('.graph-card')
   const psiCtx = psiCanvas.getContext('2d');
-  
-  try {
-    const psiRes = await fetch('/charts/dashboard/performance_stability_index');
-    const psiData = await psiRes.json();
-    
-    if (psiData.empty) {
-      showEmptyMessage(psiWrapper, psiData.message || 'No data available');
-    } else {
-      clearEmptyMessage(psiWrapper);
-      
-      new Chart(psiCtx, {
-        type: 'line',
-        data: {
-          datasets: [{
-            label: 'Stability Index',
-            data: psiData.data,
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { duration: 600, easing: 'easeOutCubic' },
-          scales: {
-            x: {
-              type: 'time',
-              time: {
-                unit: 'week',
-                displayFormats: { week: 'MMM d' }
-              },
-              title: { display: true, text: 'Week' },
-              grid: { color: getThemeColor('#e5e7eb', '#374151') }
+  const psiRes = await fetch('/charts/dashboard/performance_stability_index');
+  const psiData = await psiRes.json();
+  const psiFront = (progress) => `
+  <div class="chart-empty">
+    <p><strong>Not enough data yet</strong></p>
+    <ul>
+      <li>Time since first graded assignment: ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}</li>
+      <li>Time since account creation: ${progress.weeks_since_account_creation.current}/${progress.weeks_since_account_creation.required} weeks ${progress.weeks_since_account_creation.current >= progress.weeks_since_account_creation.required ? "✅" : "❌"}</li>
+      <li>Number of graded assignments: ${progress.graded_assignments.current}/${progress.graded_assignments.required} ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}</li>
+      <li>Number of finished study sessions: ${progress.total_study_sessions.current}/${progress.total_study_sessions.required} ${progress.total_study_sessions.current >= progress.total_study_sessions.required ? "✅" : "❌"}</li>
+
+    </ul>
+  </div>
+`;
+  if (gateChart(psiCard, psiData, psiFront, null)){
+    new Chart(psiCtx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: 'Stability Index',
+          data: psiData.data,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600, easing: 'easeOutCubic' },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'week',
+              displayFormats: { week: 'MMM d' }
             },
-            y: {
-              min: 0,
-              max: 100,
-              title: { display: true, text: 'Stability Index (0-100)' },
-              grid: { color: getThemeColor('#e5e7eb', '#374151') }
-            }
+            title: { display: true, text: 'Week' },
+            grid: { color: getThemeColor('#e5e7eb', '#374151') }
           },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return `PSI: ${context.parsed.y}`;
-                }
+          y: {
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'Stability Index (0-100)' },
+            grid: { color: getThemeColor('#e5e7eb', '#374151') }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `PSI: ${context.parsed.y}`;
               }
             }
           }
         }
-      });
-    }
-  } catch (error) {
-    showEmptyMessage(psiWrapper, 'Error loading data');
-    console.error('PSI error:', error);
+      }
+    });
   }
+
+
   
   // =================== GRAPH 3: Effort → Outcome Timeline ===================
   const effortCanvas = document.getElementById('perf-2-canvas');
-  const effortWrapper = effortCanvas.parentElement;
   const effortCtx = effortCanvas.getContext('2d');
-  
-  try {
-    const effortRes = await fetch('/charts/dashboard/effort_outcome_timeline');
-    const effortData = await effortRes.json();
-    
-    if (effortData.empty) {
-      showEmptyMessage(effortWrapper, effortData.message || 'No data available');
-    } else {
-      clearEmptyMessage(effortWrapper);
+  const effortCard = effortCanvas.closest('.graph-card');
+  const effortRes = await fetch('/charts/dashboard/effort_outcome_timeline');
+  const effortData = await effortRes.json();
+
+  const effortFront = (progress) => `
+    <div class="chart-empty">
+      <p><strong>Not enough data yet</strong></p>
+      <ul>
+        <li>Time since first graded assignment: ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}</li>
+        <li>Time since account creation: ${progress.weeks_since_account_creation.current}/${progress.weeks_since_account_creation.required} weeks ${progress.weeks_since_account_creation.current >= progress.weeks_since_account_creation.required ? "✅" : "❌"}</li>
+        <li>Number of graded assignments: ${progress.graded_assignments.current}/${progress.graded_assignments.required} ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}</li>
+        <li>Number of finished study sessions: ${progress.total_study_sessions.current}/${progress.total_study_sessions.required} ${progress.total_study_sessions.current >= progress.total_study_sessions.required ? "✅" : "❌"}</li>
+      </ul>
+    </div>
+  `;
+
+  if (gateChart(effortCard, effortData, effortFront, null)){
       
-      new Chart(effortCtx, {
-        type: 'line',
-        data: {
-          datasets: [
-            {
-              label: 'Study Time (min)',
-              data: effortData.effort_data,
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              yAxisID: 'y',
-              tension: 0.4,
-              pointRadius: 4,
-              pointHoverRadius: 6
-            },
-            {
-              label: 'Grade (%)',
-              data: effortData.grade_data,
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245, 158, 11, 0.1)',
-              yAxisID: 'y1',
-              tension: 0.4,
-              pointRadius: 4,
-              pointHoverRadius: 6
-            }
-          ]
+    new Chart(effortCtx, {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'Study Time (min)',
+            data: effortData.effort_data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            yAxisID: 'y',
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: 'Grade (%)',
+            data: effortData.grade_data,
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            yAxisID: 'y1',
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600, easing: 'easeOutCubic' },
+        interaction: {
+          mode: 'index',
+          intersect: false
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { duration: 600, easing: 'easeOutCubic' },
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
-          scales: {
-            x: {
-              type: 'time',
-              time: {
-                unit: 'week',
-                displayFormats: { week: 'MMM d' }
-              },
-              title: { display: true, text: 'Week' },
-              grid: { color: getThemeColor('#e5e7eb', '#374151') }
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'week',
+              displayFormats: { week: 'MMM d' }
             },
-            y: {
-              type: 'linear',
-              display: true,
-              position: 'left',
-              title: { display: true, text: 'Study Time (minutes)' },
-              grid: { color: getThemeColor('#e5e7eb', '#374151') }
-            },
-            y1: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              max: 100,
-              title: { display: true, text: 'Grade (%)' },
-              grid: { drawOnChartArea: false }
-            }
+            title: { display: true, text: 'Week' },
+            grid: { color: getThemeColor('#e5e7eb', '#374151') }
           },
-          plugins: {
-            legend: { position: 'bottom' },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const label = context.dataset.label;
-                  const value = context.parsed.y;
-                  return value !== null ? `${label}: ${value}` : null;
-                }
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: { display: true, text: 'Study Time (minutes)' },
+            grid: { color: getThemeColor('#e5e7eb', '#374151') }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'Grade (%)' },
+            grid: { drawOnChartArea: false }
+          }
+        },
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label;
+                const value = context.parsed.y;
+                return value !== null ? `${label}: ${value}` : null;
               }
             }
           }
         }
-      });
-    }
-  } catch (error) {
-    showEmptyMessage(effortWrapper, 'Error loading data');
-    console.error('Effort Timeline error:', error);
+      }
+    });
   }
+
   
-  // =================== GRAPH 4: Lag Correlation Heatmap ===================
-  const heatmapCanvas = document.getElementById('perf-4-canvas');
-  const heatmapWrapper = heatmapCanvas.parentElement;
-  const heatmapCtx = heatmapCanvas.getContext('2d');
-  
-  try {
+    const heatmapCanvas = document.getElementById('perf-4-canvas');
+    const heatmapCtx = heatmapCanvas.getContext('2d');
+    const heatmapCard = heatmapCanvas.closest('.graph-card');
     const heatmapRes = await fetch('/charts/dashboard/lag_correlation_heatmap');
     const heatmapData = await heatmapRes.json();
-    
-    if (heatmapData.empty) {
-      showEmptyMessage(heatmapWrapper, heatmapData.message || 'No data available');
-    } else {
-      clearEmptyMessage(heatmapWrapper);
-      
-      // Transform data for Chart.js matrix format
+
+    const heatmapFront = (progress, representative) => `
+      <div class="chart-empty">
+        <p><strong>Not enough data yet</strong></p>
+        ${representative
+          ? `<p><em>Currently showing: ${representative.class_name}</em></p>`
+          : ""
+        }
+        <ul>
+          <li>Minimum classes: ${progress.classes.current}/${progress.classes.required}
+            ${progress.classes.current >= progress.classes.required ? "✅" : "❌"}
+          </li>
+          <li>Graded assignments per class:
+            ${progress.graded_assignments.current}/${progress.graded_assignments.required}
+            ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}
+          </li>
+          <li>Study sessions per class:
+            ${progress.study_sessions.current}/${progress.study_sessions.required}
+            ${progress.study_sessions.current >= progress.study_sessions.required ? "✅" : "❌"}
+          </li>
+          <li>Time since first graded assignment:
+            ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks
+            ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}
+          </li>
+        </ul>
+      </div>
+    `;
+
+
+
+    const heatmapBack = (ineligibleClasses) => `
+      <p><strong>Why some classes are hidden:</strong></p>
+      <ul>
+        ${ineligibleClasses.map(c =>
+          `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+        ).join("")}
+      </ul>
+    `;
+
+    if (gateChart(heatmapCard, heatmapData, heatmapFront, heatmapBack)) {
+
       const matrixData = [];
       heatmapData.data.forEach((row, classIdx) => {
         row.forEach((value, lagIdx) => {
@@ -375,8 +399,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
-  } catch (error) {
-    showEmptyMessage(heatmapWrapper, 'Error loading data');
-    console.error('Heatmap error:', error);
-  }
+
 });

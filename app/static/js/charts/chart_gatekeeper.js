@@ -2,18 +2,19 @@ export function gateChart(cardEl, response, renderFront, renderBack) {
   const frontEl = cardEl.querySelector('.card-front');
   const backEl = cardEl.querySelector('.min_requirements');
 
-  // ---- Normalize backend payload (temporary safety layer) ----
+  // ---- Normalize backend payload ----
   const data = response.eligibility ?? response;
 
   const {
     eligible,
     progress,
-    ineligible_classes = []
+    ineligible_classes = [],
+    representative = null   // 👈 NEW
   } = data;
 
   // ---- Front (not eligible) ----
   if (!eligible) {
-    frontEl.innerHTML = renderFront(progress);
+    frontEl.innerHTML = renderFront(progress, representative);
     return false;
   }
 
