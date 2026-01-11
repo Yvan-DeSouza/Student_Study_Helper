@@ -21,3 +21,11 @@ def earliest_graded_assignment_date(user_id):
         .first()
     )
     return result[0] if result else None
+
+# Helper to compute time since first graded assignment
+def weeks_since_first_graded(first_date):
+    if first_date is None:
+        return 0
+    now = datetime.now(timezone.utc)
+    delta = now - first_date
+    return delta.days // 7

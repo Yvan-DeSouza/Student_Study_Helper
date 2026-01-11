@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timezone, timedelta
 
+
 from app.services.risk_utils import (
     compute_days_until_due,
     urgency_score,
@@ -17,15 +18,21 @@ from app.services.risk_utils import (
     min_max_normalize,
     time_pressure_score,
     compute_workload_overlap,
-    grade_to_risk,
     historical_risk_from_history,
     compute_assignment_risk,
     aggregate_weekly_risk_components
 )
 from app.services.expected_utils import (
-    estimate_expected_minutes, 
+    estimate_expected_minutes,
     estimate_expected_difficulty
 )
+from app.services.analytics.chart_eligibility.risk.risk_eligibility import (
+    get_deadline_proximity_eligibility,
+    get_risk_composition_eligibility,
+    get_assignment_risk_breakdown_eligibility,
+    get_urgency_risk_matrix_eligibility
+)
+
 
 def build_past_assignments(user_id):
     """
@@ -57,6 +64,7 @@ def build_past_assignments(user_id):
         .all()
     )
 
+
     return [
         {
             "class_type": r.class_type,
@@ -69,36 +77,6 @@ def build_past_assignments(user_id):
         if r.actual_minutes is not None
     ]
 
-def build_past_risk_assignments(user_id):
-    """
-    Build historical assignment data for performance-based risk modeling.
-    """
-    rows = (
-        db.session.query(
-            Assignment.assignment_id,
-            Assignment.class_id,
-            Assignment.assignment_type,
-            Assignment.grade,
-            Class.class_type
-        )
-        .join(Class, Class.class_id == Assignment.class_id)
-        .filter(
-            Assignment.user_id == user_id,
-            Assignment.is_completed == True,
-            Assignment.grade.isnot(None)
-        )
-        .all()
-    )
-
-    return [
-        {
-            "class_type": r.class_type,
-            "assignment_type": r.assignment_type,
-            "class_id": r.class_id,
-            "grade": float(r.grade)
-        }
-        for r in rows
-    ]
 
 
 
@@ -106,13 +84,9 @@ def build_past_risk_assignments(user_id):
 @charts.route("/dashboard/deadline_proximity_distribution")
 @login_required
 def deadline_proximity_distribution():
-    """
-    Shows how compressed upcoming deadlines are.
-    Pure urgency, no risk modeling.
-    """
-    
+    eligibility = get_deadline_proximity_eligibility(current_user.user_id)
     now = datetime.now(timezone.utc)
-    
+
     # Get incomplete assignments with due dates
     results = db.session.query(
         Assignment.assignment_id,
@@ -120,7 +94,8 @@ def deadline_proximity_distribution():
         Assignment.due_at,
         Assignment.estimated_minutes,
         Class.class_name,
-        Assignment.assignment_type
+        Assignment.assignment_type,
+        Class.class_type
     ).join(
         Class, Class.class_id == Assignment.class_id
     ).filter(
@@ -128,11 +103,7 @@ def deadline_proximity_distribution():
         Assignment.is_completed == False,
         Assignment.due_at.isnot(None)
     ).all()
-    
-    if not results:
-        return jsonify({"empty": True, "message": "No upcoming assignments with deadlines"})
-    
-    # Compute days until due and bucket
+
     buckets = {
         "Overdue": {"count": 0, "minutes": 0},
         "0-2 days": {"count": 0, "minutes": 0},
@@ -140,43 +111,36 @@ def deadline_proximity_distribution():
         "6-10 days": {"count": 0, "minutes": 0},
         "10+ days": {"count": 0, "minutes": 0}
     }
-    
+
     past_assignments = build_past_assignments(current_user.user_id)
 
     for r in results:
         days_until = compute_days_until_due(r.due_at, now)
         bucket = deadline_proximity_bucket(days_until)
-
         if not bucket:
             continue
 
-        if r.estimated_minutes:
-            minutes = r.estimated_minutes
-        else:
-            minutes = estimate_expected_minutes(
-                Class.class_type,
-                r.assignment_type,
-                r.assignment_id,
-                past_assignments
-            )
-
+        minutes = r.estimated_minutes or estimate_expected_minutes(
+            r.class_type, r.assignment_type, r.assignment_id, past_assignments
+        )
 
         buckets[bucket]["count"] += 1
         buckets[bucket]["minutes"] += minutes
 
-    
-    # Prepare data in fixed order
     bucket_order = ["Overdue", "0-2 days", "3-5 days", "6-10 days", "10+ days"]
-    
     labels = bucket_order
     counts = [buckets[b]["count"] for b in bucket_order]
     minutes = [buckets[b]["minutes"] for b in bucket_order]
-    
+
     return jsonify({
-        "empty": False,
+        "empty": not bool(results),
         "labels": labels,
         "counts": counts,
-        "minutes": minutes
+        "minutes": minutes,
+        "eligible": eligibility["eligible"],
+        "progress": eligibility["progress"],
+        "front_message": eligibility["front_message"],
+        "back_message": eligibility["back_message"]
     })
 
 
@@ -184,14 +148,9 @@ def deadline_proximity_distribution():
 @charts.route("/dashboard/risk_composition_evolution")
 @login_required
 def risk_composition_evolution():
-    """
-    Stacked area chart showing why risk is rising over time.
-    Components: time_pressure, difficulty, overlap, history
-    """
-    
+    eligibility = get_risk_composition_eligibility(current_user.user_id)
     now = datetime.now(timezone.utc)
-    
-    # Get all assignments (for historical context)
+
     results = db.session.query(
         Assignment.assignment_id,
         Assignment.assignment_type,
@@ -210,10 +169,18 @@ def risk_composition_evolution():
     ).filter(
         Assignment.user_id == current_user.user_id
     ).order_by(Assignment.created_at).all()
-    
-    if not results:
-        return jsonify({"empty": True, "message": "No assignments yet"})
+ 
     past_assignments = build_past_assignments(current_user.user_id)
+    if not results:
+        return jsonify({
+            "empty": True,
+            "message": "No assignments yet",
+            "eligible": eligibility["eligible"],
+            "progress": eligibility["progress"],
+            "front_message": eligibility["front_message"],
+            "back_message": eligibility["back_message"]
+        })
+
     df = pd.DataFrame([{
         'assignment_id': r.assignment_id,
         'title': r.title,
@@ -229,7 +196,7 @@ def risk_composition_evolution():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) 
+            )
         ),
         'estimated_minutes': (
             r.estimated_minutes if r.estimated_minutes is not None else
@@ -238,121 +205,52 @@ def risk_composition_evolution():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) 
+            )
         ),
         'is_completed': r.is_completed,
         'grade': float(r.grade) if r.grade else None
     } for r in results])
 
-    
-    # Normalize timezone
     df['created_at'] = pd.to_datetime(df['created_at'], utc=True)
-    df['due_at'] = pd.to_datetime(df['due_at'], utc=True)
-    
-    # Bucket by week (using created_at for temporal alignment)
-    df['week'] = df['created_at'].dt.tz_localize(None).dt.to_period('W').apply(lambda x: x.start_time)
-    
-    # Compute components per assignment
-    df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now))
-    df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7))
-    
-    # Difficulty (normalize)
+    df['week'] = df['created_at'].dt.to_period('W').apply(lambda x: x.start_time)
+    df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now) if x else None)
+    df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7) if x else 0)
     df['difficulty_norm'] = min_max_normalize(df['difficulty'])
-    
-    # Overlap: count active assignments per day
-    # For simplicity, use weekly active count
-    weekly_active = []
-    for week in sorted(df['week'].unique()):
-        week_data = df[df['week'] == week]
-        active_count = len(week_data[week_data['is_completed'] == False])
-        weekly_active.append({'week': week, 'active_count': active_count})
-    
-    active_df = pd.DataFrame(weekly_active)
-    max_active = active_df['active_count'].max() if not active_df.empty else 1
-    
-    df = df.merge(active_df, on='week', how='left')
-    df['active_count'] = df['active_count'].fillna(0)
-    df['overlap'] = df['active_count'].apply(lambda x: compute_workload_overlap(x, max_active))
-    past_risk_assignments = build_past_risk_assignments(current_user.user_id)
-
-    df['history'] = df.apply(
-        lambda row: historical_risk_from_history(
-            row['class_type'],
-            row['assignment_type'],
-            row['class_id'],
-            past_risk_assignments
-        ),
-        axis=1
-    )
-
- 
-    
-    # Aggregate by week
-    weekly_risk = aggregate_weekly_risk_components(
-        df[['week', 'time_pressure', 'difficulty_norm', 'overlap', 'history']].rename(
-            columns={'difficulty_norm': 'difficulty'}
-        )
-    )
-    
-    if weekly_risk.empty:
-        return jsonify({"empty": True, "message": "Insufficient data"})
-    
+    weekly_active = df.groupby('week').apply(lambda w: len(w[w['is_completed'] == False])).to_dict()
+    max_active = max(weekly_active.values()) if weekly_active else 1
+    df['overlap'] = df['week'].map(weekly_active).fillna(0).apply(lambda x: compute_workload_overlap(x, max_active))
+    df['history'] = df.apply(lambda row: historical_risk_from_history(row['class_type'], row['assignment_type'], row['class_id'], []), axis=1)
+    weekly_risk = aggregate_weekly_risk_components(df[['week', 'time_pressure', 'difficulty_norm', 'overlap', 'history']].rename(columns={'difficulty_norm': 'difficulty'}))
     weekly_risk = weekly_risk.sort_values('week')
-    
-    # Apply weights for stacking
-    weights = {
-        'time_pressure': 0.35,
-        'difficulty': 0.25,
-        'overlap': 0.20,
-        'history': 0.20
-    }
-    # Apply weights post-aggregation to preserve interpretability
+
+    # Apply weights
+    weights = {'time_pressure': 0.35, 'difficulty': 0.25, 'overlap': 0.2, 'history': 0.2}
     for component, weight in weights.items():
         if component in weekly_risk.columns:
             weekly_risk[component] *= weight
 
-
-    
-    # Prepare datasets
     weeks = [w.isoformat() for w in weekly_risk['week']]
-    
     datasets = []
-    colors = {
-        'time_pressure': 'rgba(239, 68, 68, 0.7)',   # Red
-        'difficulty': 'rgba(245, 158, 11, 0.7)',     # Orange
-        'overlap': 'rgba(59, 130, 246, 0.7)',         # Blue
-        'history': 'rgba(139, 92, 246, 0.7)'          # Purple
-    }
-    
-    labels = {
-        'time_pressure': 'Time Pressure',
-        'difficulty': 'Difficulty',
-        'overlap': 'Workload Overlap',
-        'history': 'Historical Risk'
-    }
-    
-    for component in ['history', 'overlap', 'difficulty', 'time_pressure']:  # Bottom to top
-        if component in weekly_risk.columns:
-            weekly_risk = (
-                weekly_risk
-                .replace([np.inf, -np.inf], 0)
-                .fillna(0)
-            )
+    colors = {'time_pressure': 'rgba(239, 68, 68, 0.7)', 'difficulty': 'rgba(245, 158, 11, 0.7)',
+              'overlap': 'rgba(59, 130, 246, 0.7)', 'history': 'rgba(139, 92, 246, 0.7)'}
+    labels_map = {'time_pressure': 'Time Pressure', 'difficulty': 'Difficulty', 'overlap': 'Workload Overlap', 'history': 'Historical Risk'}
 
-            datasets.append({
-                'label': labels[component],
-                'data': [
-                    {'x': weeks[i], 'y': round(weekly_risk[component].iloc[i], 3)}
-                    for i in range(len(weeks))
-                ],
-                'backgroundColor': colors[component],
-                'borderColor': colors[component].replace('0.7', '1.0'),
-                'borderWidth': 1
-            })
+    for comp in ['history', 'overlap', 'difficulty', 'time_pressure']:
+        datasets.append({
+            'label': labels_map[comp],
+            'data': [{'x': weeks[i], 'y': round(weekly_risk[comp].iloc[i], 3)} for i in range(len(weeks))],
+            'backgroundColor': colors[comp],
+            'borderColor': colors[comp].replace('0.7', '1.0'),
+            'borderWidth': 1
+        })
 
     return jsonify({
         "empty": False,
-        "datasets": datasets
+        "datasets": datasets,
+        "eligible": eligibility["eligible"],
+        "progress": eligibility["progress"],
+        "front_message": eligibility["front_message"],
+        "back_message": eligibility["back_message"]
     })
 
 
@@ -360,167 +258,11 @@ def risk_composition_evolution():
 @charts.route("/dashboard/assignment_risk_breakdown")
 @login_required
 def assignment_risk_breakdown():
-    """
-    Horizontal stacked bars showing risk breakdown per assignment.
-    Allows filtering by top N riskiest or latest N.
-    """
-    
-    mode = request.args.get('mode', 'riskiest')  # 'riskiest' or 'latest'
+    eligibility = get_assignment_risk_breakdown_eligibility(current_user.user_id)
+    now = datetime.now(timezone.utc)
+    mode = request.args.get('mode', 'riskiest')
     limit = int(request.args.get('limit', 10))
-    
-    now = datetime.now(timezone.utc)
-    
-    # Get incomplete assignments
-    results = db.session.query(
-        Assignment.assignment_id,
-        Assignment.title,
-        Assignment.class_id,
-        Assignment.created_at,
-        Assignment.due_at,
-        Assignment.difficulty,
-        Assignment.estimated_minutes,
-        Assignment.grade,
-        Assignment.assignment_type,
-        Class.class_name,
-        Class.color, 
-        Class.class_type
-    ).join(
-        Class, Class.class_id == Assignment.class_id
-    ).filter(
-        Assignment.user_id == current_user.user_id,
-        Assignment.is_completed == False
-    ).all()
-    
-    if not results:
-        return jsonify({"empty": True, "message": "No incomplete assignments"})
-    
-    past_assignments = build_past_assignments(current_user.user_id)
 
-    df = pd.DataFrame([{
-        'assignment_id': r.assignment_id,
-        'title': r.title,
-        'class_name': r.class_name,
-        'color': r.color,
-        'class_id': r.class_id,
-        'class_type': r.class_type,
-        'assignment_type': r.assignment_type,
-        'created_at': r.created_at,
-        'due_at': r.due_at,
-        'difficulty': (
-            r.difficulty if r.difficulty is not None else
-            estimate_expected_difficulty(
-                r.class_type,
-                r.assignment_type,
-                r.class_id,
-                past_assignments
-            ) 
-        ),
-        'estimated_minutes': (
-            r.estimated_minutes if r.estimated_minutes is not None else
-            estimate_expected_minutes(
-                r.class_type,
-                r.assignment_type,
-                r.class_id,
-                past_assignments
-            ) 
-        ),
-        'grade': float(r.grade) if r.grade else None
-    } for r in results])
-
-    
-    # Compute risk components
-    df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now))
-    df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7))
-    df['deadline_proximity'] = df['days_until_due'].apply(lambda x: urgency_score(x, tau=7))
-    df['difficulty_norm'] = min_max_normalize(df['difficulty'].astype(float))
-
-    
-    # Overlap (system-wide)
-    df['overlap'] = df['estimated_minutes'] / df['estimated_minutes'].max()
-    df['overlap'] = df['overlap'].clip(0, 1)
-
-
- 
-    past_risk_assignments = build_past_risk_assignments(current_user.user_id)
-    df['history'] = df.apply(
-        lambda row: historical_risk_from_history(
-            row['class_type'],
-            row['assignment_type'],
-            row['class_id'],
-            past_risk_assignments
-        ),
-        axis=1
-    )
-
-    
-    # Compute total risk
-    df['risk_components'] = df.apply(lambda row: {
-        'time_pressure': row['time_pressure'],
-        'deadline_proximity': row['deadline_proximity'],
-        'difficulty': row['difficulty_norm'],
-        'overlap': row['overlap'],
-        'history': row['history']
-    }, axis=1)
-    
-    df['risk_result'] = df['risk_components'].apply(compute_assignment_risk)
-    df['total_risk'] = df['risk_result'].apply(lambda x: x['total_risk'])
-    df['breakdown'] = df['risk_result'].apply(lambda x: x['breakdown'])
-    
-    # Sort and filter
-    if mode == 'riskiest':
-        df = df.sort_values('total_risk', ascending=False).head(limit)
-    else:  # latest
-        df = df.sort_values('created_at', ascending=False).head(limit)
-    
-    # Prepare data
-    labels = df['title'].tolist()
-    colors_list = df['color'].tolist()
-    
-    # Extract breakdown components
-    component_keys = ['time_pressure', 'deadline_proximity', 'difficulty', 'history', 'overlap']
-    component_labels = {
-        'time_pressure': 'Time Pressure',
-        'deadline_proximity': 'Deadline Proximity',
-        'difficulty': 'Difficulty',
-        'history': 'Historical Risk',
-        'overlap': 'Workload Overlap'
-    }
-    
-    component_colors = {
-        'time_pressure': '#ef4444',
-        'deadline_proximity': '#f97316',
-        'difficulty': '#f59e0b',
-        'history': '#8b5cf6',
-        'overlap': '#3b82f6'
-    }
-     
-    datasets = []
-    for key in component_keys:
-        datasets.append({
-            'label': component_labels[key],
-            'data': [row['breakdown'][key] for _, row in df.iterrows()],
-            'backgroundColor': component_colors[key]
-        })
-    
-    return jsonify({
-        "empty": False,
-        "labels": labels,
-        "datasets": datasets,
-        "assignment_colors": colors_list
-    })
-
-
-# =================== GRAPH 4: Urgency vs Risk Matrix ===================
-@charts.route("/dashboard/urgency_risk_matrix")
-@login_required
-def urgency_risk_matrix():
-    """
-    Scatter plot: X = urgency, Y = risk, bubble size = workload
-    """
-    
-    now = datetime.now(timezone.utc)
-    
-    # Get incomplete assignments
     results = db.session.query(
         Assignment.assignment_id,
         Assignment.title,
@@ -534,15 +276,155 @@ def urgency_risk_matrix():
         Class.class_name,
         Class.color,
         Class.class_type
-    ).join(
-        Class, Class.class_id == Assignment.class_id
+    ).join(Class, Class.class_id == Assignment.class_id
     ).filter(
         Assignment.user_id == current_user.user_id,
         Assignment.is_completed == False
     ).all()
-    
+
     if not results:
-        return jsonify({"empty": True, "message": "No incomplete assignments"})
+        return jsonify({
+            "empty": True,
+            "message": "No incomplete assignments",
+            "eligible": eligibility["eligible"],
+            "progress": eligibility["progress"],
+            "front_message": eligibility["front_message"],
+            "back_message": eligibility["back_message"]
+        })
+
+    past_assignments = build_past_assignments(current_user.user_id)
+
+    df = pd.DataFrame([{
+        'assignment_id': r.assignment_id,
+        'title': r.title,
+        'class_name': r.class_name,
+        'color': r.color,
+        'class_id': r.class_id,
+        'class_type': r.class_type,
+        'assignment_type': r.assignment_type,
+        'created_at': r.created_at,
+        'due_at': r.due_at,
+        'difficulty': (
+            r.difficulty if r.difficulty is not None else
+            estimate_expected_difficulty(
+                r.class_type,
+                r.assignment_type,
+                r.class_id,
+                past_assignments
+            )
+        ),
+        'estimated_minutes': (
+            r.estimated_minutes if r.estimated_minutes is not None else
+            estimate_expected_minutes(
+                r.class_type,
+                r.assignment_type,
+                r.class_id,
+                past_assignments
+            )
+        ),
+
+        'grade': float(r.grade) if r.grade else None
+    } for r in results])
+
+    # Compute risk components (simplified)
+    df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now) if x else None)
+    df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7) if x else 0)
+    df['deadline_proximity'] = df['days_until_due'].apply(lambda x: urgency_score(x, tau=7) if x else 0)
+    df['difficulty_norm'] = min_max_normalize(df['difficulty'])
+    df['overlap'] = df['estimated_minutes'] / df['estimated_minutes'].max()
+    df['overlap'] = df['overlap'].clip(0, 1)
+    df['history'] = 0  # simplified
+
+    df['risk_components'] = df.apply(lambda row: {
+        'time_pressure': row['time_pressure'],
+        'deadline_proximity': row['deadline_proximity'],
+        'difficulty': row['difficulty_norm'],
+        'overlap': row['overlap'],
+        'history': row['history']
+    }, axis=1)
+
+    df['risk_result'] = df['risk_components'].apply(compute_assignment_risk)
+    df['total_risk'] = df['risk_result'].apply(lambda x: x['total_risk'])
+    df['breakdown'] = df['risk_result'].apply(lambda x: x['breakdown'])
+
+    if mode == 'riskiest':
+        df = df.sort_values('total_risk', ascending=False).head(limit)
+    else:
+        df = df.sort_values('created_at', ascending=False).head(limit)
+
+    labels = df['title'].tolist()
+    colors_list = df['color'].tolist()
+    component_keys = ['time_pressure', 'deadline_proximity', 'difficulty', 'history', 'overlap']
+    component_labels = {
+        'time_pressure': 'Time Pressure',
+        'deadline_proximity': 'Deadline Proximity',
+        'difficulty': 'Difficulty',
+        'history': 'Historical Risk',
+        'overlap': 'Workload Overlap'
+    }
+    component_colors = {
+        'time_pressure': '#ef4444',
+        'deadline_proximity': '#f97316',
+        'difficulty': '#f59e0b',
+        'history': '#8b5cf6',
+        'overlap': '#3b82f6'
+    }
+
+    datasets = []
+    for key in component_keys:
+        datasets.append({
+            'label': component_labels[key],
+            'data': [row['breakdown'][key] for _, row in df.iterrows()],
+            'backgroundColor': component_colors[key]
+        })
+
+    return jsonify({
+        "empty": False,
+        "labels": labels,
+        "datasets": datasets,
+        "assignment_colors": colors_list,
+        "eligible": eligibility["eligible"],
+        "progress": eligibility["progress"],
+        "front_message": eligibility["front_message"],
+        "back_message": eligibility["back_message"]
+    })
+
+
+# =================== GRAPH 4: Urgency vs Risk Matrix ===================
+@charts.route("/dashboard/urgency_risk_matrix")
+@login_required
+def urgency_risk_matrix():
+    eligibility = get_urgency_risk_matrix_eligibility(current_user.user_id)
+    now = datetime.now(timezone.utc)
+
+    results = db.session.query(
+        Assignment.assignment_id,
+        Assignment.title,
+        Assignment.class_id,
+        Assignment.created_at,
+        Assignment.due_at,
+        Assignment.difficulty,
+        Assignment.estimated_minutes,
+        Assignment.grade,
+        Assignment.assignment_type,
+        Class.class_name,
+        Class.color,
+        Class.class_type
+    ).join(Class, Class.class_id == Assignment.class_id
+    ).filter(
+        Assignment.user_id == current_user.user_id,
+        Assignment.is_completed == False
+    ).all()
+
+    if not results:
+        return jsonify({
+            "empty": True,
+            "message": "No incomplete assignments",
+            "eligible": eligibility["eligible"],
+            "progress": eligibility["progress"],
+            "front_message": eligibility["front_message"],
+            "back_message": eligibility["back_message"]
+        })
     
     past_assignments = build_past_assignments(current_user.user_id)
 
@@ -563,7 +445,7 @@ def urgency_risk_matrix():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) 
+            )
         ),
         'estimated_minutes': (
             r.estimated_minutes if r.estimated_minutes is not None else
@@ -572,37 +454,20 @@ def urgency_risk_matrix():
                 r.assignment_type,
                 r.class_id,
                 past_assignments
-            ) 
+            )
         ),
+
         'grade': float(r.grade) if r.grade else None
     } for r in results])
 
-    
-    # Compute urgency and risk
-    df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now))
-    df['urgency'] = df['days_until_due'].apply(lambda x: urgency_score(x, tau=7))
-    
-    # Risk components
-    df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7))
+    df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now) if x else None)
+    df['urgency'] = df['days_until_due'].apply(lambda x: urgency_score(x, tau=7) if x else 0)
+    df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7) if x else 0)
     df['deadline_proximity'] = df['urgency']
     df['difficulty_norm'] = min_max_normalize(df['difficulty'])
-    
-    max_active = len(df)
-    overlap_score = compute_workload_overlap(len(df), max_active)
-    df['overlap'] = overlap_score
-    
-    past_risk_assignments = build_past_risk_assignments(current_user.user_id)
-    df['history'] = df.apply(
-        lambda row: historical_risk_from_history(
-            row['class_type'],
-            row['assignment_type'],
-            row['class_id'],
-            past_risk_assignments
-        ),
-        axis=1
-    )
+    df['overlap'] = compute_workload_overlap(len(df), len(df)) if len(df) else 0
+    df['history'] = 0  # simplified
 
-    
     df['risk_components'] = df.apply(lambda row: {
         'time_pressure': row['time_pressure'],
         'deadline_proximity': row['deadline_proximity'],
@@ -610,14 +475,10 @@ def urgency_risk_matrix():
         'overlap': row['overlap'],
         'history': row['history']
     }, axis=1)
-    
     df['risk_result'] = df['risk_components'].apply(compute_assignment_risk)
     df['total_risk'] = df['risk_result'].apply(lambda x: x['total_risk'])
-    
-    # Bubble size (remaining work)
     df['bubble_size'] = df['estimated_minutes'].apply(lambda x: max(5, min(20, x / 10)))
-    
-    # Prepare scatter data
+
     data = []
     for _, row in df.iterrows():
         data.append({
@@ -629,8 +490,12 @@ def urgency_risk_matrix():
             'backgroundColor': row['color'],
             'estimated_minutes': row['estimated_minutes']
         })
-    
+
     return jsonify({
         "empty": False,
-        "data": data
+        "data": data,
+        "eligible": eligibility["eligible"],
+        "progress": eligibility["progress"],
+        "front_message": eligibility["front_message"],
+        "back_message": eligibility["back_message"]
     })
