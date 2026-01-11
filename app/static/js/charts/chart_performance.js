@@ -118,17 +118,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   const psiRes = await fetch('/charts/dashboard/performance_stability_index');
   const psiData = await psiRes.json();
   const psiFront = (progress) => `
-  <div class="chart-empty">
-    <p><strong>Not enough data yet</strong></p>
-    <ul>
-      <li>Time since first graded assignment: ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}</li>
-      <li>Time since account creation: ${progress.weeks_since_account_creation.current}/${progress.weeks_since_account_creation.required} weeks ${progress.weeks_since_account_creation.current >= progress.weeks_since_account_creation.required ? "✅" : "❌"}</li>
-      <li>Number of graded assignments: ${progress.graded_assignments.current}/${progress.graded_assignments.required} ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}</li>
-      <li>Number of finished study sessions: ${progress.total_study_sessions.current}/${progress.total_study_sessions.required} ${progress.total_study_sessions.current >= progress.total_study_sessions.required ? "✅" : "❌"}</li>
+    <div class="chart-empty">
+      <p><strong>Not enough data yet</strong></p>
+      <ul>
+        <li>
+          Time since first graded assignment:
+          ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks
+          ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}
+        </li>
+        <li>
+          Number of graded assignments:
+          ${progress.graded_assignments.current}/${progress.graded_assignments.required}
+          ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}
+        </li>
+        <li>
+          Number of finished study sessions:
+          ${progress.study_sessions.current}/${progress.study_sessions.required}
+          ${progress.study_sessions.current >= progress.study_sessions.required ? "✅" : "❌"}
+        </li>
+      </ul>
+    </div>
+  `;
 
-    </ul>
-  </div>
-`;
   if (gateChart(psiCard, psiData, psiFront, null)){
     new Chart(psiCtx, {
       type: 'line',
@@ -192,13 +203,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     <div class="chart-empty">
       <p><strong>Not enough data yet</strong></p>
       <ul>
-        <li>Time since first graded assignment: ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}</li>
-        <li>Time since account creation: ${progress.weeks_since_account_creation.current}/${progress.weeks_since_account_creation.required} weeks ${progress.weeks_since_account_creation.current >= progress.weeks_since_account_creation.required ? "✅" : "❌"}</li>
-        <li>Number of graded assignments: ${progress.graded_assignments.current}/${progress.graded_assignments.required} ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}</li>
-        <li>Number of finished study sessions: ${progress.total_study_sessions.current}/${progress.total_study_sessions.required} ${progress.total_study_sessions.current >= progress.total_study_sessions.required ? "✅" : "❌"}</li>
+        <li>
+          Time since first graded assignment:
+          ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks
+          ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}
+        </li>
+        <li>
+          Number of graded assignments:
+          ${progress.graded_assignments.current}/${progress.graded_assignments.required}
+          ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}
+        </li>
+        <li>
+          Number of finished study sessions:
+          ${progress.study_sessions.current}/${progress.study_sessions.required}
+          ${progress.study_sessions.current >= progress.study_sessions.required ? "✅" : "❌"}
+        </li>
       </ul>
     </div>
   `;
+
 
   if (gateChart(effortCard, effortData, effortFront, null)){
       
@@ -294,24 +317,30 @@ document.addEventListener('DOMContentLoaded', async () => {
           : ""
         }
         <ul>
-          <li>Minimum classes: ${progress.classes.current}/${progress.classes.required}
+          <li>
+            Minimum classes:
+            ${progress.classes.current}/${progress.classes.required}
             ${progress.classes.current >= progress.classes.required ? "✅" : "❌"}
           </li>
-          <li>Graded assignments per class:
-            ${progress.graded_assignments.current}/${progress.graded_assignments.required}
-            ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}
+          <li>
+            Graded assignments per class:
+            ${progress.graded_assignments_per_class.current}/${progress.graded_assignments_per_class.required}
+            ${progress.graded_assignments_per_class.current >= progress.graded_assignments_per_class.required ? "✅" : "❌"}
           </li>
-          <li>Study sessions per class:
-            ${progress.study_sessions.current}/${progress.study_sessions.required}
-            ${progress.study_sessions.current >= progress.study_sessions.required ? "✅" : "❌"}
+          <li>
+            Study sessions per class:
+            ${progress.study_sessions_per_class.current}/${progress.study_sessions_per_class.required}
+            ${progress.study_sessions_per_class.current >= progress.study_sessions_per_class.required ? "✅" : "❌"}
           </li>
-          <li>Time since first graded assignment:
+          <li>
+            Time since first graded assignment:
             ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks
             ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}
           </li>
         </ul>
       </div>
     `;
+
 
 
 

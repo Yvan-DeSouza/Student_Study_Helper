@@ -6,12 +6,11 @@ from app.models.study_session import StudySession
 from app.models.assignment import Assignment
 from app.extensions import db 
 import pandas as pd
-from app.services.analytics.chart_eligibility import (
+from app.services.analytics.chart_eligibility.performance.performance_eligibility import (
     get_rolling_grade_trend_eligibility,
-    get_effort_outcome_timeline_eligibility,
-    get_performance_stability_index_eligibility,
-    get_lag_correlation_heatmap_eligibility
-
+    get_effort_outcome_eligibility,
+    get_stability_index_eligibility,
+    get_lag_correlation_eligibility
 )
 
 
@@ -203,7 +202,7 @@ def performance_stability_index():
     - Incomplete ratio (lower is better)
     Higher PSI = more stable performance
     """
-    eligibility = get_performance_stability_index_eligibility(current_user.user_id)
+    eligibility = get_stability_index_eligibility(current_user.user_id)
 
     if not eligibility["eligible"]:
         return jsonify({
@@ -340,7 +339,7 @@ def effort_outcome_timeline():
     - Study effort (minutes per week)
     - Grade outcomes (weekly average)
     """
-    eligibility = get_effort_outcome_timeline_eligibility(current_user.user_id)
+    eligibility = get_effort_outcome_eligibility(current_user.user_id)
 
     if not eligibility["eligible"]:
         return jsonify({
@@ -469,7 +468,7 @@ def lag_correlation_heatmap():
     Heatmap showing correlation between study effort and grades
     at different time lags (0-3 weeks) for each class.
     """
-    eligibility = get_lag_correlation_heatmap_eligibility(current_user.user_id)
+    eligibility = get_lag_correlation_eligibility(current_user.user_id)
 
     if not eligibility["eligible"]:
         return jsonify({
