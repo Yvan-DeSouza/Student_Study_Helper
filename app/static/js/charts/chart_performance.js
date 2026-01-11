@@ -1,3 +1,4 @@
+import { gateChart } from './chart_gatekeeper.js';
 document.addEventListener('DOMContentLoaded', async () => {
   
   // Helper function to show empty message
@@ -33,69 +34,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   const rollingWrapper = rollingCanvas.parentElement;
   const rollingCtx = rollingCanvas.getContext('2d');
   
-  try {
-    const rollingRes = await fetch('/charts/dashboard/rolling_grade_trend');
-    const rollingData = await rollingRes.json();
-    
-    if (rollingData.empty) {
-      showEmptyMessage(rollingWrapper, rollingData.message || 'No data available');
-    } else {
-      clearEmptyMessage(rollingWrapper);
-      
-      new Chart(rollingCtx, {
-        type: 'line',
-        data: {
-          datasets: rollingData.datasets.map(ds => ({
-            ...ds,
-            fill: false,
-            pointRadius: 4,
-            pointHoverRadius: 6
-          }))
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { duration: 600, easing: 'easeOutCubic' },
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
-          scales: {
-            x: {
-              type: 'time',
-              time: {
-                unit: 'week',
-                displayFormats: { week: 'MMM d' }
-              },
-              title: { display: true, text: 'Week' },
-              grid: { color: getThemeColor('#e5e7eb', '#374151') }
-            },
-            y: {
-                min: rollingData.y_bounds.min,
-                max: rollingData.y_bounds.max,
-                title: { display: true, text: 'Rolling Average Grade (%)' },
-                grid: { color: getThemeColor('#e5e7eb', '#374151') }
-            }
+  const rollingRes = await fetch('/charts/dashboard/rolling_grade_trend');
+  const rollingData = await rollingRes.json();
 
+  if (!gateChart(card, data)) return;
+
+  new Chart(rollingCtx, {
+    type: 'line',
+    data: {
+      datasets: rollingData.datasets.map(ds => ({
+        ...ds,
+        fill: false,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600, easing: 'easeOutCubic' },
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'week',
+            displayFormats: { week: 'MMM d' }
           },
-          plugins: {
-            legend: { position: 'bottom' },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return `${context.dataset.label}: ${context.parsed.y}%`;
-                }
-              }
+          title: { display: true, text: 'Week' },
+          grid: { color: getThemeColor('#e5e7eb', '#374151') }
+        },
+        y: {
+            min: rollingData.y_bounds.min,
+            max: rollingData.y_bounds.max,
+            title: { display: true, text: 'Rolling Average Grade (%)' },
+            grid: { color: getThemeColor('#e5e7eb', '#374151') }
+        }
+
+      },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `${context.dataset.label}: ${context.parsed.y}%`;
             }
           }
         }
-      });
+      }
     }
-  } catch (error) {
-    showEmptyMessage(rollingWrapper, 'Error loading data');
-    console.error('Rolling Grade Trend error:', error);
-  }
-  
+  });
+    
+    
   // =================== GRAPH 2: Performance Stability Index ===================
   const psiCanvas = document.getElementById('perf-3-canvas');
   const psiWrapper = psiCanvas.parentElement;

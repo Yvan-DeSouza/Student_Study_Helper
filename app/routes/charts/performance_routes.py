@@ -5,6 +5,9 @@ from app.models.course import Class
 from app.models.study_session import StudySession
 from app.models.assignment import Assignment
 from app.extensions import db
+from app.services.analytics.chart_eligibility import (
+    get_rolling_grade_trend_eligibility
+)
 import pandas as pd
 
 
