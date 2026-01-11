@@ -133,14 +133,12 @@ def deadline_proximity_distribution():
     minutes = [buckets[b]["minutes"] for b in bucket_order]
 
     return jsonify({
+        "eligible": eligibility["eligible"],
+        "eligibility": eligibility,
         "empty": not bool(results),
         "labels": labels,
         "counts": counts,
-        "minutes": minutes,
-        "eligible": eligibility["eligible"],
-        "progress": eligibility["progress"],
-        "front_message": eligibility["front_message"],
-        "back_message": eligibility["back_message"]
+        "minutes": minutes
     })
 
 
@@ -173,13 +171,12 @@ def risk_composition_evolution():
     past_assignments = build_past_assignments(current_user.user_id)
     if not results:
         return jsonify({
-            "empty": True,
-            "message": "No assignments yet",
             "eligible": eligibility["eligible"],
-            "progress": eligibility["progress"],
-            "front_message": eligibility["front_message"],
-            "back_message": eligibility["back_message"]
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No assignments yet"
         })
+
 
     df = pd.DataFrame([{
         'assignment_id': r.assignment_id,
@@ -245,12 +242,10 @@ def risk_composition_evolution():
         })
 
     return jsonify({
-        "empty": False,
-        "datasets": datasets,
         "eligible": eligibility["eligible"],
-        "progress": eligibility["progress"],
-        "front_message": eligibility["front_message"],
-        "back_message": eligibility["back_message"]
+        "eligibility": eligibility,
+        "empty": False,
+        "datasets": datasets
     })
 
 
@@ -284,12 +279,10 @@ def assignment_risk_breakdown():
 
     if not results:
         return jsonify({
-            "empty": True,
-            "message": "No incomplete assignments",
             "eligible": eligibility["eligible"],
-            "progress": eligibility["progress"],
-            "front_message": eligibility["front_message"],
-            "back_message": eligibility["back_message"]
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No incomplete assignments"
         })
 
     past_assignments = build_past_assignments(current_user.user_id)
@@ -379,16 +372,13 @@ def assignment_risk_breakdown():
         })
 
     return jsonify({
+        "eligible": eligibility["eligible"],
+        "eligibility": eligibility,
         "empty": False,
         "labels": labels,
         "datasets": datasets,
-        "assignment_colors": colors_list,
-        "eligible": eligibility["eligible"],
-        "progress": eligibility["progress"],
-        "front_message": eligibility["front_message"],
-        "back_message": eligibility["back_message"]
+        "assignment_colors": colors_list
     })
-
 
 # =================== GRAPH 4: Urgency vs Risk Matrix ===================
 @charts.route("/dashboard/urgency_risk_matrix")
@@ -418,12 +408,10 @@ def urgency_risk_matrix():
 
     if not results:
         return jsonify({
-            "empty": True,
-            "message": "No incomplete assignments",
             "eligible": eligibility["eligible"],
-            "progress": eligibility["progress"],
-            "front_message": eligibility["front_message"],
-            "back_message": eligibility["back_message"]
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No incomplete assignments"
         })
     
     past_assignments = build_past_assignments(current_user.user_id)
@@ -492,10 +480,8 @@ def urgency_risk_matrix():
         })
 
     return jsonify({
-        "empty": False,
-        "data": data,
         "eligible": eligibility["eligible"],
-        "progress": eligibility["progress"],
-        "front_message": eligibility["front_message"],
-        "back_message": eligibility["back_message"]
+        "eligibility": eligibility,
+        "empty": False,
+        "data": data
     })
