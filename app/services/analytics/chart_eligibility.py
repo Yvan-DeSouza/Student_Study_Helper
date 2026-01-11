@@ -19,29 +19,41 @@ def get_rolling_grade_trend_eligibility(user_id):
     eligible_classes = []
     ineligible_classes = []
 
-    for cls in classes:
-        class_age = now - cls.created_at
+    max_graded_assignments = 0
+    earliest_graded_date = None
 
-        graded_count = (
+    for cls in classes:
+        graded_assignments = (
             db.session.query(Assignment)
             .filter(
                 Assignment.class_id == cls.class_id,
-                Assignment.grade.isnot(None)
+                Assignment.grade.isnot(None),
+                Assignment.finished_at.isnot(None)
             )
-            .count()
+            .all()
         )
 
+        graded_count = len(graded_assignments)
+        max_graded_assignments = max(max_graded_assignments, graded_count)
+
+        if graded_assignments:
+            class_earliest = min(a.finished_at for a in graded_assignments)
+            if not earliest_graded_date or class_earliest < earliest_graded_date:
+                earliest_graded_date = class_earliest
+
         reasons = []
+
         if graded_count < cfg.min_graded_assignments_per_class:
             reasons.append(
                 f"Only {graded_count} graded assignments (need {cfg.min_graded_assignments_per_class})"
             )
 
-        if class_age < cfg.min_class_age:
-            weeks = class_age.days // 7
-            reasons.append(
-                f"Class is {weeks} weeks old (need 3 weeks)"
-            )
+        if graded_assignments:
+            weeks_since = (now - earliest_graded_date).days // 7
+            if weeks_since < cfg.min_weeks_since_first_grade:
+                reasons.append(
+                    f"Earliest graded assignment is {weeks_since} weeks old (need {cfg.min_weeks_since_first_grade})"
+                )
 
         if reasons:
             ineligible_classes.append({
@@ -55,15 +67,35 @@ def get_rolling_grade_trend_eligibility(user_id):
                 "class_name": cls.class_name
             })
 
-    chart_eligible = len(eligible_classes) >= cfg.min_classes
+    weeks_since_first_grade = (
+        (now - earliest_graded_date).days // 7
+        if earliest_graded_date else 0
+    )
+
+    progress = {
+        "classes": {
+            "current": len(classes),
+            "required": cfg.min_classes
+        },
+        "graded_assignments": {
+            "current": max_graded_assignments,
+            "required": cfg.min_graded_assignments_per_class
+        },
+        "weeks_since_first_grade": {
+            "current": weeks_since_first_grade,
+            "required": cfg.min_weeks_since_first_grade
+        }
+    }
+
+    eligible = (
+        progress["classes"]["current"] >= progress["classes"]["required"]
+        and progress["graded_assignments"]["current"] >= progress["graded_assignments"]["required"]
+        and progress["weeks_since_first_grade"]["current"] >= progress["weeks_since_first_grade"]["required"]
+    )
 
     return {
-        "eligible": chart_eligible,
+        "eligible": eligible,
+        "progress": progress,
         "eligible_classes": eligible_classes,
-        "ineligible_classes": ineligible_classes,
-        "requirements": {
-            "min_classes": cfg.min_classes,
-            "min_graded_assignments_per_class": cfg.min_graded_assignments_per_class,
-            "min_class_age_weeks": 3
-        }
+        "ineligible_classes": ineligible_classes
     }

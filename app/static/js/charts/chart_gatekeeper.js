@@ -1,30 +1,25 @@
-export function gateChart(cardEl, response) {
-  const front = cardEl.querySelector('.card-front');
-  const back = cardEl.querySelector('.card-back');
+export function gateChart(cardEl, response, renderFront, renderBack) {
+  const frontEl = cardEl.querySelector('.card-front');
+  const backEl = cardEl.querySelector('.min_requirements');
 
-  if (!response.eligible) {
-    front.innerHTML = `
-      <div class="chart-empty">
-        <p><strong>Not enough data yet</strong></p>
-        <ul>
-          <li>At least 1 class</li>
-          <li>3 graded assignments per class</li>
-          <li>Class must be 3 weeks old</li>
-        </ul>
-      </div>
-    `;
+  // ---- Normalize backend payload (temporary safety layer) ----
+  const data = response.eligibility ?? response;
+
+  const {
+    eligible,
+    progress,
+    ineligible_classes = []
+  } = data;
+
+  // ---- Front (not eligible) ----
+  if (!eligible) {
+    frontEl.innerHTML = renderFront(progress);
     return false;
   }
 
-  if (response.eligibility.ineligible_classes.length > 0) {
-    back.innerHTML = `
-      <p><strong>Why some classes are hidden:</strong></p>
-      <ul>
-        ${response.eligibility.ineligible_classes.map(c =>
-          `<li>${c.class_name}: ${c.reasons.join(", ")}</li>`
-        ).join("")}
-      </ul>
-    `;
+  // ---- Back (eligible but partial data hidden) ----
+  if (ineligible_classes.length > 0 && renderBack) {
+    backEl.innerHTML = renderBack(ineligible_classes);
   }
 
   return true;

@@ -4,11 +4,11 @@ from app.routes.charts import charts
 from app.models.course import Class
 from app.models.study_session import StudySession
 from app.models.assignment import Assignment
-from app.extensions import db
+from app.extensions import db 
+import pandas as pd
 from app.services.analytics.chart_eligibility import (
     get_rolling_grade_trend_eligibility
 )
-import pandas as pd
 
 
 # =================== GRAPH 1: Rolling Grade Trend ===================
@@ -19,6 +19,17 @@ def rolling_grade_trend():
     Rolling average of grades over time (weekly buckets).
     Smooths out performance trajectory per class.
     """
+    eligibility = get_rolling_grade_trend_eligibility(current_user.user_id)
+
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility
+        })
+
+    eligible_class_ids = [
+        c["class_id"] for c in eligibility["eligible_classes"]
+    ]
    
     # Query all graded assignments
     results = db.session.query(
@@ -30,6 +41,7 @@ def rolling_grade_trend():
     ).join(
         Class, Class.class_id == Assignment.class_id
     ).filter(
+        Assignment.class_id.in_(eligible_class_ids),
         Assignment.user_id == current_user.user_id,
         Assignment.grade.isnot(None),
         Assignment.finished_at.isnot(None)
@@ -155,7 +167,8 @@ def rolling_grade_trend():
         y_min, y_max = 0, 100
 
     return jsonify({
-        "empty": False,
+        "eligible": True,
+        "eligibility": eligibility,
         "datasets": datasets,
         "y_bounds": {
             "min": y_min,

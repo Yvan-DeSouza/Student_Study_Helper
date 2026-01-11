@@ -1,6 +1,41 @@
 import { gateChart } from './chart_gatekeeper.js';
 document.addEventListener('DOMContentLoaded', async () => {
-  
+  function renderPerformanceFront(progress) {
+    return `
+      <div class="chart-empty">
+        <p><strong>Not enough data yet</strong></p>
+        <ul>
+          <li>
+            Minimum classes:
+            ${progress.classes.current}/${progress.classes.required}
+            ${progress.classes.current >= progress.classes.required ? "✅" : "❌"}
+          </li>
+          <li>
+            Graded assignments per class:
+            ${progress.graded_assignments.current}/${progress.graded_assignments.required}
+            ${progress.graded_assignments.current >= progress.graded_assignments.required ? "✅" : "❌"}
+          </li>
+          <li>
+            Time since first graded assignment:
+            ${progress.weeks_since_first_grade.current}/${progress.weeks_since_first_grade.required} weeks
+            ${progress.weeks_since_first_grade.current >= progress.weeks_since_first_grade.required ? "✅" : "❌"}
+          </li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function renderPerformanceBack(ineligibleClasses) {
+    return `
+      <p><strong>Why some classes are hidden:</strong></p>
+      <ul>
+        ${ineligibleClasses.map(c =>
+          `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+        ).join("")}
+      </ul>
+    `;
+  }
+
   // Helper function to show empty message
   function showEmptyMessage(wrapper, message) {
     const existing = wrapper.querySelector('.chart-empty');
@@ -31,13 +66,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   // =================== GRAPH 1: Rolling Grade Trend ===================
   const rollingCanvas = document.getElementById('perf-1-canvas');
-  const rollingWrapper = rollingCanvas.parentElement;
   const rollingCtx = rollingCanvas.getContext('2d');
   
   const rollingRes = await fetch('/charts/dashboard/rolling_grade_trend');
   const rollingData = await rollingRes.json();
+  const card = rollingCanvas.closest('.graph-card');
 
-  if (!gateChart(card, data)) return;
+  if (!gateChart(card, rollingData, renderPerformanceFront, renderPerformanceBack)) return;
+
 
   new Chart(rollingCtx, {
     type: 'line',
