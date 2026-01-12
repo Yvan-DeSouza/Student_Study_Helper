@@ -6,7 +6,6 @@ from app.models.study_session import StudySession
 from app.models.assignment import Assignment
 from app.extensions import db
 
-
 from app.services.expected_utils import (
     estimate_expected_minutes
 )
@@ -16,10 +15,12 @@ from app.services.effort_utils import (
     effort_allocation_by_class,
     outcome_contribution_by_class
 )
-
-# Minimum data requirements
-MIN_STUDY_SESSIONS = 10
-MIN_ASSIGNMENTS_WITH_GRADES = 5
+from app.services.analytics.chart_eligibility.effort.effort_eligibility import (
+    get_time_spent_vs_expected_eligibility,
+    get_marginal_returns_eligibility,
+    get_effort_allocation_eligibility,
+    get_outcome_contribution_eligibility
+)
 
 
 # =================== GRAPH 1: Time Spent vs Expected Time ===================
@@ -29,64 +30,61 @@ def spent_vs_expected_time():
     """
     Bar chart comparing actual study time vs expected time per class.
     """
+    eligibility = get_time_spent_vs_expected_eligibility(current_user.user_id)
     
-    # Check data sufficiency
-    session_count = db.session.query(StudySession).filter(
-        StudySession.user_id == current_user.user_id,
-        StudySession.is_completed == True
-    ).count()
-    
-    grade_count = db.session.query(Assignment).filter(
-        Assignment.user_id == current_user.user_id,
-        Assignment.grade.isnot(None)
-    ).count()
-    
-    if session_count < MIN_STUDY_SESSIONS or grade_count < MIN_ASSIGNMENTS_WITH_GRADES:
+    if not eligibility["eligible"]:
         return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
             "empty": True,
-            "message": f"Need at least {MIN_STUDY_SESSIONS} study sessions and {MIN_ASSIGNMENTS_WITH_GRADES} graded assignments"
+            "message": "Insufficient data"
         })
     
-    # Get all classes
+    eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
+    
+    # Get all eligible classes
     classes = db.session.query(Class).filter(
-        Class.user_id == current_user.user_id
+        Class.user_id == current_user.user_id,
+        Class.class_id.in_(eligible_class_ids)
     ).all()
     
     if not classes:
-        return jsonify({"empty": True, "message": "No classes found"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No eligible classes found"
+        })
     
-    # Get completed study sessions
+    # Get completed study sessions for eligible classes
     sessions = db.session.query(
         StudySession.class_id,
         StudySession.duration_minutes
     ).filter(
         StudySession.user_id == current_user.user_id,
+        StudySession.class_id.in_(eligible_class_ids),
         StudySession.is_completed == True,
         StudySession.duration_minutes.isnot(None)
     ).all()
     
-
-    
-    # Get historical data for estimation
+    # Get completed assignments for eligible classes
     completed_assignments = (
         db.session.query(Assignment)
         .join(Class, Class.class_id == Assignment.class_id)
         .join(StudySession, StudySession.assignment_id == Assignment.assignment_id)
         .filter(
             Assignment.user_id == current_user.user_id,
+            Assignment.class_id.in_(eligible_class_ids),
             Assignment.is_completed == True,
             StudySession.duration_minutes.isnot(None)
         )
         .all()
     )
-
     
     # Aggregate actual time per class
     actual_by_class = {}
     for s in sessions:
         actual_by_class[s.class_id] = actual_by_class.get(s.class_id, 0) + s.duration_minutes
-    
-
     
     # Build past assignments for estimation
     past_assignments = []
@@ -103,10 +101,7 @@ def spent_vs_expected_time():
         .all()
     )
 
-    # Aggregate expected time per class
-    expected_by_class = {}
-
-    #Compute the past_assignments to be used by estimate_expected_minutes
+    # Compute the past_assignments to be used by estimate_expected_minutes
     for ca in completed_assignments:
         actual_time = study_times.get(ca.assignment_id)
 
@@ -118,12 +113,13 @@ def spent_vs_expected_time():
                 'actual_minutes': actual_time
             })
 
+    # Aggregate expected time per class
+    expected_by_class = {}
     for ca in completed_assignments:
         # 1. Determine expected time
         if ca.estimated_minutes:
             expected_minutes = ca.estimated_minutes
         else:
-
             expected_minutes = estimate_expected_minutes(
                 ca.class_.class_type,
                 ca.assignment_type,
@@ -135,7 +131,6 @@ def spent_vs_expected_time():
         expected_by_class[ca.class_id] = (
             expected_by_class.get(ca.class_id, 0) + expected_minutes
         )
-
     
     # Build response
     labels = []
@@ -147,12 +142,18 @@ def spent_vs_expected_time():
             labels.append(cls.class_name)
             actual.append(actual_by_class.get(cls.class_id, 0))
             expected.append(expected_by_class.get(cls.class_id, 0))
-
     
     if not labels:
-        return jsonify({"empty": True, "message": "No data available"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No data available"
+        })
     
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
         "empty": False,
         "labels": labels,
         "actual": actual,
@@ -167,17 +168,14 @@ def marginal_returns_curve():
     """
     Line chart showing cumulative effort vs outcome.
     """
+    eligibility = get_marginal_returns_eligibility(current_user.user_id)
     
-    # Check data sufficiency
-    grade_count = db.session.query(Assignment).filter(
-        Assignment.user_id == current_user.user_id,
-        Assignment.grade.isnot(None)
-    ).count()
-    
-    if grade_count < MIN_ASSIGNMENTS_WITH_GRADES:
+    if not eligibility["eligible"]:
         return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
             "empty": True,
-            "message": f"Need at least {MIN_ASSIGNMENTS_WITH_GRADES} graded assignments"
+            "message": "Insufficient data"
         })
     
     # Get completed assignments with grades and study time
@@ -193,7 +191,12 @@ def marginal_returns_curve():
     ).order_by(Assignment.finished_at).all()
     
     if not results:
-        return jsonify({"empty": True, "message": "No graded assignments"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No graded assignments"
+        })
     
     # Build assignment data with study time
     assignments = []
@@ -214,7 +217,12 @@ def marginal_returns_curve():
             })
     
     if len(assignments) < 3:
-        return jsonify({"empty": True, "message": "Insufficient data for curve"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "Insufficient data for curve"
+        })
     
     # Compute cumulative data
     cumulative_data = cumulative_effort_outcome(assignments)
@@ -223,6 +231,8 @@ def marginal_returns_curve():
     smoothed = smooth_marginal_returns(cumulative_data, window=3)
     
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
         "empty": False,
         "points": smoothed
     })
@@ -235,20 +245,19 @@ def effort_allocation():
     """
     Pie/donut chart showing effort allocation by class.
     """
+    eligibility = get_effort_allocation_eligibility(current_user.user_id)
     
-    # Check data sufficiency
-    session_count = db.session.query(StudySession).filter(
-        StudySession.user_id == current_user.user_id,
-        StudySession.is_completed == True
-    ).count()
-    
-    if session_count < MIN_STUDY_SESSIONS:
+    if not eligibility["eligible"]:
         return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
             "empty": True,
-            "message": f"Need at least {MIN_STUDY_SESSIONS} study sessions"
+            "message": "Insufficient data"
         })
     
-    # Get all study sessions
+    eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
+    
+    # Get all study sessions for eligible classes
     sessions = db.session.query(
         StudySession.class_id,
         StudySession.duration_minutes,
@@ -258,12 +267,18 @@ def effort_allocation():
         Class, Class.class_id == StudySession.class_id
     ).filter(
         StudySession.user_id == current_user.user_id,
+        StudySession.class_id.in_(eligible_class_ids),
         StudySession.is_completed == True,
         StudySession.duration_minutes.isnot(None)
     ).all()
     
     if not sessions:
-        return jsonify({"empty": True, "message": "No completed study sessions"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No completed study sessions"
+        })
     
     # Convert to dict format
     session_data = [
@@ -280,7 +295,12 @@ def effort_allocation():
     allocation = effort_allocation_by_class(session_data)
     
     if not allocation:
-        return jsonify({"empty": True, "message": "No data available"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No data available"
+        })
     
     # Build response
     class_map = {s.class_id: (s.class_name, s.color) for s in sessions}
@@ -296,6 +316,8 @@ def effort_allocation():
             colors.append(class_map[class_id][1])
     
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
         "empty": False,
         "labels": labels,
         "values": values,
@@ -310,20 +332,19 @@ def outcome_contribution():
     """
     Pie/donut chart showing outcome contribution by class.
     """
+    eligibility = get_outcome_contribution_eligibility(current_user.user_id)
     
-    # Check data sufficiency
-    grade_count = db.session.query(Assignment).filter(
-        Assignment.user_id == current_user.user_id,
-        Assignment.grade.isnot(None)
-    ).count()
-    
-    if grade_count < MIN_ASSIGNMENTS_WITH_GRADES:
+    if not eligibility["eligible"]:
         return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
             "empty": True,
-            "message": f"Need at least {MIN_ASSIGNMENTS_WITH_GRADES} graded assignments"
+            "message": "Insufficient data"
         })
     
-    # Get graded assignments
+    eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
+    
+    # Get graded assignments for eligible classes
     assignments = db.session.query(
         Assignment.class_id,
         Assignment.grade,
@@ -333,11 +354,17 @@ def outcome_contribution():
         Class, Class.class_id == Assignment.class_id
     ).filter(
         Assignment.user_id == current_user.user_id,
+        Assignment.class_id.in_(eligible_class_ids),
         Assignment.grade.isnot(None)
     ).all()
     
     if not assignments:
-        return jsonify({"empty": True, "message": "No graded assignments"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No graded assignments"
+        })
     
     # Convert to dict format
     assignment_data = [
@@ -354,7 +381,12 @@ def outcome_contribution():
     contribution = outcome_contribution_by_class(assignment_data)
     
     if not contribution:
-        return jsonify({"empty": True, "message": "No data available"})
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "message": "No data available"
+        })
     
     # Build response
     class_map = {a.class_id: (a.class_name, a.color) for a in assignments}
@@ -370,6 +402,8 @@ def outcome_contribution():
             colors.append(class_map[class_id][1])
     
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
         "empty": False,
         "labels": labels,
         "values": values,

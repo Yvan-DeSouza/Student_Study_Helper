@@ -29,3 +29,22 @@ def weeks_since_first_graded(first_date):
     now = datetime.now(timezone.utc)
     delta = now - first_date
     return delta.days // 7
+
+
+
+def earliest_study_session_date(user_id):
+    """Get the earliest completed study session date for a user."""
+    from app.models.study_session import StudySession
+    
+    result = (
+        db.session.query(StudySession.started_at)
+        .join(Class)
+        .filter(
+            Class.user_id == user_id,
+            StudySession.is_completed == True,
+            StudySession.started_at.isnot(None)
+        )
+        .order_by(StudySession.started_at.asc())
+        .first()
+    )
+    return result[0] if result else None
