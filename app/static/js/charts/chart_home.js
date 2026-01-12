@@ -1,99 +1,242 @@
+import { gateChart } from './chart_gatekeeper.js';
+
 document.addEventListener("DOMContentLoaded", async () => {
 
-    /* ========= TIME PER CLASS (already working) ========= */
+    function getThemeColor(lightColor, darkColor) {
+        const theme = document.documentElement.getAttribute('data-theme');
+        return theme === 'dark' ? darkColor : lightColor;
+    }
+
+    // =================== RENDER FUNCTIONS ===================
+    
+    function renderTimeDistributionFront(progress) {
+        return `
+            <div class="chart-empty">
+                <p><strong>Not enough data yet</strong></p>
+                <ul>
+                    <li>
+                        Completed study sessions:
+                        ${progress.completed_study_sessions_total.current}/${progress.completed_study_sessions_total.required}
+                        ${progress.completed_study_sessions_total.current >= progress.completed_study_sessions_total.required ? "✅" : "❌"}
+                    </li>
+                    <li>
+                        Classes with study time:
+                        ${progress.classes_with_study_time.current}/${progress.classes_with_study_time.required}
+                        ${progress.classes_with_study_time.current >= progress.classes_with_study_time.required ? "✅" : "❌"}
+                    </li>
+                </ul>
+            </div>
+        `;
+    }
+
+    function renderTimeDistributionBack(ineligibleClasses) {
+        return `
+            <p><strong>Why some classes aren't shown:</strong></p>
+            <ul>
+                ${ineligibleClasses.map(c =>
+                    `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+                ).join("")}
+            </ul>
+        `;
+    }
+
+    function renderWeeklyStudyFront(progress) {
+        return `
+            <div class="chart-empty">
+                <p><strong>Not enough data yet</strong></p>
+                <ul>
+                    <li>
+                        Study sessions in last 7 days:
+                        ${progress.sessions_in_last_7_days.current}/${progress.sessions_in_last_7_days.required}
+                        ${progress.sessions_in_last_7_days.current >= progress.sessions_in_last_7_days.required ? "✅" : "❌"}
+                    </li>
+                </ul>
+                <p><em>Study consistently over the week to unlock your trend.</em></p>
+            </div>
+        `;
+    }
+
+    function renderAssignmentLoadFront(progress) {
+        const noIncomplete = progress.incomplete_assignments_with_due.current === 0;
+        const hasWithoutDue = progress.incomplete_assignments_without_due.current > 0;
+        
+        if (noIncomplete && !hasWithoutDue) {
+            return `
+                <div class="chart-empty">
+                    <p><strong>🎉 You have no due assignments!</strong></p>
+                </div>
+            `;
+        }
+        
+        if (noIncomplete && hasWithoutDue) {
+            return `
+                <div class="chart-empty">
+                    <p><strong>🎉 You have no due assignments!</strong></p>
+                    <p><em>⚠️ However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="chart-empty">
+                <p><strong>Not enough data yet</strong></p>
+                <ul>
+                    <li>
+                        Incomplete assignments with due dates:
+                        ${progress.incomplete_assignments_with_due.current}/${progress.incomplete_assignments_with_due.required}
+                        ${progress.incomplete_assignments_with_due.current >= progress.incomplete_assignments_with_due.required ? "✅" : "❌"}
+                    </li>
+                </ul>
+            </div>
+        `;
+    }
+
+    function renderAssignmentLoadBack(progress) {
+        if (progress.incomplete_assignments_without_due.current > 0) {
+            return `
+                <p><strong>⚠️ Note:</strong></p>
+                <p>You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date that are not shown.</p>
+            `;
+        }
+        return null;
+    }
+
+    function renderPerformanceRadarFront(progress) {
+        return `
+            <div class="chart-empty">
+                <p><strong>Not enough data yet</strong></p>
+                <ul>
+                    <li>
+                        Classes:
+                        ${progress.classes.current}/${progress.classes.required}
+                        ${progress.classes.current >= progress.classes.required ? "✅" : "❌"}
+                    </li>
+                    <li>
+                        Classes with study sessions or grades:
+                        ${progress.study_sessions_or_grades.current}/${progress.study_sessions_or_grades.required}
+                        ${progress.study_sessions_or_grades.current >= progress.study_sessions_or_grades.required ? "✅" : "❌"}
+                    </li>
+                </ul>
+            </div>
+        `;
+    }
+
+    function renderPerformanceRadarBack(ineligibleClasses) {
+        return `
+            <p><strong>Why some classes aren't shown:</strong></p>
+            <ul>
+                ${ineligibleClasses.map(c =>
+                    `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+                ).join("")}
+            </ul>
+        `;
+    }
+
+    /* ========= TIME PER CLASS ========= */
     const classCtx = document.getElementById("timePerClassChart").getContext("2d");
+    const classCard = document.querySelector('[data-card-id="home-time-per-class"]');
     const classRes = await fetch("/charts/home/time_per_class");
     const classData = await classRes.json();
 
-    new Chart(classCtx, {
-        type: "doughnut",
-        data: {
-            labels: classData.labels,
-            datasets: [{
-                data: classData.data,
-                backgroundColor: classData.colors,
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: "bottom" },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => {
-                            const hours = (ctx.raw / 60).toFixed(1);
-                            return `${ctx.label}: ${hours}h`;
+    if (gateChart(classCard, classData, renderTimeDistributionFront, renderTimeDistributionBack)) {
+        new Chart(classCtx, {
+            type: "doughnut",
+            data: {
+                labels: classData.labels,
+                datasets: [{
+                    data: classData.data,
+                    backgroundColor: classData.colors,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "bottom" },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => {
+                                const hours = (ctx.raw / 60).toFixed(1);
+                                return `${ctx.label}: ${hours}h`;
+                            }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 
     /* ========= WEEKLY STUDY TIME ========= */
     const weeklyCtx = document.getElementById("weeklyStudyTime").getContext("2d");
+    const weeklyCard = document.querySelector('[data-card-id="home-weekly-study"]');
     const weeklyRes = await fetch("/charts/home/weekly_study_time");
     const weeklyData = await weeklyRes.json();
 
-    new Chart(weeklyCtx, {
-        type: "line",
-        data: {
-            labels: weeklyData.labels,
-            datasets: [{
-                label: "Study Time (hours)",
-                data: weeklyData.data.map(m => m / 60), // convert minutes → hours
-                tension: 0.3,
-                fill: true,
-                borderWidth: 2,
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: "Hours"
-                    }
-                }
+    if (gateChart(weeklyCard, weeklyData, renderWeeklyStudyFront, null)) {
+        new Chart(weeklyCtx, {
+            type: "line",
+            data: {
+                labels: weeklyData.labels,
+                datasets: [{
+                    label: "Study Time (hours)",
+                    data: weeklyData.data.map(m => m / 60), // convert minutes → hours
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 2,
+                    pointRadius: 4
+                }]
             },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => `${ctx.raw.toFixed(1)}h`
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: "Hours"
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.raw.toFixed(1)}h`
+                        }
                     }
                 }
             }
-        }
-    });
-
-
+        });
+    }
 
     /* ========= ASSIGNMENT LOAD ========= */
-
-    const assignmentCtx = document
-        .getElementById("assignmentLoad")
-        .getContext("2d");
-
+    const assignmentCtx = document.getElementById("assignmentLoad").getContext("2d");
+    const assignmentCard = document.querySelector('[data-card-id="home-assignment-load"]');
     const loadDailyBtn = document.getElementById("loadDailyBtn");
     const loadWeeklyBtn = document.getElementById("loadWeeklyBtn");
 
     let assignmentChart;
+    let currentMode = "daily";
+    let isEligible = false;
 
     async function loadAssignmentChart(mode = "daily") {
-        const url =
-            mode === "daily"
-                ? "/charts/home/assignment_load_daily"
-                : "/charts/home/assignment_load_weekly";
+        currentMode = mode;
+        const url = mode === "daily"
+            ? "/charts/home/assignment_load_daily"
+            : "/charts/home/assignment_load_weekly";
 
-        const res = await fetch(url);
-        const chartData = await res.json();
+        const chartRes = await fetch(url);
+        const chartData = await chartRes.json();
+
+        // Check eligibility on first load
+        if (!assignmentChart) {
+            isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
+            if (!isEligible) {
+                return; // Don't create chart if not eligible
+            }
+        }
 
         if (!assignmentChart) {
             assignmentChart = new Chart(assignmentCtx, {
@@ -130,90 +273,85 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /* Initial load */
-    loadAssignmentChart("daily");
+    await loadAssignmentChart("daily");
 
     /* Toggle handlers */
-    loadDailyBtn.addEventListener("click", () => {
-        loadDailyBtn.classList.add("active");
-        loadWeeklyBtn.classList.remove("active");
-        loadAssignmentChart("daily");
-    });
+    if (isEligible) {
+        loadDailyBtn.addEventListener("click", () => {
+            loadDailyBtn.classList.add("active");
+            loadWeeklyBtn.classList.remove("active");
+            loadAssignmentChart("daily");
+        });
 
-    loadWeeklyBtn.addEventListener("click", () => {
-        loadWeeklyBtn.classList.add("active");
-        loadDailyBtn.classList.remove("active");
-        loadAssignmentChart("weekly");
-    });
-
-
-
-
+        loadWeeklyBtn.addEventListener("click", () => {
+            loadWeeklyBtn.classList.add("active");
+            loadDailyBtn.classList.remove("active");
+            loadAssignmentChart("weekly");
+        });
+    }
 
     /* ========= STUDY EFFICIENCY BY CLASS ========= */
-
-    const effCtx = document
-        .getElementById("StudyEffByCls")
-        .getContext("2d");
-
+    const effCtx = document.getElementById("StudyEffByCls").getContext("2d");
+    const effCard = document.querySelector('[data-card-id="home-performance"]');
     const effRes = await fetch("/charts/home/study_efficiency_by_class");
     const effData = await effRes.json();
 
-    const efficiencyChart = new Chart(effCtx, {
-        type: "radar",
-        data: {
-            labels: effData.axes,
-            datasets: effData.datasets.map(cls => ({
-                label: cls.label,
-                data: cls.values,
-                borderColor: cls.color,
-                backgroundColor: cls.color + "33", // translucent fill
-                borderWidth: 2,
-                pointRadius: 3,
-                raw: cls.raw
-            }))
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    min: 0,
-                    max: 100,
-                    ticks: {
-                        stepSize: 20
-                    }
-                }
+    if (gateChart(effCard, effData, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
+        new Chart(effCtx, {
+            type: "radar",
+            data: {
+                labels: effData.axes,
+                datasets: effData.datasets.map(cls => ({
+                    label: cls.label,
+                    data: cls.values,
+                    borderColor: cls.color,
+                    backgroundColor: cls.color + "33", // translucent fill
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    raw: cls.raw
+                }))
             },
-            plugins: {
-                legend: {
-                    position: "bottom"
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
                 },
-                tooltip: {
-                    callbacks: {
-                        label: function (ctx) {
-                            const axis = ctx.label;
-                            const raw = ctx.dataset.raw;
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                const axis = ctx.label;
+                                const raw = ctx.dataset.raw;
 
-                            switch (axis) {
-                                case "Study Time":
-                                    return `${ctx.dataset.label}: ${raw.study_minutes} min`;
-                                case "Avg Grade":
-                                    return `${ctx.dataset.label}: ${raw.avg_grade.toFixed(1)}%`;
-                                case "Completion Rate":
-                                    return `${ctx.dataset.label}: ${raw.completion_rate.toFixed(1)}%`;
-                                case "Importance":
-                                    return `${ctx.dataset.label}: ${raw.importance || "None"}`;
-                                case "Difficulty":
-                                    return `${ctx.dataset.label}: ${raw.difficulty || 0}/10`;
-                                default:
-                                    return ctx.formattedValue;
+                                switch (axis) {
+                                    case "Study Time":
+                                        return `${ctx.dataset.label}: ${raw.study_minutes} min`;
+                                    case "Avg Grade":
+                                        return `${ctx.dataset.label}: ${raw.avg_grade.toFixed(1)}%`;
+                                    case "Completion Rate":
+                                        return `${ctx.dataset.label}: ${raw.completion_rate.toFixed(1)}%`;
+                                    case "Importance":
+                                        return `${ctx.dataset.label}: ${raw.importance || "None"}`;
+                                    case "Difficulty":
+                                        return `${ctx.dataset.label}: ${raw.difficulty || 0}/10`;
+                                    default:
+                                        return ctx.formattedValue;
+                                }
                             }
                         }
                     }
                 }
             }
-        }
+        });
+    }
     });
-
-
-});

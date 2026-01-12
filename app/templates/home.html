@@ -325,6 +325,8 @@
                     <div class="card-back">
                         <p><strong>About Assignment Load:</strong></p>
                         <p>Visualize how many assignments are due each day or week to better plan your study schedule.</p>
+                        <div class="min_requirements"></div>
+
                     </div>
                 </div>
             </div>
@@ -353,6 +355,8 @@
                 <div class="card-back">
                     <p><strong>About Time per Class:</strong></p>
                     <p>This chart shows the total study time you've logged for each class, helping you understand where you're investing your effort.</p>
+                    <div class="min_requirements"></div>
+
                 </div>
             </div>
         </div>
@@ -390,6 +394,8 @@
                 <div class="card-back">
                     <p><strong>About Performance Snapshot:</strong></p>
                     <p>View your study efficiency across different classes to optimize your study strategies.</p>
+                    <div class="min_requirements"></div>
+
                 </div>
             </div>
         </div>
@@ -418,7 +424,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
-<script src="{{ url_for('static', filename='js/charts/chart_home.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/charts/chart_home.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form_lock.js') }}"></script>
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 <script src="{{ url_for('static', filename='js/study_sessions.js') }}"></script>

@@ -7,6 +7,12 @@ from app.extensions import db
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, cast, Date
 from app.models.assignment import Assignment
+from app.services.analytics.chart_eligibility.home.home_eligibility import (
+    get_time_distribution_eligibility,
+    get_weekly_study_trend_eligibility,
+    get_assignment_load_eligibility,
+    get_performance_radar_eligibility
+)
 
 
 @charts.route("/home/time_per_class")
@@ -15,6 +21,17 @@ def time_per_class_chart():
     """
     Returns aggregated study time per class for the logged-in user.
     """
+    eligibility = get_time_distribution_eligibility(current_user.user_id)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True
+        })
+    
+    eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
+    
     # Query the database
     results = (
         db.session.query(
@@ -25,7 +42,8 @@ def time_per_class_chart():
         .join(StudySession, StudySession.class_id == Class.class_id)
         .filter(
             StudySession.user_id == current_user.user_id,
-            StudySession.is_completed == True
+            StudySession.is_completed == True,
+            Class.class_id.in_(eligible_class_ids)
         )
         .group_by(Class.class_id)
         .all()
@@ -33,16 +51,15 @@ def time_per_class_chart():
 
     # Transform into arrays for Chart.js
     chart_data = {
+        "eligible": True,
+        "eligibility": eligibility,
+        "empty": False,
         "labels": [row.class_name for row in results],
         "data": [row.total_minutes for row in results],
         "colors": [row.color for row in results]
     }
-    
-
+   
     return jsonify(chart_data)
-
-
-
 
 
 @charts.route("/home/weekly_study_time")
@@ -51,6 +68,14 @@ def weekly_study_time_chart():
     """
     Returns total study minutes per day for the last 7 days (including today).
     """
+    eligibility = get_weekly_study_trend_eligibility(current_user.user_id)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True
+        })
 
     today = datetime.now(timezone.utc).date()
     start_date = today - timedelta(days=6)
@@ -86,15 +111,26 @@ def weekly_study_time_chart():
         data.append(minutes_by_day.get(day, 0))
 
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
+        "empty": False,
         "labels": labels,
         "data": data
     })
 
 
-
 @charts.route("/home/assignment_load_daily")
 @login_required
 def assignment_load_daily():
+    eligibility = get_assignment_load_eligibility(current_user.user_id)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True
+        })
+    
     today = datetime.now(timezone.utc).date()
     end_date = today + timedelta(days=6)
 
@@ -124,17 +160,26 @@ def assignment_load_daily():
         data.append(counts_by_day.get(day, 0))
 
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
+        "empty": False,
         "labels": labels,
         "data": data
     })
 
 
-
-
-
 @charts.route("/home/assignment_load_weekly")
 @login_required
 def assignment_load_weekly():
+    eligibility = get_assignment_load_eligibility(current_user.user_id)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True
+        })
+    
     today = datetime.now(timezone.utc).date()
 
     # Start of this week (Monday)
@@ -162,11 +207,12 @@ def assignment_load_weekly():
         data.append(count)
 
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
+        "empty": False,
         "labels": labels,
         "data": data
     })
-
-
 
 
 @charts.route("/home/study_efficiency_by_class")
@@ -175,10 +221,23 @@ def study_efficiency_by_class():
     """
     Radar chart data: study efficiency per class.
     """
+    eligibility = get_performance_radar_eligibility(current_user.user_id)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True
+        })
+    
+    eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
 
     classes = (
         db.session.query(Class)
-        .filter(Class.user_id == current_user.user_id)
+        .filter(
+            Class.user_id == current_user.user_id,
+            Class.class_id.in_(eligible_class_ids)
+        )
         .all()
     )
 
@@ -190,7 +249,8 @@ def study_efficiency_by_class():
         )
         .filter(
             StudySession.user_id == current_user.user_id,
-            StudySession.is_completed == True
+            StudySession.is_completed == True,
+            StudySession.class_id.in_(eligible_class_ids)
         )
         .group_by(StudySession.class_id)
         .all()
@@ -281,6 +341,9 @@ def study_efficiency_by_class():
         })
 
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
+        "empty": False,
         "axes": [
             "Study Time",
             "Avg Grade",
