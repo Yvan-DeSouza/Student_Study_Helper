@@ -357,6 +357,7 @@
                 <div class="card-back">
                     <p><strong>About Grade vs Study Time:</strong></p>
                     <p>This scatter plot reveals the relationship between study time invested and grades received, helping you identify if more study time correlates with better performance.</p>
+                    <div class="min_requirements"></div>
                 </div>
             </div>
         </div>
@@ -390,6 +391,7 @@
                 <div class="card-back">
                     <p><strong>About Class Health:</strong></p>
                     <p>Monitor the distribution of completed vs incomplete assignments to gauge the overall health of each class.</p>
+                    <div class="min_requirements"></div>
                 </div>
             </div>
         </div>
@@ -576,7 +578,7 @@
 {% block extra_js %}
 
 <script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
-<script src="{{ url_for('static', filename='js/charts/chart_class.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/charts/chart_class.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>

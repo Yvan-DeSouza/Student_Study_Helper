@@ -1,40 +1,146 @@
+import { gateChart } from './chart_gatekeeper.js';
+
 document.addEventListener("DOMContentLoaded", async () => {
+
+    // =================== RENDER FUNCTIONS ===================
+    
+    function renderGradeVsStudyFront(progress) {
+        const hasGrades = progress.classes_with_grade.current >= progress.classes_with_grade.required;
+        const hasSessions = progress.completed_study_sessions_total.current >= progress.completed_study_sessions_total.required;
+        const hasBoth = progress.classes_with_both.current >= 1;
+        
+        if (!hasGrades && !hasSessions) {
+            return `
+                <div class="chart-empty">
+                    <p><strong>Not enough data yet</strong></p>
+                    <p>Add grades and complete study sessions for one of your classes to compare effort vs results.</p>
+                </div>
+            `;
+        }
+        
+        if (hasGrades && !hasSessions) {
+            return `
+                <div class="chart-empty">
+                    <p><strong>Not enough data yet</strong></p>
+                    <p>Complete at least one study session to see how effort relates to grades.</p>
+                </div>
+            `;
+        }
+        
+        if (!hasGrades && hasSessions) {
+            return `
+                <div class="chart-empty">
+                    <p><strong>Not enough data yet</strong></p>
+                    <p>Give at least one grade to a class to see how effort relates to grades.</p>
+                </div>
+            `;
+        }
+        
+        if (hasGrades && hasSessions && !hasBoth) {
+            return `
+                <div class="chart-empty">
+                    <p><strong>Not enough data yet</strong></p>
+                    <p>Give at least one grade and complete at least one study session for one class to compare effort vs results.</p>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="chart-empty">
+                <p><strong>Not enough data yet</strong></p>
+                <ul>
+                    <li>
+                        Classes with grades:
+                        ${progress.classes_with_grade.current}/${progress.classes_with_grade.required}
+                        ${progress.classes_with_grade.current >= progress.classes_with_grade.required ? "✅" : "❌"}
+                    </li>
+                    <li>
+                        Total completed study sessions:
+                        ${progress.completed_study_sessions_total.current}/${progress.completed_study_sessions_total.required}
+                        ${progress.completed_study_sessions_total.current >= progress.completed_study_sessions_total.required ? "✅" : "❌"}
+                    </li>
+                </ul>
+            </div>
+        `;
+    }
+
+    function renderGradeVsStudyBack(ineligibleClasses) {
+        return `
+            <p><strong>Why some classes aren't shown:</strong></p>
+            <ul>
+                ${ineligibleClasses.map(c =>
+                    `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+                ).join("")}
+            </ul>
+        `;
+    }
+
+    function renderClassHealthFront(progress) {
+        if (progress.assignments_total.current === 0) {
+            return `
+                <div class="chart-empty">
+                    <p><strong>Not enough data yet</strong></p>
+                    <p>Start logging assignments to see class health.</p>
+                </div>
+            `;
+        }
+        
+        if (progress.time_window !== 'all') {
+            return `
+                <div class="chart-empty">
+                    <p><strong>No assignments in this time range</strong></p>
+                    <p>Try switching to <strong>All time</strong>.</p>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="chart-empty">
+                <p><strong>Not enough data yet</strong></p>
+                <ul>
+                    <li>
+                        Total assignments:
+                        ${progress.assignments_total.current}/${progress.assignments_total.required}
+                        ${progress.assignments_total.current >= progress.assignments_total.required ? "✅" : "❌"}
+                    </li>
+                </ul>
+            </div>
+        `;
+    }
+
+    function renderClassHealthBack(ineligibleClasses) {
+        return `
+            <p><strong>Why some classes aren't shown:</strong></p>
+            <ul>
+                ${ineligibleClasses.map(c =>
+                    `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+                ).join("")}
+            </ul>
+        `;
+    }
+
     // ===============================
     // Populate Class Dropdown
     // ===============================
     const classSelect = document.getElementById("classHealthSelect");
 
-    function populateClassDropdown(classes) {
-        // Prefer the DOM-population helper defined later, else fall back
-        if (typeof populateClassDropdownDOM === 'function') {
-            return populateClassDropdownDOM(classes);
-        }
-        classSelect.innerHTML = `<option value="all">All</option>`;
-        classes.forEach(c => {
-            classSelect.innerHTML += `<option value="${c.class_id}">${c.class_name}</option>`;
-        });
+    function populateClassDropdownDOM(classes) {
+        if (!classSelect) return;
+        classSelect.innerHTML = '<option value="all">All</option>' + 
+            classes.map(c => `<option value="${c.class_id}">${c.class_name}</option>`).join('');
     }
-
-
 
     // ===============================
     // Grade vs Study Time Scatter
     // ===============================
-
     const scatterCanvas = document.getElementById("gradeStudyScatter");
-    const scatterWrapper = scatterCanvas.parentElement;
+    const scatterCard = document.querySelector('[data-card-id="class-scatter"]');
     const scatterCtx = scatterCanvas.getContext("2d");
 
     const scatterRes = await fetch("/charts/classes/grade_vs_study_time");
     const scatterData = await scatterRes.json();
 
-    if (scatterData.data.length === 0) {
-        showEmptyMessage(
-            scatterWrapper,
-            "Start completing study sessions for classes with grades to see this graph."
-        );
-        return;
-    } else {
+    if (gateChart(scatterCard, scatterData, renderGradeVsStudyFront, renderGradeVsStudyBack)) {
         new Chart(scatterCtx, {
             type: "bubble",
             data: {
@@ -77,22 +183,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-
     // ===============================
     // Class Health Breakdown (Pie ↔ Bar)
     // ===============================
-
-    const healthCtx = document
-        .getElementById("classHealthGraph")
-        .getContext("2d");
-
+    const healthCtx = document.getElementById("classHealthGraph").getContext("2d");
+    const healthCard = document.querySelector('[data-card-id="class-health"]');
     const healthWrapper = document.getElementById('classHealthGraph').parentElement;
-    // classSelect already defined above
     const timeFilter = document.getElementById('classHealthTimeFilter');
     const classTitle = document.getElementById('classHealthTitle');
 
     let healthChart = null;
     let currentHealthType = 'bar';
+    let currentEligibility = null;
 
     async function fetchAndPopulateClassDropdown() {
         try {
@@ -104,11 +206,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch (e) {
             console.error('Failed to load class list', e);
         }
-    }
-
-    function populateClassDropdownDOM(classes) {
-        if (!classSelect) return;
-        classSelect.innerHTML = '<option value="all">All</option>' + classes.map(c => `\n            <option value="${c.class_id}">${c.class_name}</option>`).join('');
     }
 
     function showEmptyMessage(chartWrapper, message) {
@@ -127,21 +224,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (canvas) canvas.style.visibility = 'hidden';
     }
 
-
-
-
     function clearEmptyMessage(chartWrapper) {
         chartWrapper.querySelectorAll('.chart-empty').forEach(n => n.remove());
 
         const canvas = chartWrapper.querySelector('canvas');
         if (canvas) canvas.style.visibility = 'visible';
     }
-
-
-
-
-
-
 
     async function renderHealthChart(type = 'bar', classId = 'all', timeWindow = 'all') {
         if (healthChart) {
@@ -158,26 +246,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         clearEmptyMessage(healthWrapper);
 
-
         // If pie -> ask for summary for the selected class
         if (type === 'pie') {
             currentHealthType = 'pie';
             classTitle.classList.remove('hidden');
             const res = await fetch(`/charts/classes/class_health_summary?class_id=${classId}&time_window=${timeWindow}`);
             const data = await res.json();
-       
-  
 
-            if (data.empty) {
-                showEmptyMessage(
-                    healthWrapper,
-                    "Start logging assignments to see this graph."
-                );
-                return;
+            // Check eligibility on first load
+            if (!currentEligibility) {
+                currentEligibility = data.eligibility;
+                const isEligible = gateChart(healthCard, data, renderClassHealthFront, renderClassHealthBack);
+                if (!isEligible) {
+                    return;
+                }
             }
 
-
-            const total = data.total || (data.completed_count + data.in_progress_count + data.not_started_count);
+            if (data.empty) {
+                showEmptyMessage(healthWrapper, "Start logging assignments to see this graph.");
+                return;
+            }
 
             const values = [
                 data.completed_pct,
@@ -185,10 +273,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 data.not_started_pct
             ];
 
-            console.log(values)
             // Set title
-            if (classId === 'all') classTitle.textContent = 'All classes';
-            else classTitle.textContent = data.class_name || 'Class';
+            classTitle.textContent = data.class_name || 'Class';
 
             healthChart = new Chart(healthCtx, {
                 type: 'pie',
@@ -198,7 +284,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,   // 🔑 ALWAYS false
+                    maintainAspectRatio: false,
                     animation: { duration: 600, easing: 'easeOutCubic' },
                     plugins: {
                         legend: {position: 'bottom'},
@@ -219,7 +305,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                         },
                     }
                 }
-
             });
             return;
         }
@@ -231,22 +316,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (classId === 'all') {
             const res = await fetch(`/charts/classes/class_health?time_window=${timeWindow}`);
             const healthData = await res.json();
-            if (!healthData || healthData.length === 0) {
-                showEmptyMessage(
-                    healthWrapper,
-                    "Start logging assignments to see this graph."
-                ); 
+
+            // Check eligibility on first load
+            if (!currentEligibility) {
+                currentEligibility = healthData.eligibility;
+                const isEligible = gateChart(healthCard, healthData, renderClassHealthFront, renderClassHealthBack);
+                if (!isEligible) {
+                    return;
+                }
+            }
+
+            if (!healthData || !healthData.data || healthData.data.length === 0) {
+                showEmptyMessage(healthWrapper, "Start logging assignments to see this graph.");
                 return;
             }
-            const labels = healthData.map(c => c.class_name);
-            const completedData = healthData.map(c => c.completed);
-            const inProgressData = healthData.map(c => c.in_progress);
-            const notStartedData = healthData.map(c => c.not_started);
 
+            const labels = healthData.data.map(c => c.class_name);
+            const completedData = healthData.data.map(c => c.completed);
+            const inProgressData = healthData.data.map(c => c.in_progress);
+            const notStartedData = healthData.data.map(c => c.not_started);
 
-            const completedCounts = healthData.map(c => c.completed_count || 0);
-            const inProgressCounts = healthData.map(c => c.in_progress_count || 0);
-            const notStartedCounts = healthData.map(c => c.not_started_count || 0);
+            const completedCounts = healthData.data.map(c => c.completed_count || 0);
+            const inProgressCounts = healthData.data.map(c => c.in_progress_count || 0);
+            const notStartedCounts = healthData.data.map(c => c.not_started_count || 0);
 
             healthChart = new Chart(healthCtx, {
                 type: 'bar',
@@ -281,11 +373,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             // single-class bar (use summary endpoint)
             const res = await fetch(`/charts/classes/class_health_summary?class_id=${classId}&time_window=${timeWindow}`);
             const data = await res.json();
+
             if (data.empty) {
-                showEmptyMessage(
-                    healthWrapper,
-                    "Start logging assignments to see this graph."
-                );
+                showEmptyMessage(healthWrapper, "Start logging assignments to see this graph.");
                 return;
             }
 
@@ -311,7 +401,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             ];
 
-
             healthChart = new Chart(healthCtx, {
                 type: 'bar',
                 data: { labels, datasets },
@@ -331,13 +420,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                             }
                         }
                     }
-
                 }
             });
         }
     }
-
-
 
     // Toggle buttons
     document.querySelectorAll('.health-widget .chart-toggle button').forEach(btn => {
@@ -348,8 +434,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             await renderHealthChart(currentHealthType, classSelect?.value || 'all', timeFilter?.value || 'all');
 
 
+
+
         });
     });
+
 
     // Dropdowns
     classSelect?.addEventListener('change', async () => {
@@ -359,8 +448,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         await renderHealthChart(currentHealthType, classSelect?.value || 'all', timeFilter.value);
     });
 
+
     // Initial population and render
     await fetchAndPopulateClassDropdown();
     await renderHealthChart('bar', 'all', 'all');
+
 
 });

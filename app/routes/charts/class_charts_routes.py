@@ -6,6 +6,11 @@ from app.models.study_session import StudySession
 from app.extensions import db
 from sqlalchemy import func
 from datetime import datetime, timezone, timedelta
+from app.models.assignment import Assignment
+from app.services.analytics.chart_eligibility.classes.class_eligibility import (
+    get_grade_vs_study_time_eligibility,
+    get_class_health_eligibility
+)
 
 
 @charts.route("/classes/grade_vs_study_time")
@@ -18,6 +23,17 @@ def grade_vs_study_time():
     Bubble size = importance
     Color = class color
     """
+    eligibility = get_grade_vs_study_time_eligibility(current_user.user_id)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True,
+            "data": []
+        })
+    
+    eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
 
     results = (
         db.session.query(
@@ -33,7 +49,10 @@ def grade_vs_study_time():
             (StudySession.class_id == Class.class_id)
             & (StudySession.is_completed == True)
         )
-        .filter(Class.user_id == current_user.user_id)
+        .filter(
+            Class.user_id == current_user.user_id,
+            Class.class_id.in_(eligible_class_ids)
+        )
         .group_by(Class.class_id)
         .all()
     )
@@ -61,7 +80,12 @@ def grade_vs_study_time():
             "importance": row.importance
         })
 
-    return jsonify({"data": data_points})
+    return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
+        "empty": False,
+        "data": data_points
+    })
 
 
 @charts.route("/classes/list")
@@ -69,11 +93,6 @@ def grade_vs_study_time():
 def classes_list():
     classes = db.session.query(Class).filter(Class.user_id == current_user.user_id).all()
     return jsonify([{"class_id": c.class_id, "class_name": c.class_name} for c in classes])
-
-
-
-
-from app.models.assignment import Assignment
 
 
 @charts.route("/classes/class_health")
@@ -86,18 +105,30 @@ def class_health_breakdown():
     - Not started %
     Supports optional query param `time_window` = all | last_7_days | last_30_days (filters by Assignment.created_at)
     """
-
     time_window = request.args.get('time_window', 'all')
+    eligibility = get_class_health_eligibility(current_user.user_id, time_window)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True
+        })
+
     since = None
-    from datetime import timedelta
     if time_window == 'last_7_days':
         since = datetime.now(timezone.utc) - timedelta(days=7)
     elif time_window == 'last_30_days':
         since = datetime.now(timezone.utc) - timedelta(days=30)
 
+    eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
+    
     classes = (
         db.session.query(Class)
-        .filter(Class.user_id == current_user.user_id)
+        .filter(
+            Class.user_id == current_user.user_id,
+            Class.class_id.in_(eligible_class_ids)
+        )
         .all()
     )
 
@@ -137,8 +168,12 @@ def class_health_breakdown():
             "not_started_count": not_started
         })
 
-    return jsonify(payload)
-
+    return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
+        "empty": False,
+        "data": payload
+    })
 
 
 @charts.route("/classes/class_health_summary")
@@ -146,6 +181,15 @@ def class_health_breakdown():
 def class_health_summary():
     class_id = request.args.get("class_id", "all")
     time_window = request.args.get('time_window', 'all')
+    
+    eligibility = get_class_health_eligibility(current_user.user_id, time_window)
+    
+    if not eligibility["eligible"]:
+        return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
+            "empty": True
+        })
 
     since = None
     if time_window == 'last_7_days':
@@ -158,6 +202,16 @@ def class_health_summary():
     )
 
     if class_id != "all":
+        # Check if this specific class is eligible
+        eligible_class_ids = [c["class_id"] for c in eligibility["eligible_classes"]]
+        if int(class_id) not in eligible_class_ids:
+            cl = Class.query.get(class_id)
+            return jsonify({
+                "eligible": False,
+                "eligibility": eligibility,
+                "empty": True,
+                "class_name": cl.class_name if cl else "Class"
+            })
         query = query.filter(Assignment.class_id == class_id)
 
     if since is not None:
@@ -169,11 +223,14 @@ def class_health_summary():
         cl = Class.query.get(class_id)
         if cl:
             class_name = cl.class_name
+    
     if total == 0:
         return jsonify({
+            "eligible": False,
+            "eligibility": eligibility,
             "empty": True,
             "class_name": class_name,
-            })
+        })
 
     completed = query.filter(Assignment.is_completed == True).count()
 
@@ -187,16 +244,12 @@ def class_health_summary():
     not_started = total - completed - in_progress
 
     # ✅ percent calculation ALWAYS here
-    def pct(n): 
+    def pct(n):
         return round((n / total) * 100, 1)
 
-    class_name = "All classes"
-    if class_id != "all":
-        cl = Class.query.get(class_id)
-        if cl:
-            class_name = cl.class_name
-
     return jsonify({
+        "eligible": True,
+        "eligibility": eligibility,
         "empty": False,
         "class_name": class_name,
         "total": total,
@@ -211,4 +264,3 @@ def class_health_summary():
         "in_progress_count": in_progress,
         "not_started_count": not_started
     })
-
