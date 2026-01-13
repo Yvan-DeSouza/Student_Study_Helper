@@ -414,18 +414,30 @@
 
         <div class="card chart-card chart-widget" data-card-id="assignment-grade-dist">
             <div class="card-header">
-                <h3>Grade Distribution</h3>
+                <h3>Assignment Progress vs Deadline</h3>
                 <button class="flip-btn" title="Flip">🔁</button>
             </div>
             <div class="card-body">
                 <div class="card-front">
-                    <div class="chart-wrapper">
-                        <canvas id="assignmentGradeChart"></canvas>
+                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                        <label class="selector-label">Show next:</label>
+                        <select id="progressDeadlineLimit" class="chart-select">
+                            <option value="1">1</option>
+                            <option value="3">3</option>
+                            <option value="5" selected>5</option>
+                            <option value="7">7</option>
+                            <option value="10">10</option>
+                        </select>
+                        <span class="selector-label">assignments</span>
                     </div>
+                    <div class="chart-wrapper">
+                        <canvas id="assignmentProgressDeadline"></canvas>
+                    </div>
+                    <div id="progressDeadlineWarning" class="deadlines-warning hidden"></div>
                 </div>
                 <div class="card-back">
-                    <p><strong>About Grade Distribution:</strong></p>
-                    <p>See how your assignment grades are distributed across different ranges to identify your performance patterns.</p>
+                    <p><strong>About Assignment Progress vs Deadline:</strong></p>
+                    <p>Shows whether you're pacing your work fast enough to finish assignments on time. Expected progress assumes steady work from your first study session to the deadline.</p>
                 </div>
             </div>
         </div>

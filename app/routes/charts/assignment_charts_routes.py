@@ -4,9 +4,12 @@ from app.routes.charts import charts
 from app.models.assignment import Assignment
 from app.models.course import Class
 from app.models.study_session import StudySession
+from app.models.user import UserAssignmentTypeColor
 from app.extensions import db
 from sqlalchemy import func
 from datetime import datetime, timezone, timedelta
+from app.services.expected_utils import estimate_expected_minutes
+from app.services.risk_utils import compute_days_until_due
 
 
 @charts.route('/assignments/due_timeline')
@@ -136,10 +139,156 @@ def assignments_type_load():
     # colors: fetch user assignment type colors
     colors = {}
     rows = db.session.query(func.coalesce(db.func.jsonb_build_object('assignment_type', db.func.coalesce(db.text("''"), '')), '{}'))
-    from app.models.user import UserAssignmentTypeColor
     color_rows = UserAssignmentTypeColor.query.filter_by(user_id=current_user.user_id).all()
     color_map = {r.assignment_type: r.color for r in color_rows}
 
     colors_list = [color_map.get(t, '#4f46e5') for t in types]
 
     return jsonify({'types': types, 'values': result, 'colors': colors_list})
+
+
+
+@charts.route('/assignments/progress_deadline')
+@login_required
+def assignments_progress_deadline():
+    limit = request.args.get('limit', '5')
+    try:
+        limit = int(limit)
+    except:
+        limit = 5
+
+    now = datetime.now(timezone.utc)
+
+    # Get ALL incomplete assignments with due dates
+    all_assignments = (
+        db.session.query(Assignment)
+        .join(Class)
+        .filter(
+            Class.user_id == current_user.user_id,
+            Assignment.is_completed == False,
+            Assignment.due_at != None
+        )
+        .order_by(Assignment.due_at.asc())
+        .all()
+    )
+
+    total_available = len(all_assignments)
+
+    if total_available == 0:
+        return jsonify({
+            'assignments': [],
+            'requested': limit,
+            'total_available': 0
+        })
+
+    # Take as many as we can
+    assignments = all_assignments[:limit]
+
+    # -------- past assignments (unchanged) --------
+    past_assignments = []
+    completed = (
+        db.session.query(Assignment)
+        .join(Class)
+        .filter(
+            Class.user_id == current_user.user_id,
+            Assignment.is_completed == True,
+            Assignment.finished_at != None
+        )
+        .all()
+    )
+
+    for ca in completed:
+        actual_minutes = (
+            db.session.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+            .filter(
+                StudySession.assignment_id == ca.assignment_id,
+                StudySession.is_completed == True
+            )
+            .scalar() or 0
+        )
+
+        if actual_minutes > 0:
+            past_assignments.append({
+                'class_id': ca.class_id,
+                'class_type': ca.class_.class_type,
+                'assignment_type': ca.assignment_type,
+                'actual_minutes': actual_minutes,
+                'difficulty': ca.difficulty
+            })
+
+    result = []
+
+    for a in assignments:
+        # expected minutes
+        if a.estimated_minutes:
+            expected_minutes = a.estimated_minutes
+        else:
+            expected_minutes = estimate_expected_minutes(
+                a.class_.class_type,
+                a.assignment_type,
+                a.class_id,
+                past_assignments
+            )
+
+        actual_minutes = (
+            db.session.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+            .filter(
+                StudySession.assignment_id == a.assignment_id,
+                StudySession.is_completed == True
+            )
+            .scalar() or 0
+        )
+
+        first_session = (
+            db.session.query(StudySession)
+            .filter(StudySession.assignment_id == a.assignment_id)
+            .order_by(StudySession.started_at.asc())
+            .first()
+        )
+
+        t_start = first_session.started_at if first_session and first_session.started_at else a.created_at
+        t_due = a.due_at
+
+        if t_due > t_start:
+            expected_progress = max(
+                0,
+                min(100, ((now - t_start).total_seconds() / (t_due - t_start).total_seconds()) * 100)
+            )
+        else:
+            expected_progress = 100
+
+        actual_progress = (
+            max(0, min(100, (actual_minutes / expected_minutes) * 100))
+            if expected_minutes > 0 else 0
+        )
+
+        days_until_due = compute_days_until_due(a.due_at, now)
+        days_until_due = round(days_until_due, 1) if days_until_due is not None else 0
+
+        urgency_level = (
+            'High (Overdue)' if days_until_due < 0 else
+            'High' if days_until_due <= 2 else
+            'Medium' if days_until_due <= 5 else
+            'Low'
+        )
+
+        result.append({
+            'assignment_id': a.assignment_id,
+            'title': a.title,
+            'class_name': a.class_.class_name,
+            'assignment_type': a.assignment_type,
+            'expected_progress': round(expected_progress, 1),
+            'actual_progress': round(actual_progress, 1),
+            'expected_minutes': expected_minutes,
+            'actual_minutes': actual_minutes,
+            'remaining_minutes': max(0, expected_minutes - actual_minutes),
+            'days_until_due': days_until_due,
+            'urgency_level': urgency_level,
+            'due_at': a.due_at.isoformat()
+        })
+
+    return jsonify({
+        'assignments': result,
+        'requested': limit,
+        'total_available': total_available
+    })
