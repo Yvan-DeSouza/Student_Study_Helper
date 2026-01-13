@@ -1,4 +1,3 @@
-# app/services/risk_utils.py
 from app.services.expected_utils import composite_assignment_similarity
 from datetime import datetime, timezone
 import numpy as np
@@ -75,6 +74,17 @@ def min_max_normalize(series):
 
     return (series - min_val) / (max_val - min_val)
 
+def normalize_1_to_10(series):
+    series = series.astype(float)
+    series = series.fillna(series.mean())
+
+    if series.empty:
+        return series
+
+    # Clamp to expected scale to avoid weird values
+    series = series.clip(lower=1, upper=10)
+
+    return (series - 1) / 9
 
 
 # =================== RISK COMPONENTS ===================

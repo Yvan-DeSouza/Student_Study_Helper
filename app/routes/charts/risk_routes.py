@@ -15,12 +15,12 @@ from app.services.risk_utils import (
     compute_days_until_due,
     urgency_score,
     deadline_proximity_bucket,
-    min_max_normalize,
     time_pressure_score,
     compute_workload_overlap,
     historical_risk_from_history,
     compute_assignment_risk,
     aggregate_weekly_risk_components,
+    normalize_1_to_10
 )
 from app.services.expected_utils import (
     estimate_expected_minutes,
@@ -237,16 +237,17 @@ def risk_composition_evolution():
         'is_completed': r.is_completed,
         'grade': float(r.grade) if r.grade else None
     } for r in results])
+    past_risk_assignments = build_past_risk_assignments(current_user.user_id)
 
     df['created_at'] = pd.to_datetime(df['created_at'], utc=True)
     df['week'] = df['created_at'].dt.to_period('W').apply(lambda x: x.start_time)
     df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now) if x else None)
     df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7) if x else 0)
-    df['difficulty_norm'] = min_max_normalize(df['difficulty'])
+    df['difficulty_norm'] = normalize_1_to_10(df['difficulty'])
     weekly_active = df.groupby('week').apply(lambda w: len(w[w['is_completed'] == False])).to_dict()
     max_active = max(weekly_active.values()) if weekly_active else 1
     df['overlap'] = df['week'].map(weekly_active).fillna(0).apply(lambda x: compute_workload_overlap(x, max_active))
-    df['history'] = df.apply(lambda row: historical_risk_from_history(row['class_type'], row['assignment_type'], row['class_id'], []), axis=1)
+    df['history'] = df.apply(lambda row: historical_risk_from_history(row['class_type'], row['assignment_type'], row['class_id'], past_risk_assignments), axis=1)
     weekly_risk = aggregate_weekly_risk_components(df[['week', 'time_pressure', 'difficulty_norm', 'overlap', 'history']].rename(columns={'difficulty_norm': 'difficulty'}))
     weekly_risk = weekly_risk.sort_values('week')
 
@@ -350,11 +351,14 @@ def assignment_risk_breakdown():
         'grade': float(r.grade) if r.grade else None
     } for r in results])
 
+
     df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now) if x else None)
     df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7) if x else 0)
     df['deadline_proximity'] = df['days_until_due'].apply(lambda x: urgency_score(x, tau=7) if x else 0)
-    df['difficulty_norm'] = min_max_normalize(df['difficulty'])
+    df['difficulty_norm'] = normalize_1_to_10(df['difficulty'])
     max_minutes = df['estimated_minutes'].max()
+    print(df['difficulty_norm'])
+    print(df['class_name'])
 
     if max_minutes and max_minutes > 0:
         df['overlap'] = df['estimated_minutes'] / max_minutes
@@ -505,7 +509,7 @@ def urgency_risk_matrix():
     df['urgency'] = df['days_until_due'].apply(lambda x: urgency_score(x, tau=7) if x else 0)
     df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7) if x else 0)
     df['deadline_proximity'] = df['urgency']
-    df['difficulty_norm'] = min_max_normalize(df['difficulty'])
+    df['difficulty_norm'] = normalize_1_to_10(df['difficulty'])
     df['overlap'] = compute_workload_overlap(len(df), len(df)) if len(df) else 0
     past_risk_assignments = build_past_risk_assignments(current_user.user_id)
     

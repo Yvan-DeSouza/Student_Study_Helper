@@ -121,7 +121,7 @@ def composite_assignment_similarity(target_class_type, target_assignment_type, t
     """
     class_sim = class_type_similarity(target_class_type, past_class_type)
     type_sim = assignment_type_similarity(target_assignment_type, past_assignment_type)
-    same_class_bonus = 1.0 if target_class_id == past_class_id else 0.6
+    same_class_bonus = 1.0 if target_class_id == past_class_id else 0
    
     return round(
         0.5 * class_sim +
@@ -140,7 +140,9 @@ def normalize_and_rescale(value, past_type, target_type, base_map):
     if past_base is None or target_base is None or past_base == 0:
         return None
 
+
     return (value / past_base) * target_base
+
 
 
 # =================== ESTIMATION FUNCTIONS ===================
