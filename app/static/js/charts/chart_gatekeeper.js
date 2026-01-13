@@ -9,7 +9,7 @@ export function gateChart(cardEl, response, renderFront, renderBack) {
     eligible,
     progress,
     ineligible_classes = [],
-    representative = null   // 👈 NEW
+    representative = null 
   } = data;
 
   // ---- Front (not eligible) ----

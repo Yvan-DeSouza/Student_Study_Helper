@@ -28,6 +28,7 @@ def urgency_score(days_until_due, tau=7):
     Output ∈ [0, 1]
     tau = decay constant (default 7 days)
     """
+
     if days_until_due is None:
         return 0
 
@@ -187,12 +188,18 @@ def compute_assignment_risk(components, weights=None):
     total_risk = 0.0
 
     for key, value in components.items():
-        if value is None:
+        if value is None or not np.isfinite(value):
             value = 0.0
+
         weight = weights.get(key, 0)
         contribution = weight * value
+
+        if not np.isfinite(contribution):
+            contribution = 0.0
+
         risk_breakdown[key] = round(contribution, 3)
         total_risk += contribution
+
 
     return {
         "total_risk": round(total_risk, 3),

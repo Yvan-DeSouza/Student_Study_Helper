@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function renderRiskBreakdownBack(progress) {
   const incompleteWithoutDue = progress.incomplete_assignments_without_due?.current || 0;
+
   if (incompleteWithoutDue > 0) {
     return `
       <p><strong>Hidden assignments:</strong></p>
