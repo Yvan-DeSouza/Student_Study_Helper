@@ -10,6 +10,11 @@ from sqlalchemy import func
 from datetime import datetime, timezone, timedelta
 from app.services.expected_utils import estimate_expected_minutes
 from app.services.risk_utils import compute_days_until_due
+from app.services.analytics.chart_eligibility.assignments.assignments_eligibility import (
+    get_assignment_due_timeline_eligibility,
+    get_assignment_type_load_eligibility,
+    get_assignment_progress_deadline_eligibility
+)
 
 
 @charts.route('/assignments/due_timeline')
@@ -19,13 +24,13 @@ def assignments_due_timeline():
     Query params:
       mode=days|weeks (default days)
     """
+    eligibility = get_assignment_due_timeline_eligibility(current_user.user_id)
+    
     mode = request.args.get('mode', 'days')
-
     now = datetime.now(timezone.utc)
 
     if mode == 'weeks':
-        # compute next 4 weeks starting from this week's Monday
-        weekday = now.weekday()  # Monday=0
+        weekday = now.weekday()
         this_monday = (now - timedelta(days=weekday)).date()
         weeks = []
         ranges = []
@@ -36,12 +41,10 @@ def assignments_due_timeline():
             ranges.append(f"{start.day}-{end.day}")
         labels = ranges
     else:
-        # days: today + next 6 days
         start_date = now.date()
         days = [start_date + timedelta(days=i) for i in range(7)]
         labels = [d.strftime('%a') for d in days]
 
-    # load relevant assignments (future due_at only)
     if mode == 'weeks':
         window_end = weeks[-1][1]
         q = db.session.query(Assignment).join(Class).filter(
@@ -58,11 +61,8 @@ def assignments_due_timeline():
         )
 
     assignments = q.all()
-
-    # initialize per-class buckets
     classes = db.session.query(Class).filter(Class.user_id == current_user.user_id).all()
     class_map = {c.class_id: {'class_id': c.class_id, 'class_name': c.class_name, 'color': c.color, 'counts': [0] * (4 if mode == 'weeks' else 7)} for c in classes}
-
     total_counts = [0] * (4 if mode == 'weeks' else 7)
 
     for a in assignments:
@@ -88,7 +88,14 @@ def assignments_due_timeline():
 
     total_ds = {'label': 'Total', 'class_id': None, 'color': '#333', 'data': total_counts}
 
-    return jsonify({'labels': labels, 'datasets': datasets, 'total': total_ds})
+    return jsonify({
+        'eligible': eligibility['eligible'],
+        'eligibility': eligibility,
+        'empty': not bool(assignments),
+        'labels': labels,
+        'datasets': datasets,
+        'total': total_ds
+    })
 
 
 @charts.route('/assignments/type_load')
@@ -101,6 +108,8 @@ def assignments_type_load():
     """
     metric = request.args.get('metric', 'count')
     time_window = request.args.get('time_window', 'all')
+    
+    eligibility = get_assignment_type_load_eligibility(current_user.user_id, metric)
 
     since = None
     if time_window == 'last_7_days':
@@ -118,15 +127,13 @@ def assignments_type_load():
         if metric == 'count':
             q = db.session.query(func.count(Assignment.assignment_id)).join(Class).filter(
                 Class.user_id == current_user.user_id,
-                Assignment.assignment_type == t,
-                Assignment.is_completed == False
+                Assignment.assignment_type == t
             )
             if since is not None:
                 q = q.filter(Assignment.created_at >= since)
             count = q.scalar() or 0
             result.append(count)
         else:
-            # study_time: sum duration_minutes from study sessions for assignments of this type
             q = db.session.query(func.coalesce(func.sum(StudySession.duration_minutes), 0)).join(Assignment, StudySession.assignment_id == Assignment.assignment_id).join(Class).filter(
                 Class.user_id == current_user.user_id,
                 Assignment.assignment_type == t
@@ -136,21 +143,25 @@ def assignments_type_load():
             minutes = q.scalar() or 0
             result.append(minutes)
 
-    # colors: fetch user assignment type colors
-    colors = {}
-    rows = db.session.query(func.coalesce(db.func.jsonb_build_object('assignment_type', db.func.coalesce(db.text("''"), '')), '{}'))
     color_rows = UserAssignmentTypeColor.query.filter_by(user_id=current_user.user_id).all()
     color_map = {r.assignment_type: r.color for r in color_rows}
-
     colors_list = [color_map.get(t, '#4f46e5') for t in types]
 
-    return jsonify({'types': types, 'values': result, 'colors': colors_list})
-
+    return jsonify({
+        'eligible': eligibility['eligible'],
+        'eligibility': eligibility,
+        'empty': sum(result) == 0,
+        'types': types,
+        'values': result,
+        'colors': colors_list
+    })
 
 
 @charts.route('/assignments/progress_deadline')
 @login_required
 def assignments_progress_deadline():
+    eligibility = get_assignment_progress_deadline_eligibility(current_user.user_id)
+    
     limit = request.args.get('limit', '5')
     try:
         limit = int(limit)
@@ -159,7 +170,6 @@ def assignments_progress_deadline():
 
     now = datetime.now(timezone.utc)
 
-    # Get ALL incomplete assignments with due dates
     all_assignments = (
         db.session.query(Assignment)
         .join(Class)
@@ -176,15 +186,16 @@ def assignments_progress_deadline():
 
     if total_available == 0:
         return jsonify({
+            'eligible': eligibility['eligible'],
+            'eligibility': eligibility,
+            'empty': True,
             'assignments': [],
             'requested': limit,
             'total_available': 0
         })
 
-    # Take as many as we can
     assignments = all_assignments[:limit]
 
-    # -------- past assignments (unchanged) --------
     past_assignments = []
     completed = (
         db.session.query(Assignment)
@@ -219,7 +230,6 @@ def assignments_progress_deadline():
     result = []
 
     for a in assignments:
-        # expected minutes
         if a.estimated_minutes:
             expected_minutes = a.estimated_minutes
         else:
@@ -288,6 +298,9 @@ def assignments_progress_deadline():
         })
 
     return jsonify({
+        'eligible': eligibility['eligible'],
+        'eligibility': eligibility,
+        'empty': False,
         'assignments': result,
         'requested': limit,
         'total_available': total_available
