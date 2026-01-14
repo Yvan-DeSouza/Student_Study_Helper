@@ -69,6 +69,10 @@ def get_time_distribution_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": None
     }
 
@@ -114,6 +118,10 @@ def get_weekly_study_trend_eligibility(user_id):
         "progress": progress,
         "eligible_classes": [],
         "ineligible_classes": [],
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": None
     }
 
@@ -150,6 +158,10 @@ def get_assignment_load_eligibility(user_id):
         "progress": progress,
         "eligible_classes": [],
         "ineligible_classes": [],
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": None
     }
 
@@ -215,5 +227,9 @@ def get_performance_radar_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": None
     }

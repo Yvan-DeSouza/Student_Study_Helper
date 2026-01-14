@@ -9,7 +9,8 @@ export function gateChart(cardEl, response, renderFront, renderBack) {
     eligible,
     progress,
     ineligible_classes = [],
-    representative = null 
+    ineligible_assignments = [],
+    representative = null
   } = data;
 
   // ---- Front (not eligible) ----
@@ -19,8 +20,8 @@ export function gateChart(cardEl, response, renderFront, renderBack) {
   }
 
   // ---- Back (eligible but partial data hidden) ----
-  if (ineligible_classes.length > 0 && renderBack) {
-    backEl.innerHTML = renderBack(ineligible_classes);
+  if ((ineligible_classes.length > 0 || ineligible_assignments.length > 0) && renderBack) {
+    backEl.innerHTML = renderBack(ineligible_classes, ineligible_assignments);
   }
 
   return true;

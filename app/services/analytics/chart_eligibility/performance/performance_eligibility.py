@@ -82,6 +82,10 @@ def get_rolling_grade_trend_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": representative
     }
 
@@ -147,8 +151,12 @@ def get_stability_index_eligibility(user_id):
     return {
         "eligible": eligible,
         "progress": progress,
-        "eligible_classes": [],     # not class-specific
-        "ineligible_classes": [],   # not class-specific
+        "eligible_classes": [],    
+        "ineligible_classes": [],
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],  
         "representative": None
     }
 
@@ -226,6 +234,10 @@ def get_effort_outcome_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": representative
     }
 
@@ -326,5 +338,9 @@ def get_lag_correlation_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": representative
     }

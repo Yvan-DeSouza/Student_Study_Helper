@@ -87,8 +87,13 @@ def get_grade_vs_study_time_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": None
     }
+
 
 
 def get_class_health_eligibility(user_id, time_window='all'):
@@ -153,5 +158,9 @@ def get_class_health_eligibility(user_id, time_window='all'):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": None
     }

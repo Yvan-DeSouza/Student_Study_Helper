@@ -13,6 +13,8 @@ from app.services.analytics.chart_eligibility.classes.class_eligibility import (
 )
 
 
+
+
 @charts.route("/classes/grade_vs_study_time")
 @login_required
 def grade_vs_study_time():

@@ -7,12 +7,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // =================== RENDER FUNCTIONS ===================
-  
+
   function renderDeadlineProximityFront(progress) {
     const hasData = progress.incomplete_assignments_with_due.current >= progress.incomplete_assignments_with_due.required;
     const noIncomplete = progress.incomplete_assignments_with_due.current === 0;
     const hasWithoutDue = progress.incomplete_assignments_without_due.current > 0;
-    
+   
     if (noIncomplete && !hasWithoutDue) {
       return `
         <div class="chart-empty">
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
     }
-    
+   
     if (noIncomplete && hasWithoutDue) {
       return `
         <div class="chart-empty">
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
     }
-    
+   
     return `
       <div class="chart-empty">
         <p><strong>Not enough data yet</strong></p>
@@ -45,17 +45,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-  function renderDeadlineProximityBack(progress) {
-    if (progress.incomplete_assignments_without_due.current > 0) {
+
+
+  function renderDeadlineProximityBack(ineligibleClasses, ineligibleAssignments) {
+    if (ineligibleAssignments && ineligibleAssignments.length > 0) {
       return `
-        <p><strong>Hidden assignments:</strong></p>
-        <p>You have ${progress.incomplete_assignments_without_due.current} assignment(s) that are not shown because they do not have a due date.</p>
+        <p><strong>Hidden assignments (${ineligibleAssignments.length}):</strong></p>
+        <ul>
+          ${ineligibleAssignments
+            .map(a => `<li><strong>${a.assignment_name}</strong> (${a.class_name}): ${a.reasons.join(", ")}</li>`)
+            .join("")}
+        </ul>
       `;
     }
     return null;
   }
-
-  function renderRiskCompositionFront(progress) {
+    function renderRiskCompositionFront(progress) {
     return `
       <div class="chart-empty">
         <p><strong>Not enough data yet</strong></p>
@@ -76,12 +81,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-
-
-  function renderRiskBreakdownFront(progress) {
+  function renderRiskBreakdownFront(progress, representative) {
     return `
       <div class="chart-empty">
         <p><strong>Not enough data yet</strong></p>
+        
+        ${representative ? `
+          <p><em>Example incomplete assignment: <strong>${representative.assignment_name}</strong></em></p>
+          <ul>
+            <li>Class: ${representative.class_name}</li>
+            <li>Issue: ${representative.reasons.join(", ")}</li>
+          </ul>
+        ` : ''}
+        
+        <p><strong>Requirements:</strong></p>
         <ul>
           <li>
             Incomplete assignments with due dates:
@@ -98,23 +111,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
-function renderRiskBreakdownBack(progress) {
-  const incompleteWithoutDue = progress.incomplete_assignments_without_due?.current || 0;
-
-  if (incompleteWithoutDue > 0) {
-    return `
-      <p><strong>Hidden assignments:</strong></p>
-      <p>You have ${incompleteWithoutDue} assignment(s) that are not shown because they do not have a due date.</p>
-    `;
+  function renderRiskBreakdownBack(ineligibleClasses, ineligibleAssignments) {
+    if (ineligibleAssignments && ineligibleAssignments.length > 0) {
+      return `
+        <p><strong>Hidden assignments (${ineligibleAssignments.length}):</strong></p>
+        <ul>
+          ${ineligibleAssignments
+            .slice(0, 5)
+            .map(a => `<li><strong>${a.assignment_name}</strong> (${a.class_name}): ${a.reasons.join(", ")}</li>`)
+            .join("")}
+          ${ineligibleAssignments.length > 5 ? `<li><em>...and ${ineligibleAssignments.length - 5} more</em></li>` : ''}
+        </ul>
+      `;
+    }
+    return null;
   }
-  return null;
-}
 
-
-  function renderUrgencyMatrixFront(progress) {
+  function renderUrgencyMatrixFront(progress, representative) {
     return `
       <div class="chart-empty">
         <p><strong>Not enough data yet</strong></p>
+        
+        ${representative ? `
+          <p><em>Example incomplete assignment: <strong>${representative.assignment_name}</strong></em></p>
+          <ul>
+            <li>Class: ${representative.class_name}</li>
+            <li>Issue: ${representative.reasons.join(", ")}</li>
+          </ul>
+        ` : ''}
+        
+        <p><strong>Requirements:</strong></p>
         <ul>
           <li>
             Incomplete assignments with due dates:
@@ -136,16 +162,32 @@ function renderRiskBreakdownBack(progress) {
     `;
   }
 
-  function renderUrgencyMatrixBack(progress) {
-    const incompleteWithoutDue = progress.incomplete_assignments_without_due?.current || 0;
-    if (incompleteWithoutDue > 0) {
+  function renderUrgencyMatrixBack(ineligibleClasses, ineligibleAssignments) {
+    if (ineligibleAssignments && ineligibleAssignments.length > 0) {
       return `
-        <p><strong>Hidden assignments:</strong></p>
-        <p>You have ${progress.incomplete_assignments_without_due.current} assignment(s) that are not shown because they do not have a due date.</p>
+        <p><strong>Hidden assignments (${ineligibleAssignments.length}):</strong></p>
+        <ul>
+          ${ineligibleAssignments
+            .slice(0, 5)
+            .map(a => `<li><strong>${a.assignment_name}</strong> (${a.class_name}): ${a.reasons.join(", ")}</li>`)
+            .join("")}
+          ${ineligibleAssignments.length > 5 ? `<li><em>...and ${ineligibleAssignments.length - 5} more</em></li>` : ''}
+        </ul>
       `;
     }
     return null;
   }
+
+
+
+
+
+
+
+
+
+
+
  
   // =================== GRAPH 1: Deadline Proximity Distribution ===================
   const deadlineCanvas = document.getElementById('risk-1-canvas');

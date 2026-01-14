@@ -133,7 +133,11 @@ def get_time_spent_vs_expected_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
-        "representative": representative
+        "representative": representative,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
     }
 
 
@@ -228,6 +232,10 @@ def get_marginal_returns_eligibility(user_id):
         "progress": progress,
         "eligible_classes": [],
         "ineligible_classes": [],
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": None
     }
 
@@ -312,6 +320,10 @@ def get_effort_allocation_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": representative
     }
 
@@ -384,5 +396,9 @@ def get_outcome_contribution_eligibility(user_id):
         "progress": progress,
         "eligible_classes": eligible_classes,
         "ineligible_classes": ineligible_classes,
+        "eligible_assignments": [], 
+        "ineligible_assignments": [],
+        "eligible_study_sessions": [],
+        "ineligible_study_sessions": [],
         "representative": representative
     }
