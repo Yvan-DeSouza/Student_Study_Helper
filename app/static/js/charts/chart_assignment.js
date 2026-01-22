@@ -351,6 +351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (dueChart) dueChart.destroy();
 
+            const dueWrapper = dueCard.querySelector('.chart-wrapper');
             dueChart = new Chart(dueCanvas.getContext('2d'), {
                 type: 'line',
                 data: { labels, datasets },
@@ -376,6 +377,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             });
+            dueWrapper.style.height = dueChart.height + 'px';
         }
     }
 

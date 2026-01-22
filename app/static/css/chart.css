@@ -30,9 +30,11 @@
 .chart-wrapper {
   position: relative;
   width: 100%;
-  min-height: 300px; 
   height: auto;
+  width: 100%;
 }
+
+
 
 /* Canvas fills wrapper, wrapper never changes */
 .chart-wrapper canvas {

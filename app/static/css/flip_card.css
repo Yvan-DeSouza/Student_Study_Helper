@@ -27,23 +27,28 @@
 
 .card-front,
 .card-back {
-  inset: 0;
-  grid-area: stack;
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 /* Allow scrolling ONLY on the back (text explanations) */
 .card-front {
+  position: relative;
   opacity: 1;
   visibility: visible;
   z-index: 1;
 }
 
 .card-back {
+  position: absolute;
+  inset: 0;
   opacity: 0;
   visibility: hidden;
   z-index: 0;
   padding: 20px;
   overflow-y: auto; /* scrolling allowed only here */
+  transform: rotateY(180deg);
 }
 
 
@@ -54,6 +59,7 @@
   opacity: 0;
   visibility: hidden;
   z-index: 0;
+  transform: rotateY(180deg);
 }
 
 
@@ -62,6 +68,7 @@
   opacity: 1;
   visibility: visible;
   z-index: 1;
+  transform: rotateY(0deg);
 }
 
 

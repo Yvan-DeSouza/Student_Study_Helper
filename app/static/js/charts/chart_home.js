@@ -139,7 +139,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const classData = await classRes.json();
 
     if (gateChart(classCard, classData, renderTimeDistributionFront, renderTimeDistributionBack)) {
-        new Chart(classCtx, {
+        const classWrapper = classCard.querySelector('.chart-wrapper');
+        const classChart = new Chart(classCtx, {
             type: "doughnut",
             data: {
                 labels: classData.labels,
@@ -174,7 +175,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const weeklyData = await weeklyRes.json();
 
     if (gateChart(weeklyCard, weeklyData, renderWeeklyStudyFront, null)) {
-        new Chart(weeklyCtx, {
+        const weeklyWrapper = weeklyCard.querySelector('.chart-wrapper');
+        const weeklyChart = new Chart(weeklyCtx, {
             type: "line",
             data: {
                 labels: weeklyData.labels,
@@ -239,6 +241,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (!assignmentChart) {
+            const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
             assignmentChart = new Chart(assignmentCtx, {
                 type: "bar",
                 data: {
@@ -297,7 +300,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const effData = await effRes.json();
 
     if (gateChart(effCard, effData, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
-        new Chart(effCtx, {
+        const effWrapper = effCard.querySelector('.chart-wrapper');
+        const effChart = new Chart(effCtx, {
             type: "radar",
             data: {
                 labels: effData.axes,

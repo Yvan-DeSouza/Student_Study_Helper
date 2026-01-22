@@ -141,7 +141,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const scatterData = await scatterRes.json();
 
     if (gateChart(scatterCard, scatterData, renderGradeVsStudyFront, renderGradeVsStudyBack)) {
-        new Chart(scatterCtx, {
+        const scatterWrapper = scatterCard.querySelector('.chart-wrapper');
+        const scatterChart = new Chart(scatterCtx, {
             type: "bubble",
             data: {
                 datasets: [{
@@ -181,6 +182,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
         });
+        scatterWrapper.style.height = scatterChart.height + 'px';
     }
 
     // ===============================
@@ -306,6 +308,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                 }
             });
+            healthWrapper.style.height = healthChart.height + 'px';
             return;
         }
 
@@ -369,6 +372,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                 }
             });
+            healthWrapper.style.height = healthChart.height + 'px';
         } else {
             // single-class bar (use summary endpoint)
             const res = await fetch(`/charts/classes/class_health_summary?class_id=${classId}&time_window=${timeWindow}`);
@@ -422,6 +426,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                 }
             });
+            healthWrapper.style.height = healthChart.height + 'px';
         }
     }
 

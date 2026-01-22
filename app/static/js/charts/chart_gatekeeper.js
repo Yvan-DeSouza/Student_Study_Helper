@@ -16,6 +16,8 @@ export function gateChart(cardEl, response, renderFront, renderBack) {
   // ---- Front (not eligible) ----
   if (!eligible) {
     frontEl.innerHTML = renderFront(progress, representative);
+    const wrapper = frontEl.querySelector('.chart-wrapper');
+    if (wrapper) wrapper.style.height = '220px';
     return false;
   }
 
