@@ -445,7 +445,7 @@
             >
         </div>
 
-        <form method="POST" id="deleteClassForm">
+        <form id="deleteClassForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-actions">
                 <button
@@ -465,7 +465,7 @@
                 </button>
 
                 <button
-                    type="submit"
+                    type="button"
                     class="btn full-btn"
                     id="confirmDelete"
                     disabled
@@ -572,6 +572,7 @@
 </div>
 
 
+{% include 'partials/modals/class_modal.html' %}
 
 {% endblock %}
 
@@ -582,7 +583,7 @@
 
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/add_class.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modals/class_modal.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/classes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

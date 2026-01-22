@@ -71,6 +71,8 @@ def create_app():
 
 
 
+
+
     # Register blueprints
     from .routes import (
         auth_routes,

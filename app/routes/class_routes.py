@@ -17,9 +17,9 @@ def list_classes():
     return render_template("classes.html", classes=classes, user=current_user.user_id)
 
 
-@classes.route("/classes/new", methods=["POST"])
+@classes.route("/classes", methods=["POST"])
 @login_required
-def add_class():
+def create_class():
     class_code = request.form["class_code"].strip()
 
     existing = Class.query.filter(
@@ -62,7 +62,7 @@ def add_class():
 
 
 
-@classes.route("/classes/<int:class_id>/delete", methods=["POST"])
+@classes.route("/classes/<int:class_id>", methods=["DELETE"])
 @login_required
 def delete_class(class_id):
     cls = Class.query.filter_by(
@@ -73,12 +73,12 @@ def delete_class(class_id):
     db.session.delete(cls)
     db.session.commit()
 
-    return redirect(url_for("classes.list_classes"))
+    return jsonify({"success": True}), 200
 
 
-@classes.route("/classes/<int:class_id>/edit", methods=["POST"])
+@classes.route("/classes/<int:class_id>", methods=["PATCH"])
 @login_required
-def edit_class(class_id):
+def update_class(class_id):
     cls = Class.query.filter_by(
         class_id=class_id,
         user_id=current_user.user_id
@@ -141,7 +141,7 @@ def toggle_class_completion(class_id):
 
 
 
-@classes.route("/classes/<int:class_id>/grade", methods=["POST"])
+@classes.route("/classes/<int:class_id>/grade", methods=["PATCH"])
 @login_required
 def update_grade(class_id):
     cls = Class.query.filter_by(

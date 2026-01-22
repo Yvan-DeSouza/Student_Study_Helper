@@ -166,6 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+
+
     /* ======================================================
    INLINE GRADE EDITING + UNSAVED CHANGES (CLEAN REWRITE)
     ====================================================== */
@@ -380,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             await fetch(`/classes/${classId}/grade`, {
-                method: "POST",
+                method: "PATCH",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                     "X-CSRFToken": csrfToken
@@ -458,7 +460,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             requests.push(
                 fetch(`/classes/${classId}/grade`, {
-                    method: "POST",
+                    method: "PATCH",
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
                         "X-CSRFToken": csrfToken
@@ -548,7 +550,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             requests.push(
             fetch(`/classes/${classId}/grade`, {
-                method: "POST",
+                method: "PATCH",
                 headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "X-CSRFToken": csrfToken
@@ -598,7 +600,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function resetClassModal() {
         classModalTitle.textContent = "Add Class";
         classModalSubmit.textContent = "Create Class";
-        classForm.action = "/classes/new";
+
+        classForm.action = "/classes";
+        classForm.method = "POST";
+
+        document.getElementById("classFormMethod").value = "POST";
 
 
         classForm.reset();
@@ -613,7 +619,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     function openEditClassModal(btn) {
-        console.log(nameInput)
         isEditMode = true;
 
 
@@ -639,7 +644,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        classForm.action = `/classes/${btn.dataset.classId}/edit`;
+        classForm.action = `/classes/${btn.dataset.classId}`;
+        classForm.method = "POST";
+
+        document.getElementById("classFormMethod").value = "PATCH";
+
 
 
         addModal.classList.remove("hidden");
@@ -918,6 +927,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let currentStep = 1;
     let className = "";
+    let deleteClassId = null;
 
 
 
@@ -971,29 +981,47 @@ document.addEventListener("DOMContentLoaded", () => {
     // Open DELETE modal
     document.querySelectorAll(".delete-btn").forEach(btn => {
         btn.addEventListener("click", () => {
+
             className = btn.dataset.className;
-
-
-
+            deleteClassId = btn.dataset.classId; 
 
             assignmentCountEl.textContent = btn.dataset.assignments;
             sessionCountEl.textContent = btn.dataset.sessions;
 
-
-
-
-            deleteForm.action = `/classes/${btn.dataset.classId}/delete`;
-
-
-
-
             currentStep = 1;
             renderDeleteStep();
+
             deleteModal.classList.remove("hidden");
             deleteModal.classList.add("active");
         });
     });
 
+
+
+    confirmBtn.addEventListener("click", async (e) => {
+        if (currentStep < 3) {
+            e.preventDefault();
+            currentStep++;
+            renderDeleteStep();
+            return;
+        }
+
+        // FINAL DELETE STEP
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        const response = await fetch(`/classes/${deleteClassId}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": csrfToken
+            }
+        });
+
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert("Failed to delete class.");
+        }
+    });
 
 
 
@@ -1005,17 +1033,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-    // Next / Delete logic
-    confirmBtn.addEventListener("click", (e) => {
-        if (currentStep < 3) {
-            e.preventDefault();
-            currentStep++;
-            renderDeleteStep();
-        } else {
 
-
-        }
-    });
 
 
 
