@@ -472,6 +472,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
 
+    // Initial population and render
+    await fetchAndPopulateClassDropdown();
+    await renderHealthChart('bar', 'all', 'all');
 
     registerRefresh("charts", async () => {
         await fetchAndPopulateClassDropdown();

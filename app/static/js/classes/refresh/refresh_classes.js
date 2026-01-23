@@ -8,6 +8,9 @@ async function refreshClasses() {
     const html = await res.text();
 
     grid.innerHTML = html;
+
+    // Emit event to trigger selector re-application
+    document.dispatchEvent(new CustomEvent("classes:updated"));
 }
 
 // Register once

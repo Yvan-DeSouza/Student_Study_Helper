@@ -12,7 +12,7 @@ export function initClassSelector() {
 
     if (!container) return;
 
-    const allItems = [...container.querySelectorAll(".class-card")];
+    let allItems = [...container.querySelectorAll(".class-card")];
 
     // capture initial control state so Reset can restore it
     let personalPrefs = null;
@@ -134,6 +134,12 @@ export function initClassSelector() {
 
     window.addEventListener('pagehide', saveClassPrefs);
     window.addEventListener('beforeunload', saveClassPrefs);
+
+    // Listen for classes refresh to re-apply selectors
+    document.addEventListener("classes:updated", () => {
+        allItems = [...container.querySelectorAll(".class-card")];
+        apply();
+    });
 
     // NOTE: no automatic application on control change — user must click Apply to apply filters
 

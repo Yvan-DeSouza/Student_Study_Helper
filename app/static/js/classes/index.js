@@ -8,10 +8,15 @@ import { initAddClassModal } from "./modals/add_class.js";
 import { initEditClassModal } from "./modals/edit_class.js";
 import { initDeleteClassModal } from "./modals/delete_class.js";
 import { initUnsavedChangesModal } from "./modals/unsaved_changes.js";
+import { registerRefresh } from "../core/refreshBus.js";
+import { refreshCharts } from "./refresh/refresh_charts.js";
 import "./refresh/refresh_classes.js";
 import "./refresh/refresh_charts.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Register refresh handlers
+    registerRefresh("charts", refreshCharts);
+
     // Initialize selector
     initClassSelector();
     
