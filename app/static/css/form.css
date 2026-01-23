@@ -74,6 +74,19 @@
     color: white;
 }
 
+/* ================= ADVANCED OPTIONS ================= */
+
+.advanced-options {
+    display: none;
+    margin-top: 10px;
+    padding-left: 10px;
+    border-left: 2px solid var(--primary);
+}
+
+.advanced-options:not(.hidden) {
+    display: block;
+}
+
 .advanced-toggle {
     background: none;
     border: none;
@@ -84,6 +97,10 @@
     cursor: pointer;
     text-align: left;
 }
+.advanced-toggle[aria-expanded="true"] {
+    font-weight: 700;
+}
+
 
 /* Graded fields hidden by default */
 .graded-options {

@@ -14,6 +14,10 @@ classes = Blueprint("classes", __name__)
 @login_required
 def list_classes():
     classes = Class.query.filter_by(user_id=current_user.user_id).all()
+
+    if request.args.get("partial") == "cards":
+        return render_template("partials/classes/cards.html", classes=classes)
+    
     return render_template("classes.html", classes=classes, user=current_user.user_id)
 
 

@@ -1,30 +1,67 @@
-// static/js/classes/modals/edit_class.js
-import { showModal } from "../../core/modalManager.js";
+import { showModal } from '../../core/modalManager.js';
+import { default_class_colors } from '../utils.js';
+import { saveAllInlineEditsSilently } from '../inlineEditing.js';
+export function initEditClassModal() {
+    const editModal = document.getElementById("editClassModal");
+    if (!editModal) return;
 
-document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("editClassForm");
-    if (!form) return;
 
-    form.addEventListener("submit", async e => {
+
+    const classForm = document.getElementById("editClassForm");
+    const typeSelect = document.getElementById("edit-classTypeSelect");
+    const colorInput = document.getElementById("edit-classColor");
+    const advancedToggle = editModal.querySelector(".advanced-toggle");
+    const advancedOptions = editModal.querySelector(".advanced-options");
+
+
+    classForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const formData = new FormData(form);
-
-        const res = await fetch(form.action, {
-            method: "PATCH",
-            body: formData,
-            headers: { 
-                "Accept": "application/json",
-                "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content 
-            }
+        await submitClassForm(classForm, {
+            refresh: ["classes", "charts"]
         });
+    });
 
-        const data = await res.json();
+    document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            await saveAllInlineEditsSilently();
+            openEditClassModal(btn);
+        });
+    });
 
-        if (!data.success && data.error === "DUPLICATE_CLASS_CODE") {
-            alert(`Class code already used by "${data.existing_class_name}"`);
-            return;
+
+
+    typeSelect.addEventListener("change", () => {
+        const newType = typeSelect.value;
+        if (!newType || !default_class_colors[newType]) return;
+
+        if (colorInput.value.toUpperCase() === default_class_colors[typeSelect.dataset.previous]?.toUpperCase()) {
+            colorInput.value = default_class_colors[newType];
         }
 
-        window.location.reload();
+        typeSelect.dataset.previous = newType;
     });
-});
+
+    function openEditClassModal(btn) {
+        // Fill inputs from button data attributes
+        document.getElementById("edit-class-name").value = btn.dataset.name;
+        document.getElementById("edit-class-code").value = btn.dataset.code;
+        typeSelect.value = btn.dataset.type;
+        typeSelect.dataset.previous = btn.dataset.type;
+        document.getElementById("edit-importance").value = btn.dataset.importance || "";
+        colorInput.value = btn.dataset.color || "#4f46e5";
+        document.getElementById("edit-difficulty").value = btn.dataset.difficulty || "";
+        document.getElementById("edit-pass_grade").value = btn.dataset.passGrade || "";
+        document.getElementById("edit-teacher_name").value = btn.dataset.teacherName || "";
+
+        // Collapse advanced options by default
+        advancedOptions.classList.add("hidden");
+        advancedToggle.setAttribute("aria-expanded", "false");
+
+        // Set correct PATCH URL
+        classForm.action = `/classes/${btn.dataset.classId}`;
+        classForm.method = "POST"; // HTML form uses POST + _method override
+        document.getElementById("editClassFormMethod").value = "PATCH";
+
+        showModal("editClassModal");
+    }
+}

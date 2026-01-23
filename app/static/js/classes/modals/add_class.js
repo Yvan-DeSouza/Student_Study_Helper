@@ -1,57 +1,53 @@
-// static/js/classes/modals/add_class.js
-import { showModal, closeModal } from "../../core/modalManager.js";
-
-document.addEventListener("DOMContentLoaded", () => {
+import { showModal } from '../../core/modalManager.js';
+import { default_class_colors } from '../utils.js';
+import { saveAllInlineEditsSilently } from '../inlineEditing.js';
+export function initAddClassModal() {
     const addModal = document.getElementById("addClassModal");
     if (!addModal) return;
 
-    const form = addModal.querySelector("form");
-    if (!form) return;
 
-    const errorModal = document.getElementById("class-code-error-modal");
-    const errorText = document.getElementById("class-code-error-text");
-    const closeErrorBtn = document.getElementById("close-class-code-error");
+    const classForm = document.getElementById("addClassForm");
+    const typeSelect = document.getElementById("classTypeSelect");
+    const colorInput = document.getElementById("classColor");
+    const advancedToggle = addModal.querySelector(".advanced-toggle");
+    const advancedOptions = addModal.querySelector(".advanced-options");
 
-    function resetAddClassModal() {
-        form.reset();
-        document.getElementById("classColor").value = "#4f46e5";
-    }
 
-    form.addEventListener("submit", async e => {
+    classForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const formData = new FormData(form);
-
-        const res = await fetch(form.action, {
-            method: "POST",
-            body: formData,
-            headers: { 
-                "Accept": "application/json",
-                "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content 
-            }
+        await submitClassForm(classForm, {
+            refresh: ["classes", "charts"]
         });
-
-        const data = await res.json();
-
-        if (!data.success && data.error === "DUPLICATE_CLASS_CODE") {
-            errorText.textContent = `Your class code is already used for "${data.existing_class_name}". Please choose another.`;
-            closeModal("addClassModal");
-            showModal("class-code-error-modal");
-            return;
-        }
-
-        window.location.reload();
     });
 
-    closeErrorBtn?.addEventListener("click", () => {
-        closeModal("class-code-error-modal");
-        showModal("addClassModal");
-    });
-
-    // Open add modal buttons
-    document.querySelectorAll("[data-open-modal='addClassModal']").forEach(btn => {
-        btn.addEventListener("click", () => {
-            resetAddClassModal();
+    document.querySelectorAll("#openAddClassModal, #openAddClassModalEmpty").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            await saveAllInlineEditsSilently();
+            resetClassModal();
             showModal("addClassModal");
         });
     });
-});
+
+
+
+    typeSelect.addEventListener("change", () => {
+        const newType = typeSelect.value;
+        if (newType && default_class_colors[newType]) {
+            colorInput.value = default_class_colors[newType];
+        }
+    });
+
+    function resetClassModal() {
+        document.getElementById("classModalTitle").textContent = "Add Class";
+        document.getElementById("classModalSubmit").textContent = "Create Class";
+        classForm.action = "/classes";
+        classForm.method = "POST";
+        document.getElementById("classFormMethod").value = "POST";
+        classForm.reset();
+        colorInput.value = "#4f46e5";
+
+        // Collapse advanced options by default
+        advancedOptions.classList.add("hidden");
+        advancedToggle.setAttribute("aria-expanded", "false");
+    }
+}

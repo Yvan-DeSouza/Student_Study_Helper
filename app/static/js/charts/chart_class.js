@@ -1,6 +1,15 @@
 import { gateChart } from './chart_gatekeeper.js';
+import { registerRefresh } from "../core/refreshBus.js";
+
+let scatterChart = null;
+let healthChart = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+    document.addEventListener("charts:refresh", () => {
+        location.reload(); // TEMP
+        // later: destroy & re-init charts properly
+    });
 
     // =================== RENDER FUNCTIONS ===================
     

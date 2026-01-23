@@ -1,22 +1,64 @@
-import { showModal, closeModal } from "../../core/modalManager.js";
+// static/js/classes/modals/unsaved_changes.js
+import { showModal, closeModal } from '../../core/modalManager.js';
+import { hasUnsavedChanges, clearUnsavedFlag, saveAllInlineGrades } from '../inlineEditing.js';
 
-document.addEventListener("DOMContentLoaded", () => {
-    const saveBtn = document.getElementById("saveAllInline");
-    const leaveBtn = document.getElementById("leaveWithoutSaving");
-    const stayBtn = document.getElementById("stayOnPage");
-    const modalId = "unsavedChangesModal";
+let pendingNavigation = null;
 
-    saveBtn?.addEventListener("click", () => {
-        // implement saving logic
-        console.log("Saving all changes...");
-        closeModal(modalId);
+export function initUnsavedChangesModal() {
+    // Intercept navigation links
+    document.addEventListener("click", (e) => {
+        if (e.defaultPrevented) return;
+        if (e.button !== 0) return;
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+        const link = e.target.closest("a[href]");
+        if (!link) return;
+
+        if (link.dataset.openModal) return;
+        if (link.dataset.ignoreUnsaved === "true") return;
+        if (!link.contains(e.target)) return;
+
+        if (!hasUnsavedChanges()) return;
+
+        e.preventDefault();
+
+        pendingNavigation = () => {
+            window.location.href = link.href;
+        };
+
+        showModal("unsavedChangesModal");
     });
 
-    leaveBtn?.addEventListener("click", () => {
-        window.location.href = "/"; // or previous page
+    // Browser-level page leave
+    window.addEventListener("beforeunload", (e) => {
+        if (!hasUnsavedChanges()) return;
+        e.preventDefault();
+        e.returnValue = "";
     });
 
-    stayBtn?.addEventListener("click", () => {
-        closeModal(modalId);
+    // Stay button
+    document.getElementById("stayOnPage")?.addEventListener("click", () => {
+        pendingNavigation = null;
+        closeModal("unsavedChangesModal");
     });
-});
+
+    // Leave without saving
+    document.getElementById("leaveWithoutSaving")?.addEventListener("click", () => {
+        clearUnsavedFlag();
+        closeModal("unsavedChangesModal");
+
+        if (pendingNavigation) {
+            pendingNavigation();
+        }
+    });
+
+    // Save all
+    document.getElementById("saveAllInline")?.addEventListener("click", async () => {
+        await saveAllInlineGrades();
+        closeModal("unsavedChangesModal");
+
+        if (pendingNavigation) {
+            pendingNavigation();
+        }
+    });
+}

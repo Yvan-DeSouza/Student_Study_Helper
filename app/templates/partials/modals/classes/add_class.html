@@ -14,21 +14,12 @@
 
       <label class="input-label">Class Type</label>
       <select id="classTypeSelect" name="class_type" class="input-field" required>
-        <option value="">Select Class Type</option>
-        <option value="math">Math</option>
-        <option value="science">Science</option>
-        <option value="language">Language</option>
-        <option value="social_science">Social Science</option>
-        <option value="art">Art</option>
-        <option value="engineering">Engineering</option>
-        <option value="technology">Technology</option>
-        <option value="finance">Finance</option>
-        <option value="other">Other</option>
+        {% include "partials/forms/class_type_options.html" %}
       </select>
 
       <label class="input-label">Class Color</label>
       <input id="classColor" name="color" type="color" value="#4f46e5">
-
+      <br>
       <button type="button" class="advanced-toggle" aria-expanded="false">
         ▸ Advanced options
       </button>
@@ -52,7 +43,7 @@
       </div>
 
       <div class="modal-actions">
-        <button type="submit" class="btn full-btn">Create Class</button>
+        <button type="submit" id="classModalSubmit" class="btn full-btn">Create Class</button>
         <button type="button" class="btn ghost-btn" data-close-modal>Cancel</button>
       </div>
     </form>
