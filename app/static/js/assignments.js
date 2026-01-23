@@ -411,15 +411,15 @@ document.addEventListener("DOMContentLoaded", () => {
     async function sendCompletionUpdate(isCompleted, finishedAt) {
         const id = pendingRow.dataset.assignmentId;
 
-        const res = await fetch(`/assignments/${id}/completion`, {
+        const res = await fetch(`/assignments/${id}/update`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content
             },
             body: JSON.stringify({
-                is_completed: isCompleted,
-                finished_at: finishedAt
+                is_graded: pendingRow.dataset.graded === "true",
+                finished_at: isCompleted ? finishedAt : null
             })
         });
 
@@ -803,14 +803,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const formData = new FormData();
-            formData.append("grade", a.grade);
-            formData.append("finished_at", a.finished_at);
 
-            const res = await fetch(`/assignments/${a.id}/grade`, {
+            const payload = {
+                grade: a.grade,
+                finished_at: a.finished_at
+            };
+
+            const res = await fetch(`/assignments/${a.id}/update`, {
                 method: "PATCH",
-                headers: { "X-CSRFToken": csrf },
-                body: formData
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrf 
+                },
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) {
