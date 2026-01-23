@@ -105,7 +105,8 @@ def update_class(class_id):
 
 
     db.session.commit()
-    return redirect(url_for("classes.list_classes"))
+    return jsonify({"success": True}), 200
+
 
 
 

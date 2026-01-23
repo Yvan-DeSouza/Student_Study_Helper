@@ -420,62 +420,7 @@
     </div>
 </div>
 
-<!-- ================= DELETE CONFIRM MODAL ================= -->
-<div class="modal-overlay hidden" id="deleteClassModal">
-    <div class="modal card">
-        <h2>Delete Class</h2>
 
-        <p id="deleteStepText"></p>
-
-        <div id="deleteImpactBox" class="hidden">
-            <ul>
-                <li><strong><span id="assignmentCount"></span></strong> assignments</li>
-                <li><strong><span id="sessionCount"></span></strong> study sessions</li>
-            </ul>
-        </div>
-
-        <div id="deleteInputBox" class="hidden">
-            <label class="input-label">
-                Type class name to confirm
-            </label>
-            <input
-                type="text"
-                id="deleteConfirmInput"
-                class="input-field"
-            >
-        </div>
-
-        <form id="deleteClassForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="modal-actions">
-                <button
-                    type="button"
-                    class="btn ghost-btn"
-                    id="deleteBackBtn"
-                >
-                    Back
-                </button>
-
-                <button
-                    type="button"
-                    class="btn ghost-btn"
-                    id="cancelDelete"
-                >
-                    Cancel
-                </button>
-
-                <button
-                    type="button"
-                    class="btn full-btn"
-                    id="confirmDelete"
-                    disabled
-                >
-                    Delete
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <!-- ================= FUTURE FINISH DATE WARNING MODAL ================= -->
 <div class="modal-overlay hidden" id="futureFinishDateModal">
@@ -519,7 +464,7 @@
 <!-- Complete assignment modal -->
  <div class="modal-overlay hidden" id="completeAssignmentModal">
   <div class="modal card">
-    <h2>Mark as uompleted</h2>
+    <h2>Mark as completed</h2>
 
     <p class="modal-message" id="completeMessage"></p>
 
@@ -550,29 +495,15 @@
 </div>
 
 
-<div class="modal-overlay hidden" id="unsavedChangesModal">
-  <div class="modal card">
-    <h2>Unsaved Changes</h2>
-    <p>You are about to leave this page with unsaved changes.</p>
-
-    <div class="modal-actions">
-      <button id="saveAllInline" class="btn full-btn" style="background:#22c55e">
-        Save changes
-      </button>
-
-      <button id="leaveWithoutSaving" class="btn full-btn" style="background:#ef4444">
-        Leave without saving
-      </button>
-
-      <button id="stayOnPage" class="btn full-btn" style="background:#3b82f6">
-        Stay on the page
-      </button>
-    </div>
-  </div>
-</div>
 
 
-{% include 'partials/modals/class_modal.html' %}
+
+{% include 'partials/modals/classes/add_class.html' %}
+{% include 'partials/modals/classes/edit_class.html' %}
+{% include 'partials/modals/classes/unsaved_changes.html' %}
+{% include 'partials/modals/classes/delete_class.html' %}
+
+
 
 {% endblock %}
 
@@ -580,10 +511,8 @@
 
 <script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/charts/chart_class.js') }}"></script>
-
+<script type="module" src="{{ url_for('static', filename='js/classes/index.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/modals/class_modal.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='js/classes.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

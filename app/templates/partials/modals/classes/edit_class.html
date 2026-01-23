@@ -1,0 +1,49 @@
+<!-- templates/partials/modals/edit_class.html -->
+<div class="modal-overlay hidden" id="editClassModal">
+  <div class="modal card">
+    <h2 id="editClassModalTitle">Edit Class</h2>
+    <form id="editClassForm" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" id="editClassFormMethod" name="_method" value="PATCH">
+
+      <!-- same inputs as add_class.html -->
+      <label class="input-label">Class Name</label>
+      <input id="edit-class-name" name="class_name" type="text" class="input-field" required>
+
+      <label class="input-label">Class Code</label>
+      <input id="edit-class-code" name="class_code" type="text" class="input-field" required>
+
+      <label class="input-label">Class Type</label>
+      <select id="edit-classTypeSelect" name="class_type" class="input-field" required>
+        <!-- options -->
+      </select>
+
+      <label class="input-label">Class Color</label>
+      <input id="edit-classColor" name="color" type="color">
+
+      <div class="advanced-options hidden">
+        <label class="input-label">Teacher Name</label>
+        <input id="edit-teacher_name" name="teacher_name" type="text" class="input-field">
+
+        <label class="input-label">Importance</label>
+        <select id="edit-importance" name="importance" class="input-field">
+          <option value="">Not set</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+
+        <label class="input-label">Difficulty</label>
+        <input id="edit-difficulty" name="difficulty" type="number" min="1" max="10" class="input-field">
+
+        <label class="input-label">Pass Grade (%)</label>
+        <input id="edit-pass_grade" name="pass_grade" type="number" min="0" max="100" step="0.1" class="input-field">
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn full-btn">Save Changes</button>
+        <button type="button" class="btn ghost-btn" data-close-modal>Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
