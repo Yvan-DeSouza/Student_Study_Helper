@@ -54,11 +54,17 @@ export function initUnsavedChangesModal() {
 
     // Save all
     document.getElementById("saveAllInline")?.addEventListener("click", async () => {
-        await saveAllInlineGrades();
+        const success = await saveAllInlineGrades();
+
+        if (!success) {
+            return;
+        }
+
         closeModal("unsavedChangesModal");
 
         if (pendingNavigation) {
             pendingNavigation();
         }
     });
+
 }
