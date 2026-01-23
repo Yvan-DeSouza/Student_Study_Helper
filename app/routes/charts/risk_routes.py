@@ -244,9 +244,18 @@ def risk_composition_evolution():
     df['days_until_due'] = df['due_at'].apply(lambda x: compute_days_until_due(x, now) if x else None)
     df['time_pressure'] = df['days_until_due'].apply(lambda x: time_pressure_score(x, tau=7) if x else 0)
     df['difficulty_norm'] = normalize_1_to_10(df['difficulty'])
-    weekly_active = df.groupby('week').apply(lambda w: len(w[w['is_completed'] == False])).to_dict()
-    max_active = max(weekly_active.values()) if weekly_active else 1
-    df['overlap'] = df['week'].map(weekly_active).fillna(0).apply(lambda x: compute_workload_overlap(x, max_active))
+    weekly_active = (
+        df.groupby('week')
+        .apply(lambda w: len(w[w['is_completed'] == False]))
+        .to_dict()
+    )
+    max_active = max(weekly_active.values()) if weekly_active and max(weekly_active.values()) > 0 else 1
+    df['overlap'] = (
+        df['week']
+        .map(weekly_active)
+        .fillna(0)
+        .apply(lambda x: compute_workload_overlap(x, max_active))
+    )
     df['history'] = df.apply(lambda row: historical_risk_from_history(row['class_type'], row['assignment_type'], row['class_id'], past_risk_assignments), axis=1)
     weekly_risk = aggregate_weekly_risk_components(df[['week', 'time_pressure', 'difficulty_norm', 'overlap', 'history']].rename(columns={'difficulty_norm': 'difficulty'}))
     weekly_risk = weekly_risk.sort_values('week')
@@ -256,6 +265,9 @@ def risk_composition_evolution():
     for component, weight in weights.items():
         if component in weekly_risk.columns:
             weekly_risk[component] *= weight
+
+        weekly_risk = weekly_risk.fillna(0.0)
+
 
     weeks = [w.isoformat() for w in weekly_risk['week']]
     datasets = []
