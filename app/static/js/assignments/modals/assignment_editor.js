@@ -1,4 +1,4 @@
-import { showModal } from "../assignments/modals.js";
+import { showModal } from "../modals.js";
 
 let currentAssignmentId = null;
 

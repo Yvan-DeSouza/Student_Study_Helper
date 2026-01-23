@@ -1,12 +1,14 @@
 // static/js/assignments/index.js
+import { initEditAssignmentModal } from "./modals/edit_assignment_init.js";
+import { initEditAssignmentSubmit } from "./modals/assignment_editor_submit.js";
+import { initEditAssignmentGradedToggle } from "./modals/assignment_editor.js";
 import { initInlineEditing } from './inlineEditing.js';
 import { initCompletion } from './completion.js';
-import { initDeleteAssignment } from './deleteAssignment.js';
+import { initDeleteFromTable } from './adapters/delete_from_table.js';
+import { initDeleteAssignmentModal } from './modals/delete_assignment.js';
 import { initEditFromTable } from './adapters/edit_from_table.js';
 import { initModals, initUnsavedChangesModal } from './modals.js';
-import { initEditAssignmentModal } from "../modals/edit_assignment_init.js";
-import { initEditAssignmentSubmit } from "../modals/assignment_editor_submit.js";
-import { initEditAssignmentGradedToggle } from "../modals/assignment_editor.js";
+
 
 
 
@@ -28,7 +30,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initModals();
     initInlineEditing();
     initCompletion();
-    initDeleteAssignment();
+    initDeleteAssignmentModal();  
+    initDeleteFromTable();      
+
     initEditFromTable();
     initUnsavedChangesModal();
 

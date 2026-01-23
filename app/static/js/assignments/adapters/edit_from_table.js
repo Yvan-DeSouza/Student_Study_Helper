@@ -1,4 +1,4 @@
-import { openEditAssignmentModal } from "../../modals/assignment_editor.js";
+import { openEditAssignmentModal } from "../modals/assignment_editor.js";
 
 export function initEditFromTable() {
   document.querySelectorAll(".assignments-table-card").forEach(card => {

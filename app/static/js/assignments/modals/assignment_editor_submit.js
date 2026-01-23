@@ -1,5 +1,5 @@
-import { updateAssignment } from "../domain/assignment_api.js";
-import { showModal } from "../core/modalManager.js";
+import { updateAssignment } from "../../domain/assignment_api.js";
+import { showModal } from "../../core/modalManager.js";
 
 export function initEditAssignmentSubmit() {
   const form = document.getElementById("editAssignmentForm");

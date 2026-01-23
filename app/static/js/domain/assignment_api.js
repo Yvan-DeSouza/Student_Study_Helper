@@ -19,3 +19,14 @@ export async function updateAssignment(id, payload) {
 }
 
 
+
+// static/js/domain/assignment_api.js
+export async function deleteAssignmentAPI(id) {
+    const csrf = document.querySelector("meta[name='csrf-token']").content;
+    const res = await fetch(`/assignments/${id}`, {
+        method: "DELETE",
+        headers: { "X-CSRFToken": csrf },
+    });
+    if (!res.ok) throw new Error("Delete failed");
+    return true;
+}

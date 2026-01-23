@@ -2,46 +2,22 @@
 import { saveAllInlineGrades, hasUnsavedChanges, clearUnsavedFlag } from './inlineEditing.js';
 import { collectAllInlineAssignments } from './utils.js';
 import { validateInlineGrades, clearInvalidGradeHighlights, openInlineFinishDatesModal } from './inlineEditing.js';
+import { showModal as coreShowModal, closeModal as coreCloseModal, initModalEvents } from '../core/modalManager.js';
 
+// Re-export so other modules can import from './modals.js'
+export const showModal = coreShowModal;
+export const closeModal = coreCloseModal;
 
 let pendingNavigationUrl = null;
 
-export function showModal(id) {
-    const modal = document.getElementById(id);
-    if (!modal) return;
-
-    document.querySelectorAll(".modal-overlay")
-        .forEach(m => m.classList.remove("modal-top"));
-
-    modal.classList.add("modal-top");
-    modal.classList.remove("hidden");
-    modal.classList.add("visible");
-}
-
-export function closeModal(id) {
-    const modal = document.getElementById(id);
-    if (!modal) return;
-    modal.classList.remove("visible");
-    modal.classList.add("hidden");
-}
-
+// Initialize general modal behaviors
 export function initModals() {
-    // Generic close modal handler
-    document.addEventListener("click", e => {
-        const btn = e.target.closest("[data-close-modal]");
-        if (!btn) return;
-
-        const modal = btn.closest(".modal-overlay");
-        if (!modal) return;
-
-        modal.classList.remove("visible");
-        modal.classList.add("hidden");
-    });
+    initModalEvents();
 }
 
+// Unsaved changes modal logic
 export function initUnsavedChangesModal() {
-
-    // Intercept navigation
+    // Intercept navigation links
     document.querySelectorAll(".nav-link").forEach(link => {
         link.addEventListener("click", e => {
             if (!hasUnsavedChanges()) return;
@@ -61,54 +37,49 @@ export function initUnsavedChangesModal() {
     });
 
     // Stay button
-    document.getElementById("stayOnPage")
-        .addEventListener("click", () => {
-            closeModal("unsavedChangesModal");
-            pendingNavigationUrl = null;
-        });
+    document.getElementById("stayOnPage")?.addEventListener("click", () => {
+        closeModal("unsavedChangesModal");
+        pendingNavigationUrl = null;
+    });
 
     // Leave without saving
-    document.getElementById("leaveWithoutSaving")
-        .addEventListener("click", () => {
-            clearUnsavedFlag();
-            closeModal("unsavedChangesModal");
+    document.getElementById("leaveWithoutSaving")?.addEventListener("click", () => {
+        clearUnsavedFlag();
+        closeModal("unsavedChangesModal");
 
-            if (pendingNavigationUrl) {
-                window.location.href = pendingNavigationUrl;
-            }
-        });
+        if (pendingNavigationUrl) {
+            window.location.href = pendingNavigationUrl;
+        }
+    });
 
     // Save all
-    document.getElementById("saveAllInline")
-        .addEventListener("click", () => {
-            document
-                .querySelectorAll(".assignments-table-card")
-                .forEach(clearInvalidGradeHighlights);
+    document.getElementById("saveAllInline")?.addEventListener("click", () => {
+        document.querySelectorAll(".assignments-table-card")
+            .forEach(clearInvalidGradeHighlights);
 
-            let valid = true;
-            document
-                .querySelectorAll(".assignments-table-card")
-                .forEach(card => {
-                    if (!validateInlineGrades(card)) valid = false;
-                });
+        let valid = true;
+        document.querySelectorAll(".assignments-table-card")
+            .forEach(card => {
+                if (!validateInlineGrades(card)) valid = false;
+            });
 
-            if (!valid) {
-                closeModal("unsavedChangesModal");
-                showModal("invalidGradeModal");
-                return;
-            }
-
-            const assignments = collectAllInlineAssignments();
-            const missingFinishDates = assignments.filter(a => !a.finished_at);
-
+        if (!valid) {
             closeModal("unsavedChangesModal");
+            showModal("invalidGradeModal");
+            return;
+        }
 
-            if (missingFinishDates.length === 0) {
-                saveAllInlineGrades(assignments, pendingNavigationUrl);
-            } else {
-                openInlineFinishDatesModal(missingFinishDates, pendingNavigationUrl);
-            }
-        });
+        const assignments = collectAllInlineAssignments();
+        const missingFinishDates = assignments.filter(a => !a.finished_at);
+
+        closeModal("unsavedChangesModal");
+
+        if (missingFinishDates.length === 0) {
+            saveAllInlineGrades(assignments, pendingNavigationUrl);
+        } else {
+            openInlineFinishDatesModal(missingFinishDates, pendingNavigationUrl);
+        }
+    });
 }
 
 export function getPendingNavigation() {
