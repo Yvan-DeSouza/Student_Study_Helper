@@ -452,82 +452,7 @@
 </div>
 
 
-<!--Edit Assignment Modal-->
 
-<div class="modal-overlay" id="editAssignmentModal">
-    <div class="modal card">
-        <h2>Edit Assignment</h2>
-
-        <form id="editAssignmentForm">
-            <input type="hidden" id="edit-assignment-id">
-            <input type="hidden" name="_method" id="classFormMethod" value="POST">
-
-
-            <!-- Class -->
-            <label for="edit-class" class="input-label">Class</label>
-            <select id="edit-class" class="input-field"></select>
-
-            <!-- Title -->
-            <label for="edit-title"class="input-label">Title</label>
-            <input id="edit-title" type="text" class="input-field" required>
-
-            <!-- Type -->
-            <label for="edit-type" class="input-label">Type</label>
-            <select id="edit-type" class="input-field"></select>
-
-            <!-- Due -->
-            <label for="edit-due-at" class="input-label">Due Date</label>
-            <input id="edit-due-at" type="datetime-local" class="input-field">
-
-            <!-- Finished At -->
-            <label for="edit-finished-at" class="input-label">Finish Date (Optional)</label>
-            <input id="edit-finished-at" type="datetime-local" class="input-field">
-
-            <!-- Graded -->
-            <div class="checkbox-row">
-                <input type="checkbox" id="edit-is-graded">
-                <label for="edit-is-graded">This assignment is graded</label>
-            </div>
-
-            <!-- Advanced -->
-            <button type="button" class="advanced-toggle">▸ Advanced options</button>
-
-            <div class="advanced-options hidden">
-                <label for="edit-difficulty" class="input-label">Difficulty
-                    <span class="hint-icon" data-hint="How difficult this assignment is expected to be.">?</span>
-                </label>
-                <input id="edit-difficulty" type="number" class="input-field" min="1" max="10" placeholder="1 (easy) – 10 (hard)">
-
-                <label for="edit-estimated-minutes" class="input-label">Estimated Minutes
-                    <span class="hint-icon" data-hint="Estimated time to complete this assignment.">?</span>
-                </label>
-                <input id="edit-estimated-minutes" type="number" class="input-field" min="1" placeholder="e.g. 45">
-
-                <div id="edit-graded-only" class="hidden">
-                    <label for="edit-expected-grade" class="input-label">Expected Grade in % (Optional)
-                        <span class="hint-icon" data-hint="What grade do you expect to get for this assignment.">?</span>
-                    </label>
-                    <input id="edit-expected-grade" type="number" class="input-field" min="0" max="100" >
-
-                    <label for="edit-pass-grade" class="input-label">Pass Grade in % (Optional)
-                        <span class="hint-icon" data-hint="Minimum grade considered passing.">?</span>
-                    </label>
-                    <input id="edit-pass-grade" type="number" class="input-field" min="0" max="100">
-
-                    <label for="edit-ponderation" class="input-label">Ponderation, from 1-5 (Optional)
-                        <span class="hint-icon" data-hint="What is the relative weight of this assignment compared to others.">?</span>
-                    </label>
-                    <input id="edit-ponderation" type="number" class="input-field" min="1" max="5">
-                </div>
-            </div>
-
-            <div class="modal-actions">
-                <button type="submit" class="btn full-btn">Confirm</button>
-                <button type="button" class="btn ghost-btn" data-close-modal>Cancel</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 
 
@@ -810,11 +735,11 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
 
-<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module" src="{{ url_for('static', filename='js/charts/chart_assignment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
 
 <script type="module" src="{{ url_for('static', filename='js/assignments/index.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>

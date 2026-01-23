@@ -2,8 +2,14 @@
 import { initInlineEditing } from './inlineEditing.js';
 import { initCompletion } from './completion.js';
 import { initDeleteAssignment } from './deleteAssignment.js';
-import { initEditAssignment } from './editAssignment.js';
+import { initEditFromTable } from './adapters/edit_from_table.js';
 import { initModals, initUnsavedChangesModal } from './modals.js';
+import { initEditAssignmentModal } from "../modals/edit_assignment_init.js";
+import { initEditAssignmentSubmit } from "../modals/assignment_editor_submit.js";
+import { initEditAssignmentGradedToggle } from "../modals/assignment_editor.js";
+
+
+
 
 document.addEventListener("DOMContentLoaded", () => {
     // Normalize completed attributes
@@ -16,11 +22,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Initialize all modules
+    initEditAssignmentModal();
+    initEditAssignmentSubmit();
+    initEditAssignmentGradedToggle();
     initModals();
     initInlineEditing();
     initCompletion();
     initDeleteAssignment();
-    initEditAssignment();
+    initEditFromTable();
     initUnsavedChangesModal();
 
     // Sort category logic
