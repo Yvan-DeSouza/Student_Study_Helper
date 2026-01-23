@@ -15,7 +15,9 @@
           <div class="chart-wrapper"><canvas id="perf-1-canvas"></canvas></div>
         </div>
         <div class="card-back">
-            <p>Description of the graph</p>
+            <p>This chart shows how your academic performance evolves over time by smoothing out your grades into a rolling weekly average. Instead of focusing on individual assignment scores, it highlights longer-term trends, making it easier to see whether you are improving, declining, or staying consistent across each class. A dashed “Overall Average” line provides a reference point for your performance across all classes combined.
+
+The trend is computed by grouping graded assignments into weekly buckets and calculating a rolling average over the most recent weeks. This reduces short-term noise from individual assignments and emphasizes sustained performance patterns rather than one-off results.</p>
             <div class="min_requirements"></div>
         </div>
       </div>
@@ -31,7 +33,9 @@
           <div class="chart-wrapper"><canvas id="perf-2-canvas"></canvas></div>
         </div>
         <div class="card-back">
-          <p>Description Performance 2</p>
+          <p>This chart compares how much time you spend studying with the grades you receive over the same period. By displaying study effort and academic outcomes together on a shared timeline, it helps reveal whether increased effort tends to translate into better results, or whether changes in grades lag behind changes in study habits.
+
+Each week, total study time is aggregated from completed study sessions, while grades are averaged from completed assignments. The two series are aligned by week, allowing you to visually assess relationships between effort and outcomes without assuming that improvements happen instantly.</p>
         </div>
       </div>
     </div>
@@ -46,7 +50,9 @@
           <div class="chart-wrapper"><canvas id="perf-3-canvas"></canvas></div>
         </div>
         <div class="card-back">
-          <p>Description Performance 3</p>
+          <p>The Performance Stability Index measures how consistent and reliable your academic performance is over time. A higher score indicates steady grades, timely submissions, and few unfinished assignments, while lower values suggest volatility, missed deadlines, or incomplete work. This chart focuses on stability, not just raw performance.
+
+The index is calculated weekly by combining multiple signals: grade variability, late submission rate, and the proportion of incomplete assignments. These factors are normalized, weighted, and combined into a single score between 0 and 100, where higher values represent more stable academic behavior.</p>
         </div>
       </div>
     </div>
@@ -62,7 +68,9 @@
 <canvas id="perf-4-canvas"></canvas></div>
         </div>
         <div class="card-back">
-          <p>Description Performance 4</p>
+          <p>This heatmap explores how your study effort relates to your grades over time, including delayed effects. Each row represents a class, and each column shows a time lag — from the same week (Lag 0) up to several weeks later. Stronger colors indicate a stronger relationship between studying and performance.
+
+For each class, weekly study time is compared with weekly average grades using correlation analysis at different time shifts. This makes it possible to see whether studying tends to pay off immediately, after a delay, or inconsistently — offering insight into how learning effort translates into results over time.</p>
           <div class="min_requirements"></div>
 
         </div>
