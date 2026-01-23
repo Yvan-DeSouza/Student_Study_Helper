@@ -1,0 +1,176 @@
+    {% for c in classes %}
+        <div class="card class-card"
+            data-class-id="{{ c.class_id }}"
+            data-name="{{ c.class_name | lower }}"
+            data-importance="{{ c.importance or '' }}"
+            data-difficulty="{{ c.difficulty or '' }}"
+            data-grade="{{ c.grade or '' }}"
+            data-finished="{{ 'finished' if c.is_finished else 'in_progress' }}"
+            data-class-type="{{ c.class_type }}"
+            data-created-at="{{ c.created_at.timestamp() if c.created_at else '' }}"
+        >
+
+
+
+            <div class="class-card-header">
+                <span
+                    class="class-dot"
+                    data-color="{{ c.color }}">
+                </span>
+
+                <h3>{{ c.class_name }}</h3>
+            </div>
+
+            <div class="class-meta">
+                {% if c.teacher_name %}
+                <p><strong>Teacher:</strong> {{ c.teacher_name }}</p>
+                {% endif %}
+                <p class="meta-row">
+                    <strong>Type:</strong>
+                    <span
+                        class="class-type"
+                        data-type="{{ c.class_type }}"
+                    >
+                        {{ c.class_type|capitalize }}
+                    </span>
+                </p>
+                <p><strong>Code:</strong> {{ c.class_code }}</p>
+                <p class="meta-row">
+                    <strong>Importance:</strong>
+                    {% if c.importance %}
+                        <span
+                            class="importance-dot"
+                            data-importance="{{ c.importance }}"
+                        ></span>
+                        {{ c.importance|capitalize }}
+                    {% else %}
+                        None
+                    {% endif %}
+                </p>
+
+                <p class="difficulty-row">
+                    <strong>Difficulty:</strong>
+                    {% if c.difficulty %}
+                        <span
+                            class="difficulty-value"
+                            data-difficulty="{{ c.difficulty }}"
+                        >
+                            {{ c.difficulty }}
+                        </span>
+                    {% else %}
+                        None
+                    {% endif %}
+                </p>
+             
+                <p class="meta-row">
+                    <strong>Grade:</strong>
+
+                    <!-- DISPLAY MODE -->
+                    <span
+                        class="grade-display"
+                        data-grade="{{ c.grade }}"
+                        data-pass-grade="{{ c.pass_grade }}"
+                        {% if c.is_finished %}data-locked="true"{% endif %}
+                    >
+                        {{ c.grade if c.grade is not none else "—" }}
+                    </span>
+
+                    <!-- EDIT MODE (hidden by default) -->
+                        <input
+                            type="number"
+                            class="inline-grade-input"
+                            data-class-id="{{ c.class_id }}"
+                            data-pass-grade="{{ c.pass_grade }}"
+                            value="{{ c.grade if c.grade is not none else '' }}"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            style="display:none;"
+                            {% if c.is_finished %} disabled {% endif %}
+                        >
+
+                    <span class="grade-dot"></span>
+                </p>
+
+
+
+                <p>
+                    <strong>Pass Grade: 🎯</strong>
+                        {{ c.pass_grade if c.pass_grade is not none else "—" }}
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+                    {% if c.is_finished %}
+                        <span class="status finished">Finished ✓</span>
+                    {% else %}
+                        <span class="status in-progress">In Progress</span>
+                    {% endif %}
+                </p>
+                <label class="finished-toggle">
+                    <input
+                        type="checkbox"
+                        class="finish-checkbox"
+                        data-class-id="{{ c.class_id }}"
+                        {% if c.is_finished %}checked{% endif %}
+                    >
+                    Finished
+                </label>
+
+                <p><strong>Assignments: 📄</strong> {{ c.completed_assignments }} / {{ c.total_assignments }}</p>
+                <p><strong>Total Study Time: ⏱️</strong> {{ c.total_study_time }}</p>
+            </div>
+
+            <div class="class-actions">
+                <button
+                    class="icon-btn edit-btn"
+                    data-class-id="{{ c.class_id }}"
+                    data-name="{{ c.class_name }}"
+                    data-code="{{ c.class_code }}"
+                    data-type="{{ c.class_type }}"
+                    data-importance="{{ c.importance }}"
+                    data-difficulty="{{ c.difficulty }}"
+                    data-pass-grade="{{ c.pass_grade }}"
+                    data-teacher-name="{{ c.teacher_name }}"
+                    data-color="{{ c.color }}"
+                >
+                    ✏ Edit
+                </button>
+
+                <button
+                    class="icon-btn delete-btn"
+                    data-class-id="{{ c.class_id }}"
+                    data-class-name="{{ c.class_name }}"
+                    data-assignments="{{ c.total_assignments }}"
+                    data-sessions="{{ c.total_study_sessions }}"
+                >
+                    🗑 Delete
+                </button>
+
+                <!-- Inline edit button -->
+                <button class="icon-btn edit-inline-btn" data-class-id="{{ c.class_id }}">
+                    Edit Inline
+                </button>
+                <span class="hint-icon"
+                    data-hint="Cannot edit the grade of a class that is already finished."
+                    {% if not c.is_finished %}style="display:none;"{% endif %}>?
+                </span>
+
+
+
+                <button class="icon-btn save-inline-btn" data-class-id="{{ c.class_id }}" style="display:none;">
+                    Save
+                </button>
+                <button class="icon-btn cancel-inline-btn" data-class-id="{{ c.class_id }}" style="display:none;">
+                    Cancel
+                </button>
+
+
+
+
+
+            </div>
+
+        </div>
+
+    {% endfor %}

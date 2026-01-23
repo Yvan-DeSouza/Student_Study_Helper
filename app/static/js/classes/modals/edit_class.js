@@ -1,6 +1,8 @@
 import { showModal } from '../../core/modalManager.js';
 import { default_class_colors } from '../utils.js';
 import { saveAllInlineEditsSilently } from '../inlineEditing.js';
+import { submitClassForm } from "../refresh/index.js";
+
 export function initEditClassModal() {
     const editModal = document.getElementById("editClassModal");
     if (!editModal) return;

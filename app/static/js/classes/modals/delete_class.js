@@ -1,5 +1,6 @@
 // static/js/classes/modals/delete_class.js
 import { showModal, closeModal } from '../../core/modalManager.js';
+import { runRefreshes } from "../../core/refreshBus.js";
 
 let currentStep = 1;
 let className = "";
@@ -55,7 +56,9 @@ export function initDeleteClassModal() {
         });
 
         if (response.ok) {
-            window.location.reload();
+            closeModal("deleteClassModal");
+
+            await runRefreshes(["classes", "charts"]);
         } else {
             alert("Failed to delete class.");
         }

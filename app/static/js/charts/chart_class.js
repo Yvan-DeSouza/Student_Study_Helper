@@ -150,8 +150,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     const scatterData = await scatterRes.json();
 
     if (gateChart(scatterCard, scatterData, renderGradeVsStudyFront, renderGradeVsStudyBack)) {
+        renderScatter(scatterData);
+    }
+    function renderScatter(scatterData) {
+        if (scatterChart) {
+            scatterChart.destroy();
+            scatterChart = null;
+        }
+
         const scatterWrapper = scatterCard.querySelector('.chart-wrapper');
-        const scatterChart = new Chart(scatterCtx, {
+
+        scatterChart = new Chart(scatterCtx, {
             type: "bubble",
             data: {
                 datasets: [{
@@ -463,9 +472,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
 
-    // Initial population and render
-    await fetchAndPopulateClassDropdown();
-    await renderHealthChart('bar', 'all', 'all');
+
+    registerRefresh("charts", async () => {
+        await fetchAndPopulateClassDropdown();
+        await renderHealthChart(
+            currentHealthType,
+            classSelect?.value || "all",
+            timeFilter?.value || "all"
+        );
+
+        // Re-fetch scatter
+        const scatterRes = await fetch("/charts/classes/grade_vs_study_time");
+        const scatterData = await scatterRes.json();
+
+        if (gateChart(scatterCard, scatterData, renderGradeVsStudyFront, renderGradeVsStudyBack)) {
+            renderScatter(scatterData);
+        }
+    });
+
 
 
 });

@@ -8,6 +8,8 @@ import { initAddClassModal } from "./modals/add_class.js";
 import { initEditClassModal } from "./modals/edit_class.js";
 import { initDeleteClassModal } from "./modals/delete_class.js";
 import { initUnsavedChangesModal } from "./modals/unsaved_changes.js";
+import "./refresh/refresh_classes.js";
+import "./refresh/refresh_charts.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize selector
