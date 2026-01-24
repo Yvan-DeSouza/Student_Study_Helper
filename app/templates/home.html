@@ -341,8 +341,8 @@
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button
                         class="btn-tiny"
-                        data-open-modal="addClassModal"
-                        id="openAddClassModal"
+                        data-open-modal="class"
+                        data-mode="add"
                     >
                         + Add Class
                     </button>
@@ -406,23 +406,6 @@
         </div>
     </div>
 </div>
-<!-- ================= INVALID AMOUNT MODAL ================= -->
-<div class="modal-overlay hidden" id="invalidDeadlineAmountModal">
-  <div class="modal card">
-    <h2>Invalid Amount</h2>
-    
-    <p class="modal-message">
-      Please enter a number between 1 and 10.
-    </p>
-    
-    <div class="modal-actions">
-      <button type="button" class="btn full-btn" data-close-modal>
-        OK
-      </button>
-    </div>
-  </div>
-</div>
-{% include 'partials/modals/classes/add_class.html' %}
 
 
 {% endblock %}
@@ -434,6 +417,7 @@
 <script src="{{ url_for('static', filename='js/study_sessions.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/classes/modals/classModal.controller.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/home/index.js') }}"></script>
 <script src="{{ url_for('static', filename='js/upcoming_deadlines.js') }}"></script>
 

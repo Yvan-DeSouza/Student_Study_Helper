@@ -123,7 +123,9 @@
 
             <div class="class-actions">
                 <button
-                    class="icon-btn edit-btn"
+                    class="icon-btn"
+                    data-open-modal="class"
+                    data-mode="edit"
                     data-class-id="{{ c.class_id }}"
                     data-name="{{ c.class_name }}"
                     data-code="{{ c.class_code }}"
@@ -138,7 +140,9 @@
                 </button>
 
                 <button
-                    class="icon-btn delete-btn"
+                    class="icon-btn"
+                    data-open-modal="class"
+                    data-mode="delete"
                     data-class-id="{{ c.class_id }}"
                     data-class-name="{{ c.class_name }}"
                     data-assignments="{{ c.total_assignments }}"

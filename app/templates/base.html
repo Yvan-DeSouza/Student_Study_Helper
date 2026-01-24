@@ -182,5 +182,8 @@
   <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
   <script src="{{ url_for('static', filename='js/sticky_session.js') }}"></script>
   {% block extra_js %}{% endblock %}
+
+  <!-- Global Modals -->
+  {% include "partials/modals/_registry.html" %}
   </body>
 </html>

@@ -13,10 +13,17 @@ document.addEventListener("DOMContentLoaded", () => {
     initModalEvents();
     initAddClassModal();
 
+
     registerRefresh("home:charts", refreshHomeCharts);
     registerRefresh("home:assignments", refreshHomeAssignments);
     registerRefresh("home:sessions", refreshHomeSessions);
 
-    document.dispatchEvent(new CustomEvent("home:charts:refresh"));
+    // Listen for class changes to refresh home page
+    document.addEventListener("class:changed", () => {
+        refreshHomeCharts();
+        refreshHomeAssignments();
+        refreshHomeSessions();
+    });
+
 });
 

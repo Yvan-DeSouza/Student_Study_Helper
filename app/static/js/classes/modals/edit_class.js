@@ -23,12 +23,7 @@ export function initEditClassModal() {
         });
     });
 
-    document.querySelectorAll(".edit-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            await saveAllInlineEditsSilently();
-            openEditClassModal(btn);
-        });
-    });
+    // Event listener removed, now handled by controller
 
 
 
@@ -43,7 +38,11 @@ export function initEditClassModal() {
         typeSelect.dataset.previous = newType;
     });
 
-    function openEditClassModal(btn) {
+
+}
+    export async function openEditClassModal(btn) {
+        await saveAllInlineEditsSilently();
+
         // Fill inputs from button data attributes
         document.getElementById("edit-class-name").value = btn.dataset.name;
         document.getElementById("edit-class-code").value = btn.dataset.code;
@@ -66,4 +65,3 @@ export function initEditClassModal() {
 
         showModal("editClassModal");
     }
-}

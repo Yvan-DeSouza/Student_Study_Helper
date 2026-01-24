@@ -8,6 +8,7 @@ import { initAddClassModal } from "./modals/add_class.js";
 import { initEditClassModal } from "./modals/edit_class.js";
 import { initDeleteClassModal } from "./modals/delete_class.js";
 import { initUnsavedChangesModal } from "./modals/unsaved_changes.js";
+import { runRefreshes } from "../core/refreshBus.js";
 import { registerRefresh } from "../core/refreshBus.js";
 import { refreshCharts } from "./refresh/refresh_charts.js";
 import "./refresh/refresh_classes.js";
@@ -36,4 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initEditClassModal();
     initDeleteClassModal();
     initUnsavedChangesModal();
+
+    // Listen for class changes to refresh classes page
+    document.addEventListener("class:changed", () => {
+        runRefreshes(["classes", "charts"]);
+    });
 });

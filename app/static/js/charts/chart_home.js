@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
 
+
     function getThemeColor(lightColor, darkColor) {
         const theme = document.documentElement.getAttribute('data-theme');
         return theme === 'dark' ? darkColor : lightColor;
@@ -254,72 +255,74 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     /* ========= ASSIGNMENT LOAD ========= */
     const assignmentCtx = document.getElementById("assignmentLoad")?.getContext("2d");
+    const assignmentCard = document.querySelector('[data-card-id="home-assignment-load"]');
+    const loadDailyBtn = document.getElementById("loadDailyBtn");
+    const loadWeeklyBtn = document.getElementById("loadWeeklyBtn");
+
+    let assignmentChart;
+    let currentMode = "daily";
+    let isEligible = false;
 
 
 
-    if (assignmentCtx){
-        const assignmentCard = document.querySelector('[data-card-id="home-assignment-load"]');
-        const loadDailyBtn = document.getElementById("loadDailyBtn");
-        const loadWeeklyBtn = document.getElementById("loadWeeklyBtn");
+    async function loadAssignmentChart(mode = "daily") {
+        currentMode = mode;
+        const url = mode === "daily"
+            ? "/charts/home/assignment_load_daily"
+            : "/charts/home/assignment_load_weekly";
 
-        let assignmentChart;
-        let currentMode = "daily";
-        let isEligible = false;
-        async function loadAssignmentChart(mode = "daily") {
-            currentMode = mode;
-            const url = mode === "daily"
-                ? "/charts/home/assignment_load_daily"
-                : "/charts/home/assignment_load_weekly";
+        const chartRes = await fetch(url);
+        const chartData = await chartRes.json();
 
-            const chartRes = await fetch(url);
-            const chartData = await chartRes.json();
-
-            // Check eligibility on first load
-            if (!assignmentChart) {
-                isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
-                if (!isEligible) {
-                    return; // Don't create chart if not eligible
-                }
-            }
-
-            if (!assignmentChart) {
-                const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
-                assignmentChart = new Chart(assignmentCtx, {
-                    type: "bar",
-                    data: {
-                        labels: chartData.labels,
-                        datasets: [{
-                            label: "Assignments Due",
-                            data: chartData.data,
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false }
-                        }
-                    }
-                });
-            } else {
-                assignmentChart.data.labels = chartData.labels;
-                assignmentChart.data.datasets[0].data = chartData.data;
-                assignmentChart.update();
+        // Check eligibility on first load
+        if (!assignmentChart) {
+            isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
+            if (!isEligible) {
+                return; // Don't create chart if not eligible
             }
         }
 
+        if (!assignmentChart) {
+            const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
+            assignmentChart = new Chart(assignmentCtx, {
+                type: "bar",
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: "Assignments Due",
+                        data: chartData.data,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        } else {
+            assignmentChart.data.labels = chartData.labels;
+            assignmentChart.data.datasets[0].data = chartData.data;
+            assignmentChart.update();
+        }
+    }
+
+    if (assignmentCtx){
+
+
+
 
         /* Initial load */
-        await loadAssignmentChart("daily");
 
         /* Toggle handlers */
         if (isEligible) {
@@ -412,15 +415,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
         });
-}
+    }
+    await initHomeCharts();
 
 
-    document.addEventListener("home:charts:refresh", async () => {
+    async function initHomeCharts() {
         await renderTimePerClass();
         await renderWeeklyStudy();
         await loadAssignmentChart("daily");
         await renderStudyEfficiency();
-    });
+    }
+
+    // Refresh listener
+    document.addEventListener("home:charts:refresh", initHomeCharts);
 
 
 });

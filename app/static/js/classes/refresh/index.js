@@ -25,5 +25,8 @@ export async function submitClassForm(form, { refresh = [] } = {}) {
     // 🔑 Run refresh hooks
     await runRefreshes(refresh);
 
+    // Emit event for page refreshes
+    document.dispatchEvent(new CustomEvent("class:changed"));
+
     return result;
 }

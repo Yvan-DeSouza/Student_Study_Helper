@@ -1,6 +1,7 @@
 // static/js/classes/modals/delete_class.js
 import { showModal, closeModal } from '../../core/modalManager.js';
 import { runRefreshes } from "../../core/refreshBus.js";
+import { saveAllInlineEditsSilently } from '../inlineEditing.js';
 
 let currentStep = 1;
 let className = "";
@@ -20,21 +21,7 @@ export function initDeleteClassModal() {
     const cancelBtn = document.getElementById("cancelDelete");
     const backBtn = document.getElementById("deleteBackBtn");
 
-    // Open DELETE modal
-    document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            className = btn.dataset.className;
-            deleteClassId = btn.dataset.classId;
-
-            assignmentCountEl.textContent = btn.dataset.assignments;
-            sessionCountEl.textContent = btn.dataset.sessions;
-
-            currentStep = 1;
-            renderDeleteStep();
-
-            showModal("deleteClassModal");
-        });
-    });
+    // Event listener removed, now handled by controller
 
     // Next/Confirm button
     confirmBtn.addEventListener("click", async (e) => {
@@ -106,4 +93,19 @@ export function initDeleteClassModal() {
 
         confirmBtn.textContent = currentStep < 3 ? "Next" : "Delete";
     }
+}
+
+export async function openDeleteClassModal(btn) {
+    await saveAllInlineEditsSilently();
+
+    className = btn.dataset.className;
+    deleteClassId = btn.dataset.classId;
+
+    assignmentCountEl.textContent = btn.dataset.assignments;
+    sessionCountEl.textContent = btn.dataset.sessions;
+
+    currentStep = 1;
+    renderDeleteStep();
+
+    showModal("deleteClassModal");
 }

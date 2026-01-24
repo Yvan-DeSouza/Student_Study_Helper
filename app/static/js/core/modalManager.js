@@ -19,6 +19,17 @@ export function closeModal(id) {
 
 export function initModalEvents() {
   document.addEventListener("click", e => {
+    const openBtn = e.target.closest("[data-open-modal]");
+    if (openBtn) {
+      e.preventDefault();
+      const feature = openBtn.dataset.openModal;
+      const mode = openBtn.dataset.mode || 'add';
+      document.dispatchEvent(new CustomEvent("modal:open", {
+        detail: { feature, mode, source: openBtn }
+      }));
+      return;
+    }
+
     const closeBtn = e.target.closest("[data-close-modal]");
     if (!closeBtn) return;
 

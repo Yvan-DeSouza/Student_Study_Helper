@@ -23,13 +23,7 @@ export function initAddClassModal() {
 
     });
 
-    document.querySelectorAll("#openAddClassModal, #openAddClassModalEmpty").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            await saveAllInlineEditsSilently();
-            resetClassModal();
-            showModal("addClassModal");
-        });
-    });
+    // Event listener removed, now handled by controller
 
 
 
@@ -40,17 +34,31 @@ export function initAddClassModal() {
         }
     });
 
-    function resetClassModal() {
-        document.getElementById("classModalTitle").textContent = "Add Class";
-        document.getElementById("classModalSubmit").textContent = "Create Class";
-        classForm.action = "/classes";
-        classForm.method = "POST";
-        document.getElementById("classFormMethod").value = "POST";
-        classForm.reset();
-        colorInput.value = "#4f46e5";
 
-        // Collapse advanced options by default
-        advancedOptions.classList.add("hidden");
-        advancedToggle.setAttribute("aria-expanded", "false");
-    }
+}
+function resetClassModal() {
+    const addModal = document.getElementById("addClassModal");
+    if (!addModal) return;
+    const classForm = document.getElementById("addClassForm");
+    const colorInput = document.getElementById("classColor");
+    const advancedToggle = addModal.querySelector(".advanced-toggle");
+    const advancedOptions = addModal.querySelector(".advanced-options");
+
+
+    document.getElementById("classModalTitle").textContent = "Add Class";
+    document.getElementById("classModalSubmit").textContent = "Create Class";
+    classForm.action = "/classes";
+    classForm.method = "POST";
+    document.getElementById("classFormMethod").value = "POST";
+    classForm.reset();
+    colorInput.value = "#4f46e5";
+
+    // Collapse advanced options by default
+    advancedOptions.classList.add("hidden");
+    advancedToggle.setAttribute("aria-expanded", "false");
+}
+export async function openAddClassModal() {
+    await saveAllInlineEditsSilently();
+    resetClassModal();
+    showModal("addClassModal");
 }

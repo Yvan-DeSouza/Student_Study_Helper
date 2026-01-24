@@ -323,10 +323,8 @@
 
 
 
-{% include 'partials/modals/classes/add_class.html' %}
-{% include 'partials/modals/classes/edit_class.html' %}
-{% include 'partials/modals/classes/unsaved_changes.html' %}
-{% include 'partials/modals/classes/delete_class.html' %}
+
+
 
 
 
@@ -336,6 +334,7 @@
 
 <script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/charts/chart_class.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/modals/classes/classModal.controller.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='js/classes/index.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form.js') }}"></script>
