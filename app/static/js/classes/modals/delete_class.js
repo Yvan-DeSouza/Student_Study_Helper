@@ -14,13 +14,10 @@ export function initDeleteClassModal() {
     const deleteText = document.getElementById("deleteStepText");
     const impactBox = document.getElementById("deleteImpactBox");
     const inputBox = document.getElementById("deleteInputBox");
-
     const confirmInput = document.getElementById("deleteConfirmInput");
     const confirmBtn = document.getElementById("confirmDelete");
     const cancelBtn = document.getElementById("cancelDelete");
     const backBtn = document.getElementById("deleteBackBtn");
-
-    // Event listener removed, now handled by controller
 
     // Next/Confirm button
     confirmBtn.addEventListener("click", async (e) => {
@@ -32,22 +29,7 @@ export function initDeleteClassModal() {
         }
 
         // FINAL DELETE STEP
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-
-        const response = await fetch(`/classes/${deleteClassId}`, {
-            method: "DELETE",
-            headers: {
-                "X-CSRFToken": csrfToken
-            }
-        });
-
-        if (response.ok) {
-            closeModal("deleteClassModal");
-
-            await runRefreshes(["classes", "charts"]);
-        } else {
-            alert("Failed to delete class.");
-        }
+        await executeDelete();
     });
 
     // Enable delete only when name matches
@@ -67,10 +49,17 @@ export function initDeleteClassModal() {
     cancelBtn.addEventListener("click", () => {
         closeModal("deleteClassModal");
     });
-
-
 }
+
 function renderDeleteStep() {
+    const deleteText = document.getElementById("deleteStepText");
+    const impactBox = document.getElementById("deleteImpactBox");
+    const inputBox = document.getElementById("deleteInputBox");
+    const confirmBtn = document.getElementById("confirmDelete");
+    const confirmInput = document.getElementById("deleteConfirmInput");
+    const backBtn = document.getElementById("deleteBackBtn");
+
+    // Reset state
     confirmBtn.disabled = currentStep === 3;
     confirmInput.value = "";
 
@@ -78,15 +67,18 @@ function renderDeleteStep() {
     inputBox.classList.add("hidden");
     backBtn.style.display = currentStep === 1 ? "none" : "inline-block";
 
+    // Step 1: Confirmation question
     if (currentStep === 1) {
         deleteText.textContent = `Are you sure you want to delete the "${className}" class?`;
     }
 
+    // Step 2: Show impact
     if (currentStep === 2) {
         deleteText.textContent = "Deleting this class will permanently remove:";
         impactBox.classList.remove("hidden");
     }
 
+    // Step 3: Type name to confirm
     if (currentStep === 3) {
         deleteText.textContent = `To confirm deletion of "${className}", type the class name below.`;
         inputBox.classList.remove("hidden");
@@ -95,16 +87,56 @@ function renderDeleteStep() {
     confirmBtn.textContent = currentStep < 3 ? "Next" : "Delete";
 }
 
+async function executeDelete() {
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+        const response = await fetch(`/classes/${deleteClassId}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            let err = {};
+            try {
+                err = await response.json();
+            } catch {
+                // JSON parsing failed, maybe the response was empty
+                err.error = "Server responded but not in JSON format";
+            }
+            throw new Error(err.error || "Failed to update class");
+        }
+
+
+        // Close modal
+        closeModal("deleteClassModal");
+
+        // Refresh appropriate page elements
+        await runRefreshes(["classes", "charts"]);
+
+        // Emit global event
+        document.dispatchEvent(new CustomEvent("class:changed"));
+
+    } catch (error) {
+        console.error("Error deleting class:", error);
+        alert("Failed to delete class. Please try again.");
+    }
+}
+
 export async function openDeleteClassModal(btn) {
     await saveAllInlineEditsSilently();
+
     const assignmentCountEl = document.getElementById("assignmentCount");
     const sessionCountEl = document.getElementById("sessionCount");
 
-    className = btn.dataset.className;
+    className = btn.dataset.className || "";
     deleteClassId = btn.dataset.classId;
 
-    assignmentCountEl.textContent = btn.dataset.assignments;
-    sessionCountEl.textContent = btn.dataset.sessions;
+    assignmentCountEl.textContent = btn.dataset.assignments || "0";
+    sessionCountEl.textContent = btn.dataset.sessions || "0";
 
     currentStep = 1;
     renderDeleteStep();

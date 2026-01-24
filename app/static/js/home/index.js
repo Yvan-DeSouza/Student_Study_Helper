@@ -1,7 +1,5 @@
+// static/js/home/index.js
 import { initModalEvents } from "../core/modalManager.js";
-import { initAddClassModal } from "../classes/modals/add_class.js";
-
-// Refresh bus
 import { registerRefresh } from "../core/refreshBus.js";
 
 // Home refresh handlers
@@ -10,20 +8,19 @@ import { refreshHomeAssignments } from "./refresh/refresh_assignments.js";
 import { refreshHomeSessions } from "./refresh/refresh_sessions.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Initialize modal system
     initModalEvents();
-    initAddClassModal();
 
 
+    // Register refresh handlers
     registerRefresh("home:charts", refreshHomeCharts);
     registerRefresh("home:assignments", refreshHomeAssignments);
     registerRefresh("home:sessions", refreshHomeSessions);
 
     // Listen for class changes to refresh home page
-    document.addEventListener("class:changed", () => {
-        refreshHomeCharts();
-        refreshHomeAssignments();
-        refreshHomeSessions();
+    document.addEventListener("class:changed", async () => {
+        await refreshHomeCharts();
+        await refreshHomeAssignments();
+        await refreshHomeSessions();
     });
-
 });
-

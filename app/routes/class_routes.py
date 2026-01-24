@@ -10,15 +10,41 @@ from dateutil import parser
 
 classes = Blueprint("classes", __name__)
 
+
+@classes.route("/classes/json")
+@login_required
+def list_classes_json():
+    """Return classes as JSON for dropdown population"""
+    classes_list = Class.query.filter_by(user_id=current_user.user_id).all()
+    
+    return jsonify([{
+        "class_id": c.class_id,
+        "class_name": c.class_name,
+        "class_code": c.class_code,
+        "color": c.color
+    } for c in classes_list])
+
+# Or modify the existing list_classes route to handle both:
 @classes.route("/classes")
 @login_required
 def list_classes():
-    classes = Class.query.filter_by(user_id=current_user.user_id).all()
+    classes_list = Class.query.filter_by(user_id=current_user.user_id).all()
 
+    # Handle partial HTML request
     if request.args.get("partial") == "cards":
-        return render_template("partials/classes/cards.html", classes=classes)
+        return render_template("partials/classes/cards.html", classes=classes_list)
     
-    return render_template("classes.html", classes=classes, user=current_user.user_id)
+    # Handle JSON request
+    if request.args.get("partial") == "json":
+        return jsonify([{
+            "class_id": c.class_id,
+            "class_name": c.class_name,
+            "class_code": c.class_code,
+            "color": c.color
+        } for c in classes_list])
+    
+    # Default: full page
+    return render_template("classes.html", classes=classes_list, user=current_user.user_id)
 
 
 @classes.route("/classes", methods=["POST"])

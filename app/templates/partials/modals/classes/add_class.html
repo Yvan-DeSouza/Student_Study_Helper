@@ -2,7 +2,7 @@
 <div class="modal-overlay hidden" id="addClassModal">
   <div class="modal card">
     <h2 id="classModalTitle">Add Class</h2>
-    <form id="addClassForm" method="POST">
+    <form id="addClassForm" method="POST" action="{{ url_for('classes.create_class') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" id="classFormMethod" name="_method" value="POST">
 
