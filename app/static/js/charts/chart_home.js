@@ -5,227 +5,277 @@ let weeklyStudyChart = null;
 let assignmentLoadChart = null;
 let efficiencyChart = null;
 
-document.addEventListener("DOMContentLoaded", async () => {
-
-    const timePerClassCtx = document.getElementById("timePerClassChart")?.getContext("2d");
-    const weeklyStudyCtx = document.getElementById("weeklyStudyTime")?.getContext("2d");
-    const efficiencyCtx = document.getElementById("StudyEffByCls")?.getContext("2d");
-
-    console.log({
-        timePerClassCtx,
-        weeklyStudyCtx,
-        efficiencyCtx
-    });
 
 
 
-    function getThemeColor(lightColor, darkColor) {
-        const theme = document.documentElement.getAttribute('data-theme');
-        return theme === 'dark' ? darkColor : lightColor;
-    }
+function  renderTimeDistributionFront(progress){
+    return `
+        <div class="chart-empty">
+            <p><strong>Not enough data yet</strong></p>
+            <ul>
+                <li>
+                    Completed study sessions:
+                    ${progress.completed_study_sessions_total.current}/${progress.completed_study_sessions_total.required}
+                    ${progress.completed_study_sessions_total.current >= progress.completed_study_sessions_total.required ? "✅" : "❌"}
+                </li>
+                <li>
+                    Classes with study time:
+                    ${progress.classes_with_study_time.current}/${progress.classes_with_study_time.required}
+                    ${progress.classes_with_study_time.current >= progress.classes_with_study_time.required ? "✅" : "❌"}
+                </li>
+            </ul>
+        </div>
+    `;
+}
 
-    // =================== RENDER FUNCTIONS ===================
+function renderTimeDistributionBack(ineligibleClasses) {
+    return `
+        <p><strong>Why some classes aren't shown:</strong></p>
+        <ul>
+            ${ineligibleClasses.map(c =>
+                `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+            ).join("")}
+        </ul>
+    `;
+}
+
+function renderWeeklyStudyFront(progress) {
+    return `
+        <div class="chart-empty">
+            <p><strong>Not enough data yet</strong></p>
+            <ul>
+                <li>
+                    Study sessions in last 7 days:
+                    ${progress.sessions_in_last_7_days.current}/${progress.sessions_in_last_7_days.required}
+                    ${progress.sessions_in_last_7_days.current >= progress.sessions_in_last_7_days.required ? "✅" : "❌"}
+                </li>
+            </ul>
+            <p><em>Study consistently over the week to unlock your trend.</em></p>
+        </div>
+    `;
+}
+
+function renderAssignmentLoadFront(progress) {
+    const noIncomplete = progress.incomplete_assignments_with_due.current === 0;
+    const hasWithoutDue = progress.incomplete_assignments_without_due.current > 0;
     
-    function renderTimeDistributionFront(progress) {
+    if (noIncomplete && !hasWithoutDue) {
         return `
             <div class="chart-empty">
-                <p><strong>Not enough data yet</strong></p>
-                <ul>
-                    <li>
-                        Completed study sessions:
-                        ${progress.completed_study_sessions_total.current}/${progress.completed_study_sessions_total.required}
-                        ${progress.completed_study_sessions_total.current >= progress.completed_study_sessions_total.required ? "✅" : "❌"}
-                    </li>
-                    <li>
-                        Classes with study time:
-                        ${progress.classes_with_study_time.current}/${progress.classes_with_study_time.required}
-                        ${progress.classes_with_study_time.current >= progress.classes_with_study_time.required ? "✅" : "❌"}
-                    </li>
-                </ul>
+                <p><strong>🎉 You have no due assignments!</strong></p>
             </div>
         `;
     }
-
-    function renderTimeDistributionBack(ineligibleClasses) {
+    
+    if (noIncomplete && hasWithoutDue) {
         return `
-            <p><strong>Why some classes aren't shown:</strong></p>
+            <div class="chart-empty">
+                <p><strong>🎉 You have no due assignments!</strong></p>
+                <p><em>⚠️ However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
+            </div>
+        `;
+    }
+    
+    return `
+        <div class="chart-empty">
+            <p><strong>Not enough data yet</strong></p>
             <ul>
-                ${ineligibleClasses.map(c =>
-                    `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
-                ).join("")}
+                <li>
+                    Incomplete assignments with due dates:
+                    ${progress.incomplete_assignments_with_due.current}/${progress.incomplete_assignments_with_due.required}
+                    ${progress.incomplete_assignments_with_due.current >= progress.incomplete_assignments_with_due.required ? "✅" : "❌"}
+                </li>
             </ul>
+        </div>
+    `;
+}
+
+function renderAssignmentLoadBack(progress) {
+    if (progress.incomplete_assignments_without_due.current > 0) {
+        return `
+            <p><strong>⚠️ Note:</strong></p>
+            <p>You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date that are not shown.</p>
         `;
     }
+    return null;
+}
 
-    function renderWeeklyStudyFront(progress) {
-        return `
-            <div class="chart-empty">
-                <p><strong>Not enough data yet</strong></p>
-                <ul>
-                    <li>
-                        Study sessions in last 7 days:
-                        ${progress.sessions_in_last_7_days.current}/${progress.sessions_in_last_7_days.required}
-                        ${progress.sessions_in_last_7_days.current >= progress.sessions_in_last_7_days.required ? "✅" : "❌"}
-                    </li>
-                </ul>
-                <p><em>Study consistently over the week to unlock your trend.</em></p>
-            </div>
-        `;
-    }
-
-    function renderAssignmentLoadFront(progress) {
-        const noIncomplete = progress.incomplete_assignments_with_due.current === 0;
-        const hasWithoutDue = progress.incomplete_assignments_without_due.current > 0;
-        
-        if (noIncomplete && !hasWithoutDue) {
-            return `
-                <div class="chart-empty">
-                    <p><strong>🎉 You have no due assignments!</strong></p>
-                </div>
-            `;
-        }
-        
-        if (noIncomplete && hasWithoutDue) {
-            return `
-                <div class="chart-empty">
-                    <p><strong>🎉 You have no due assignments!</strong></p>
-                    <p><em>⚠️ However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
-                </div>
-            `;
-        }
-        
-        return `
-            <div class="chart-empty">
-                <p><strong>Not enough data yet</strong></p>
-                <ul>
-                    <li>
-                        Incomplete assignments with due dates:
-                        ${progress.incomplete_assignments_with_due.current}/${progress.incomplete_assignments_with_due.required}
-                        ${progress.incomplete_assignments_with_due.current >= progress.incomplete_assignments_with_due.required ? "✅" : "❌"}
-                    </li>
-                </ul>
-            </div>
-        `;
-    }
-
-    function renderAssignmentLoadBack(progress) {
-        if (progress.incomplete_assignments_without_due.current > 0) {
-            return `
-                <p><strong>⚠️ Note:</strong></p>
-                <p>You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date that are not shown.</p>
-            `;
-        }
-        return null;
-    }
-
-    function renderPerformanceRadarFront(progress) {
-        return `
-            <div class="chart-empty">
-                <p><strong>Not enough data yet</strong></p>
-                <ul>
-                    <li>
-                        Classes:
-                        ${progress.classes.current}/${progress.classes.required}
-                        ${progress.classes.current >= progress.classes.required ? "✅" : "❌"}
-                    </li>
-                    <li>
-                        Classes with study sessions or grades:
-                        ${progress.study_sessions_or_grades.current}/${progress.study_sessions_or_grades.required}
-                        ${progress.study_sessions_or_grades.current >= progress.study_sessions_or_grades.required ? "✅" : "❌"}
-                    </li>
-                </ul>
-            </div>
-        `;
-    }
-
-    function renderPerformanceRadarBack(ineligibleClasses) {
-        return `
-            <p><strong>Why some classes aren't shown:</strong></p>
+function renderPerformanceRadarFront(progress) {
+    return `
+        <div class="chart-empty">
+            <p><strong>Not enough data yet</strong></p>
             <ul>
-                ${ineligibleClasses.map(c =>
-                    `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
-                ).join("")}
+                <li>
+                    Classes:
+                    ${progress.classes.current}/${progress.classes.required}
+                    ${progress.classes.current >= progress.classes.required ? "✅" : "❌"}
+                </li>
+                <li>
+                    Classes with study sessions or grades:
+                    ${progress.study_sessions_or_grades.current}/${progress.study_sessions_or_grades.required}
+                    ${progress.study_sessions_or_grades.current >= progress.study_sessions_or_grades.required ? "✅" : "❌"}
+                </li>
             </ul>
-        `;
+        </div>
+    `;
+}
+
+function renderPerformanceRadarBack(ineligibleClasses) {
+    return `
+        <p><strong>Why some classes aren't shown:</strong></p>
+        <ul>
+            ${ineligibleClasses.map(c =>
+                `<li><strong>${c.class_name}</strong>: ${c.reasons.join(", ")}</li>`
+            ).join("")}
+        </ul>
+    `;
+}
+
+/* ========= TIME PER CLASS ========= */
+async function renderTimePerClass() {
+    const classCtx = document.getElementById("timePerClassChart").getContext("2d");
+
+    if (!classCtx) return;
+
+    const card = document.querySelector('[data-card-id="home-time-per-class"]');
+    const res = await fetch("/charts/home/time_per_class");
+    const data = await res.json();
+
+
+    const allowed = gateChart(card, data, renderTimeDistributionFront, renderTimeDistributionBack);
+    if (!allowed) return;
+
+
+
+    if (timePerClassChart) {
+        timePerClassChart.destroy();
     }
 
-    /* ========= TIME PER CLASS ========= */
-    async function renderTimePerClass() {
-        if (!timePerClassCtx) return;
-
-        const card = document.querySelector('[data-card-id="home-time-per-class"]');
-        const res = await fetch("/charts/home/time_per_class");
-        const data = await res.json();
-
-        console.log("[TimePerClass] eligibility:", data.eligible, data);
-
-        const allowed = gateChart(card, data, renderTimeDistributionFront, renderTimeDistributionBack);
-        if (!allowed) return;
-
-
-
-        if (timePerClassChart) {
-            timePerClassChart.destroy();
-        }
-
-        timePerClassChart = new Chart(timePerClassCtx, {
-            type: "doughnut",
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    data: data.data,
-                    backgroundColor: data.colors,
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: "bottom" },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => {
-                                const hours = (ctx.raw / 60).toFixed(1);
-                                return `${ctx.label}: ${hours}h`;
-                            }
+    timePerClassChart = new Chart(classCtx, {
+        type: "doughnut",
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.data,
+                backgroundColor: data.colors,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: "bottom" },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const hours = (ctx.raw / 60).toFixed(1);
+                            return `${ctx.label}: ${hours}h`;
                         }
                     }
                 }
             }
-        });
+        }
+    });
+}
+
+
+/* ========= WEEKLY STUDY TIME ========= */
+async function renderWeeklyStudy() {
+    const weeklyStudyCtx = document.getElementById("weeklyStudyTime").getContext("2d");
+
+    if (!weeklyStudyCtx) return;
+
+    const card = document.querySelector('[data-card-id="home-weekly-study"]');
+    const res = await fetch("/charts/home/weekly_study_time");
+    const data = await res.json();
+
+
+    if (!gateChart(card, data, renderWeeklyStudyFront, null)) {
+        return;
     }
 
+    if (weeklyStudyChart) {
+        weeklyStudyChart.destroy();
+    }
 
-    /* ========= WEEKLY STUDY TIME ========= */
-    async function renderWeeklyStudy() {
-        if (!weeklyStudyCtx) return;
-
-        const card = document.querySelector('[data-card-id="home-weekly-study"]');
-        const res = await fetch("/charts/home/weekly_study_time");
-        const data = await res.json();
-
-        console.log("[WeeklyStudy] data:", data);
-
-        if (!gateChart(card, data, renderWeeklyStudyFront, null)) {
-            return;
+    weeklyStudyChart = new Chart(weeklyStudyCtx, {
+        type: "line",
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: "Study Time (hours)",
+                data: data.data.map(m => m / 60), // convert minutes → hours
+                tension: 0.3,
+                fill: true,
+                borderWidth: 2,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Hours"
+                    }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.raw.toFixed(1)}h`
+                    }
+                }
+            }
         }
+    });
+}
 
-        if (weeklyStudyChart) {
-            weeklyStudyChart.destroy();
+
+/* ========= ASSIGNMENT LOAD ========= */
+const assignmentCtx = document.getElementById("assignmentLoad")?.getContext("2d");
+const assignmentCard = document.querySelector('[data-card-id="home-assignment-load"]');
+const loadDailyBtn = document.getElementById("loadDailyBtn");
+const loadWeeklyBtn = document.getElementById("loadWeeklyBtn");
+
+let assignmentChart;
+let currentMode = "daily";
+let isEligible = false;
+
+
+
+async function loadAssignmentChart(mode = "daily") {
+    currentMode = mode;
+    const url = mode === "daily"
+        ? "/charts/home/assignment_load_daily"
+        : "/charts/home/assignment_load_weekly";
+
+    const chartRes = await fetch(url);
+    const chartData = await chartRes.json();
+
+    // Check eligibility on first load
+    if (!assignmentChart) {
+        isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
+        if (!isEligible) {
+            return; // Don't create chart if not eligible
         }
+    }
 
-        weeklyStudyChart = new Chart(weeklyStudyCtx, {
-            type: "line",
+    if (!assignmentChart) {
+        const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
+        assignmentChart = new Chart(assignmentCtx, {
+            type: "bar",
             data: {
-                labels: data.labels,
+                labels: chartData.labels,
                 datasets: [{
-                    label: "Study Time (hours)",
-                    data: data.data.map(m => m / 60), // convert minutes → hours
-                    tension: 0.3,
-                    fill: true,
-                    borderWidth: 2,
-                    pointRadius: 4
+                    label: "Assignments Due",
+                    data: chartData.data,
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -234,200 +284,135 @@ document.addEventListener("DOMContentLoaded", async () => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: "Hours"
-                        }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => `${ctx.raw.toFixed(1)}h`
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-
-    /* ========= ASSIGNMENT LOAD ========= */
-    const assignmentCtx = document.getElementById("assignmentLoad")?.getContext("2d");
-    const assignmentCard = document.querySelector('[data-card-id="home-assignment-load"]');
-    const loadDailyBtn = document.getElementById("loadDailyBtn");
-    const loadWeeklyBtn = document.getElementById("loadWeeklyBtn");
-
-    let assignmentChart;
-    let currentMode = "daily";
-    let isEligible = false;
-
-
-
-    async function loadAssignmentChart(mode = "daily") {
-        currentMode = mode;
-        const url = mode === "daily"
-            ? "/charts/home/assignment_load_daily"
-            : "/charts/home/assignment_load_weekly";
-
-        const chartRes = await fetch(url);
-        const chartData = await chartRes.json();
-
-        // Check eligibility on first load
-        if (!assignmentChart) {
-            isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
-            if (!isEligible) {
-                return; // Don't create chart if not eligible
-            }
-        }
-
-        if (!assignmentChart) {
-            const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
-            assignmentChart = new Chart(assignmentCtx, {
-                type: "bar",
-                data: {
-                    labels: chartData.labels,
-                    datasets: [{
-                        label: "Assignments Due",
-                        data: chartData.data,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        } else {
-            assignmentChart.data.labels = chartData.labels;
-            assignmentChart.data.datasets[0].data = chartData.data;
-            assignmentChart.update();
-        }
-    }
-
-    if (assignmentCtx){
-
-
-
-
-        /* Initial load */
-
-        /* Toggle handlers */
-        if (isEligible) {
-            loadDailyBtn.addEventListener("click", () => {
-                loadDailyBtn.classList.add("active");
-                loadWeeklyBtn.classList.remove("active");
-                loadAssignmentChart("daily");
-            });
-
-            loadWeeklyBtn.addEventListener("click", () => {
-                loadWeeklyBtn.classList.add("active");
-                loadDailyBtn.classList.remove("active");
-                loadAssignmentChart("weekly");
-            });
-        }
-    }
-
-    /* ========= STUDY EFFICIENCY BY CLASS ========= */
-    async function renderStudyEfficiency() {
-        if (!efficiencyCtx) return;
-
-        const card = document.querySelector('[data-card-id="home-performance"]');
-
-        const res = await fetch("/charts/home/study_efficiency_by_class");
-        const data = await res.json();
-
-        console.log("[Efficiency] data:", data);
-
-        if (!gateChart(card, data, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
-            return;
-        }
-
-        if (efficiencyChart) {
-            efficiencyChart.destroy();
-        }
-
-        efficiencyChart = new Chart(efficiencyCtx, {
-            type: "radar",
-            data: {
-                labels: data.axes,
-                datasets: data.datasets.map(cls => ({
-                    label: cls.label,
-                    data: cls.values,
-                    borderColor: cls.color,
-                    backgroundColor: cls.color + "33", // translucent fill
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    raw: cls.raw
-                }))
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        min: 0,
-                        max: 100,
                         ticks: {
-                            stepSize: 20
+                            precision: 0
                         }
                     }
                 },
                 plugins: {
-                    legend: {
-                        position: "bottom"
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (ctx) {
-                                const axis = ctx.label;
-                                const raw = ctx.dataset.raw;
+                    legend: { display: false }
+                }
+            }
+        });
+    } else {
+        assignmentChart.data.labels = chartData.labels;
+        assignmentChart.data.datasets[0].data = chartData.data;
+        assignmentChart.update();
+    }
+}
 
-                                switch (axis) {
-                                    case "Study Time":
-                                        return `${ctx.dataset.label}: ${raw.study_minutes} min`;
-                                    case "Avg Grade":
-                                        return `${ctx.dataset.label}: ${raw.avg_grade.toFixed(1)}%`;
-                                    case "Completion Rate":
-                                        return `${ctx.dataset.label}: ${raw.completion_rate.toFixed(1)}%`;
-                                    case "Importance":
-                                        return `${ctx.dataset.label}: ${raw.importance || "None"}`;
-                                    case "Difficulty":
-                                        return `${ctx.dataset.label}: ${raw.difficulty || 0}/10`;
-                                    default:
-                                        return ctx.formattedValue;
-                                }
+if (assignmentCtx){
+
+
+
+
+    /* Initial load */
+
+    /* Toggle handlers */
+    if (isEligible) {
+        loadDailyBtn.addEventListener("click", () => {
+            loadDailyBtn.classList.add("active");
+            loadWeeklyBtn.classList.remove("active");
+            loadAssignmentChart("daily");
+        });
+
+        loadWeeklyBtn.addEventListener("click", () => {
+            loadWeeklyBtn.classList.add("active");
+            loadDailyBtn.classList.remove("active");
+            loadAssignmentChart("weekly");
+        });
+    }
+}
+
+/* ========= STUDY EFFICIENCY BY CLASS ========= */
+async function renderStudyEfficiency() {
+    const efficiencyCtx = document.getElementById("StudyEffByCls").getContext("2d");
+
+    if (!efficiencyCtx) return;
+
+    const card = document.querySelector('[data-card-id="home-performance"]');
+
+    const res = await fetch("/charts/home/study_efficiency_by_class");
+    const data = await res.json();
+
+
+    if (!gateChart(card, data, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
+        return;
+    }
+
+    if (efficiencyChart) {
+        efficiencyChart.destroy();
+    }
+
+    efficiencyChart = new Chart(efficiencyCtx, {
+        type: "radar",
+        data: {
+            labels: data.axes,
+            datasets: data.datasets.map(cls => ({
+                label: cls.label,
+                data: cls.values,
+                borderColor: cls.color,
+                backgroundColor: cls.color + "33", // translucent fill
+                borderWidth: 2,
+                pointRadius: 3,
+                raw: cls.raw
+            }))
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: "bottom"
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            const axis = ctx.label;
+                            const raw = ctx.dataset.raw;
+
+                            switch (axis) {
+                                case "Study Time":
+                                    return `${ctx.dataset.label}: ${raw.study_minutes} min`;
+                                case "Avg Grade":
+                                    return `${ctx.dataset.label}: ${raw.avg_grade.toFixed(1)}%`;
+                                case "Completion Rate":
+                                    return `${ctx.dataset.label}: ${raw.completion_rate.toFixed(1)}%`;
+                                case "Importance":
+                                    return `${ctx.dataset.label}: ${raw.importance || "None"}`;
+                                case "Difficulty":
+                                    return `${ctx.dataset.label}: ${raw.difficulty || 0}/10`;
+                                default:
+                                    return ctx.formattedValue;
                             }
                         }
                     }
                 }
             }
-        });
-    }
-    await initHomeCharts();
+        }
+    });
+}
+await initHomeCharts();
 
 
-    async function initHomeCharts() {
-        await renderTimePerClass();
-        await renderWeeklyStudy();
-        await loadAssignmentChart("daily");
-        await renderStudyEfficiency();
-    }
+async function initHomeCharts() {
+    await renderTimePerClass();
+    await renderWeeklyStudy();
+    await loadAssignmentChart("daily");
+    await renderStudyEfficiency();
+}
 
-    // Refresh listener
-    document.addEventListener("home:charts:refresh", initHomeCharts);
+// Refresh listener
+document.addEventListener("home:charts:refresh", initHomeCharts);
 
 
-});
+

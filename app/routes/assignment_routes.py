@@ -40,11 +40,8 @@ def add_assignment():
 
     db.session.add(new_assignment)
     db.session.commit()
-    if request.headers.get('Accept') == 'application/json':
-        return jsonify({'success': True, 'assignment_id': new_assignment.assignment_id})
-    else:
-        flash('Assignment added successfully!', 'success')
-        return redirect(url_for('assignment.assignments'))
+    return jsonify({'success': True, 'assignment_id': new_assignment.assignment_id})
+
 
 # ---------------- LIST ASSIGNMENTS ----------------
 @assignment.route("/assignments")
@@ -91,6 +88,10 @@ def list_assignments():
         }
         for a, class_name, class_importance, class_type, class_is_finished, created_at, study_minutes in assignments
     ]
+
+    # Handle partial request
+    if request.args.get("partial") == "table":
+        return render_template("partials/assignments_table.html", rows=rows, show_class_column=True)
 
     prefs = UserPreferences.query.filter_by(user_id=current_user.user_id).first()
     deadline_count = prefs.default_upcoming_deadlines_count if prefs else 3
@@ -158,14 +159,16 @@ def update_assignment(assignment_id):
 @assignment.route("/assignments/<int:assignment_id>", methods=["DELETE"])
 @login_required
 def delete_assignment(assignment_id):
-    assignment = Assignment.query.filter_by(assignment_id=assignment_id, user_id=current_user.user_id).first_or_404()
+    assignment = Assignment.query.filter_by(assignment_id=assignment_id, user_id=current_user.user_id).first()
+    if not assignment:
+        return jsonify({
+            "success": False,
+            "error": "Assignment not found and not deleted"
+        }), 404
     db.session.delete(assignment)
     db.session.commit()
-    if request.headers.get('Accept') == 'application/json':
-        return jsonify({'success': True})
-    else:
-        flash('Assignment deleted successfully!', 'success')
-        return redirect(url_for('assignment.assignments'))
+    return jsonify({'success': True})
+
 
 # ---------------- SUMMARY ----------------
 @assignment.route("/assignments/<int:assignment_id>/summary", methods=["GET"])

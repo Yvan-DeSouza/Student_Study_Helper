@@ -93,11 +93,12 @@ async function executeDelete() {
         const response = await fetch(`/classes/${deleteClassId}`, {
             method: "DELETE",
             headers: {
-                "X-CSRFToken": csrfToken,
-                "Content-Type": "application/json"
+                "Accept": "application/json",
+                "X-CSRFToken": csrfToken
             }
         });
 
+        console.log(response.ok)
         if (!response.ok) {
             let err = {};
             try {

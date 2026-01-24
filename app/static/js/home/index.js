@@ -39,18 +39,22 @@ document.addEventListener("DOMContentLoaded", () => {
     if (addAssignmentForm) {
         addAssignmentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const response = await fetch(addAssignmentForm.action, {
-                method: 'POST',
-                body: new FormData(addAssignmentForm),
-                headers: { 'Accept': 'application/json' }
-            });
-            if (response.ok) {
-                const result = await response.json();
-                addAssignmentForm.reset();
-                document.dispatchEvent(new CustomEvent("assignment:changed"));
-            } else {
-                const err = await response.json();
-                // Handle error
+            try {
+                const response = await fetch(addAssignmentForm.action, {
+                    method: 'POST',
+                    body: new FormData(addAssignmentForm),
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    addAssignmentForm.reset();
+                    document.dispatchEvent(new CustomEvent("assignment:changed"));
+                } else {
+                    const err = await response.json();
+                    alert("Error: " + (err.message || "Failed to add assignment"));
+                }
+            } catch (error) {
+                console.error("Error adding assignment:", error);
             }
         });
     }
@@ -60,17 +64,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (studyForm) {
         studyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const response = await fetch(studyForm.action, {
-                method: 'POST',
-                body: new FormData(studyForm),
-                headers: { 'Accept': 'application/json' }
-            });
-            if (response.ok) {
-                const result = await response.json();
-                studyForm.reset();
-                document.dispatchEvent(new CustomEvent("study:logged"));
-            } else {
-                // Handle
+            try {
+                const response = await fetch(studyForm.action, {
+                    method: 'POST',
+                    body: new FormData(studyForm),
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    studyForm.reset();
+                    // Update session lock state
+                    studyForm.dataset.hasActiveSession = "true";
+                    document.dispatchEvent(new CustomEvent("study:logged"));
+                } else {
+                    const err = await response.json();
+                    alert("Error: " + (err.message || "Failed to log session"));
+                }
+            } catch (error) {
+                console.error("Error logging study session:", error);
             }
         });
     }

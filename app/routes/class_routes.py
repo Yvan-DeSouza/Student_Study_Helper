@@ -117,16 +117,20 @@ def delete_class(class_id):
     cls = Class.query.filter_by(
         class_id=class_id,
         user_id=current_user.user_id
-    ).first_or_404()
+    ).first()
+    if not cls:
+        return jsonify({
+            "success": False,
+            "error": "CLASS_NOT_FOUND"
+        }), 404
 
     db.session.delete(cls)
     db.session.commit()
 
-    if request.headers.get('Accept') == 'application/json':
-        return jsonify({'success': True})
-    else:
-        flash('Class deleted successfully!', 'success')
-        return redirect(url_for('classes.classes'))
+    return jsonify({
+        "success": True,
+        "class_id": class_id
+    }), 200
 
 
 @classes.route("/classes/<int:class_id>", methods=["PATCH"])
@@ -229,6 +233,9 @@ def toggle_class_completion(class_id):
 @classes.route("/classes/<int:class_id>/grade", methods=["PATCH"])
 @login_required
 def update_grade(class_id):
+    print(class_id)
+    print(current_user.user_id)
+
     cls = Class.query.filter_by(
         class_id=class_id,
         user_id=current_user.user_id

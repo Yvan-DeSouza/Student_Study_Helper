@@ -31,8 +31,6 @@ export function initAddClassModal() {
 
 async function submitAddClass(form) {
     try {
-        const csrf = document.querySelector("meta[name='csrf-token']").content;
-
         const response = await fetch(form.action, {
             method: "POST",
             body: new FormData(form),
@@ -40,7 +38,6 @@ async function submitAddClass(form) {
                 "Accept": "application/json",
             }
         });
-        console.log(response)
 
         if (!response.ok) {
             let err = {};
@@ -65,13 +62,12 @@ async function submitAddClass(form) {
             throw new Error(err.error || "Failed to create class");
         }
 
-        // ✅ Safe success handling
-        await response.json();
-
+        // Success
+        const result = await response.json();
+        resetClassModal();
         closeModal("addClassModal");
-
-        document.dispatchEvent(new CustomEvent("class:changed"));
-
+        
+        // Emit event to trigger refresh
         document.dispatchEvent(new CustomEvent("class:changed"));
 
     } catch (error) {

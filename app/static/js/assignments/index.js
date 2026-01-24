@@ -10,7 +10,7 @@ import { initEditFromTable } from './adapters/edit_from_table.js';
 import { initModals, initUnsavedChangesModal } from './modals.js';
 import { refreshAssignmentsTable } from "./refresh/refresh_table.js";
 import { refreshCharts } from "./refresh/refresh_charts.js";
-import { registerRefresh } from "../core/refreshBus.js";
+import { registerRefresh, runRefreshes } from "../core/refreshBus.js";
 
 
 
