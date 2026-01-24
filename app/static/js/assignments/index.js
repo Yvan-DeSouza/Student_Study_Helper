@@ -51,6 +51,16 @@ document.addEventListener("DOMContentLoaded", () => {
         await runRefreshes(["table", "charts"]);
     });
 
+    // Listen for assignment grade changes
+    document.addEventListener("assignment:grade:changed", async () => {
+        await runRefreshes(["table", "charts"]);
+    });
+
+    // Listen for assignment completion changes
+    document.addEventListener("assignment:completion:changed", async () => {
+        await runRefreshes(["table", "charts"]);
+    });
+
     // AJAX for add assignment form
     const addAssignmentForm = document.querySelector('form[action="/assignment"]');
     if (addAssignmentForm) {

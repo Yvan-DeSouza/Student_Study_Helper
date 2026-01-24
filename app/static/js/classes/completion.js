@@ -125,17 +125,24 @@ async function sendClassFinishedUpdate(isFinished, finishedAt) {
     const classId = pendingClassCard.dataset.classId;
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    await fetch(`/classes/${classId}/completion`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken
-        },
-        body: JSON.stringify({
-            is_finished: isFinished,
-            finished_at: finishedAt
-        })
-    });
+    try {
+        await fetch(`/classes/${classId}/completion`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({
+                is_finished: isFinished,
+                finished_at: finishedAt
+            })
+        });
+
+        // Emit refresh event for completion change
+        document.dispatchEvent(new CustomEvent("class:completion:changed"));
+    } catch (error) {
+        console.error("Error updating class completion:", error);
+    }
 }
 
 function updateClassFinishedUI(card, isFinished) {

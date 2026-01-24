@@ -102,7 +102,6 @@ export async function saveSingleGrade(card) {
     const input = card.querySelector(".inline-grade-input");
     const display = card.querySelector(".grade-display");
 
-
     const value = parseFloat(input.value);
    
     if (!validateGradeInput(value)) {
@@ -110,34 +109,36 @@ export async function saveSingleGrade(card) {
         return;
     }
 
-
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
+    try {
+        await fetch(`/classes/${classId}/grade`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": csrfToken
+            },
+            body: `grade=${encodeURIComponent(value)}`
+        });
 
-    await fetch(`/classes/${classId}/grade`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-CSRFToken": csrfToken
-        },
-        body: `grade=${encodeURIComponent(value)}`
-    });
+        display.textContent = value.toFixed(1);
+        display.dataset.grade = value;
+       
+        const dot = card.querySelector(".grade-dot");
+        const passGrade = parseFloat(display.dataset.passGrade);
+        dot.style.backgroundColor = getGradeColor(value, passGrade);
 
+        resetInlineUI(card);
+        inlineEdits.delete(classId);
 
-    display.textContent = value.toFixed(1);
-    display.dataset.grade = value;
-   
-    const dot = card.querySelector(".grade-dot");
-    const passGrade = parseFloat(display.dataset.passGrade);
-    dot.style.backgroundColor = getGradeColor(value, passGrade);
+        if (inlineEdits.size === 0) {
+            clearUnsavedFlag();
+        }
 
-
-    resetInlineUI(card);
-    inlineEdits.delete(classId);
-
-
-    if (inlineEdits.size === 0) {
-        clearUnsavedFlag();
+        // Emit refresh event for grade change
+        document.dispatchEvent(new CustomEvent("class:grade:changed"));
+    } catch (error) {
+        console.error("Error saving grade:", error);
     }
 }
 

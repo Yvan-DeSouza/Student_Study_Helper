@@ -29,6 +29,16 @@ document.addEventListener("DOMContentLoaded", () => {
         await runRefreshes(["cards", "charts"]);
     });
 
+    // Listen for class grade changes
+    document.addEventListener("class:grade:changed", async () => {
+        await runRefreshes(["charts"]);
+    });
+
+    // Listen for class completion changes
+    document.addEventListener("class:completion:changed", async () => {
+        await runRefreshes(["cards", "charts"]);
+    });
+
     // Listen for assignment changes
     document.addEventListener("assignment:changed", async () => {
         await runRefreshes(["charts"]);

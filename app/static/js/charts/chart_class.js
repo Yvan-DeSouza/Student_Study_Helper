@@ -6,9 +6,26 @@ let healthChart = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    document.addEventListener("charts:refresh", () => {
-        location.reload(); // TEMP
-        // later: destroy & re-init charts properly
+    document.addEventListener("charts:refresh", async () => {
+        // Destroy existing charts
+        if (scatterChart) scatterChart.destroy();
+        if (healthChart) healthChart.destroy();
+        
+        scatterChart = null;
+        healthChart = null;
+        
+        // Re-render charts
+        await fetchAndPopulateClassDropdown();
+        await renderHealthChart('bar', 'all', 'all');
+        
+        // Re-fetch scatter
+        const scatterRes = await fetch("/charts/classes/grade_vs_study_time");
+        const scatterData = await scatterRes.json();
+        const scatterCard = document.querySelector('.scatter-card');
+
+        if (gateChart(scatterCard, scatterData, renderGradeVsStudyFront, renderGradeVsStudyBack)) {
+            renderScatter(scatterData);
+        }
     });
 
     // =================== RENDER FUNCTIONS ===================

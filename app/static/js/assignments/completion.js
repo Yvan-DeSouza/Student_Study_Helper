@@ -66,6 +66,9 @@ async function handleUncomplete() {
     pendingCheckbox.checked = false;
     pendingRow.dataset.completed = "false";
 
+    // Emit refresh event
+    document.dispatchEvent(new CustomEvent("assignment:completion:changed"));
+
     closeModal("uncompleteConfirmModal");
     pendingRow = null;
     pendingCheckbox = null;
@@ -94,6 +97,10 @@ async function handleComplete() {
     }
 
     await sendCompletionUpdate(true, finishedAt);
+    
+    // Emit refresh event
+    document.dispatchEvent(new CustomEvent("assignment:completion:changed"));
+    
     closeModal("completeAssignmentModal");
     pendingRow = null;
     pendingCheckbox = null;

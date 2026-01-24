@@ -24,9 +24,29 @@ document.addEventListener("DOMContentLoaded", () => {
         await runRefreshes(["home:charts", "home:assignments", "home:sessions", "upcoming-deadlines"]);
     });
 
+    // Listen for class grade changes
+    document.addEventListener("class:grade:changed", async () => {
+        await runRefreshes(["home:charts"]);
+    });
+
+    // Listen for class completion changes
+    document.addEventListener("class:completion:changed", async () => {
+        await runRefreshes(["home:charts", "home:assignments", "upcoming-deadlines"]);
+    });
+
     // Listen for assignment changes
     document.addEventListener("assignment:changed", async () => {
         await runRefreshes(["home:charts", "home:assignments", "home:sessions", "upcoming-deadlines"]);
+    });
+
+    // Listen for assignment grade changes
+    document.addEventListener("assignment:grade:changed", async () => {
+        await runRefreshes(["home:charts"]);
+    });
+
+    // Listen for assignment completion changes
+    document.addEventListener("assignment:completion:changed", async () => {
+        await runRefreshes(["home:charts", "home:assignments", "upcoming-deadlines"]);
     });
 
     // Listen for study logged

@@ -205,12 +205,14 @@ export async function saveInlineGrades(assignments, navUrl = null) {
     }
 
     hasUnsavedInlineChanges = false;
+    isSavingInlineChanges = false;
+
+    // Emit refresh event instead of reloading
+    document.dispatchEvent(new CustomEvent("assignment:changed"));
 
     const pendingUrl = navUrl || getPendingNavigation();
     if (pendingUrl) {
         window.location.href = pendingUrl;
-    } else {
-        location.reload();
     }
 }
 
