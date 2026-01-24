@@ -14,8 +14,7 @@ export function initDeleteClassModal() {
     const deleteText = document.getElementById("deleteStepText");
     const impactBox = document.getElementById("deleteImpactBox");
     const inputBox = document.getElementById("deleteInputBox");
-    const assignmentCountEl = document.getElementById("assignmentCount");
-    const sessionCountEl = document.getElementById("sessionCount");
+
     const confirmInput = document.getElementById("deleteConfirmInput");
     const confirmBtn = document.getElementById("confirmDelete");
     const cancelBtn = document.getElementById("cancelDelete");
@@ -69,34 +68,37 @@ export function initDeleteClassModal() {
         closeModal("deleteClassModal");
     });
 
-    function renderDeleteStep() {
-        confirmBtn.disabled = currentStep === 3;
-        confirmInput.value = "";
 
-        impactBox.classList.add("hidden");
-        inputBox.classList.add("hidden");
-        backBtn.style.display = currentStep === 1 ? "none" : "inline-block";
+}
+function renderDeleteStep() {
+    confirmBtn.disabled = currentStep === 3;
+    confirmInput.value = "";
 
-        if (currentStep === 1) {
-            deleteText.textContent = `Are you sure you want to delete the "${className}" class?`;
-        }
+    impactBox.classList.add("hidden");
+    inputBox.classList.add("hidden");
+    backBtn.style.display = currentStep === 1 ? "none" : "inline-block";
 
-        if (currentStep === 2) {
-            deleteText.textContent = "Deleting this class will permanently remove:";
-            impactBox.classList.remove("hidden");
-        }
-
-        if (currentStep === 3) {
-            deleteText.textContent = `To confirm deletion of "${className}", type the class name below.`;
-            inputBox.classList.remove("hidden");
-        }
-
-        confirmBtn.textContent = currentStep < 3 ? "Next" : "Delete";
+    if (currentStep === 1) {
+        deleteText.textContent = `Are you sure you want to delete the "${className}" class?`;
     }
+
+    if (currentStep === 2) {
+        deleteText.textContent = "Deleting this class will permanently remove:";
+        impactBox.classList.remove("hidden");
+    }
+
+    if (currentStep === 3) {
+        deleteText.textContent = `To confirm deletion of "${className}", type the class name below.`;
+        inputBox.classList.remove("hidden");
+    }
+
+    confirmBtn.textContent = currentStep < 3 ? "Next" : "Delete";
 }
 
 export async function openDeleteClassModal(btn) {
     await saveAllInlineEditsSilently();
+    const assignmentCountEl = document.getElementById("assignmentCount");
+    const sessionCountEl = document.getElementById("sessionCount");
 
     className = btn.dataset.className;
     deleteClassId = btn.dataset.classId;
