@@ -13,19 +13,27 @@ import { initUnsavedChangesModal } from "./modals/unsaved_changes.js";
 // Import refresh handlers
 import "./refresh/refresh_classes.js"; // Auto-registers
 import { refreshCharts } from "./refresh/refresh_charts.js";
+import { refreshClassCards } from "./refresh/refresh_cards.js";
+import { runRefreshes } from "../core/refreshBus.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize modal system
     initModalEvents();
 
-    // Register chart refresh
+    // Register refresh
+    registerRefresh("cards", refreshClassCards);
     registerRefresh("charts", refreshCharts);
 
     // Listen for class changes
     document.addEventListener("class:changed", async () => {
-        // Charts will be refreshed via the runRefreshes call in modals
+        await runRefreshes(["cards", "charts"]);
     });
-    
+
+    // Listen for assignment changes
+    document.addEventListener("assignment:changed", async () => {
+        await runRefreshes(["charts"]);
+    });
+
     initClassSelector();
     initVisualElements();
     initInlineEditing();

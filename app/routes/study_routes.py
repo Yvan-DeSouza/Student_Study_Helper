@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, render_template
+from flask import Blueprint, request, redirect, url_for, render_template, jsonify, flash
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.study_session import StudySession
@@ -72,8 +72,11 @@ def add_session():
         db.session.add(session)
         db.session.commit()
 
-        # Redirect back to home page
-        return redirect(url_for("main.home"))
+        if request.headers.get('Accept') == 'application/json':
+            return jsonify({'success': True, 'session_id': session.session_id})
+        else:
+            flash('Study session logged successfully!', 'success')
+            return redirect(url_for('study.study'))
 
 
     # GET request: render form

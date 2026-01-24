@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, abort
+from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, abort, flash
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.course import Class
@@ -103,9 +103,11 @@ def create_class():
     db.session.add(new_class)
     db.session.commit()
 
-    return jsonify({
-        "success": True
-    }), 200 
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'success': True, 'class_id': new_class.class_id})
+    else:
+        flash('Class created successfully!', 'success')
+        return redirect(url_for('classes.classes')) 
 
 
 
@@ -120,7 +122,11 @@ def delete_class(class_id):
     db.session.delete(cls)
     db.session.commit()
 
-    return jsonify({"success": True}), 200
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'success': True})
+    else:
+        flash('Class deleted successfully!', 'success')
+        return redirect(url_for('classes.classes'))
 
 
 @classes.route("/classes/<int:class_id>", methods=["PATCH"])
@@ -243,4 +249,11 @@ def update_grade(class_id):
     db.session.commit()
 
     return "", 204
+
+
+@classes.route("/classes/cards")
+@login_required
+def classes_cards():
+    classes = Class.query.filter_by(user_id=current_user.user_id).all()
+    return render_template('partials/classes/cards.html', classes=classes)
 

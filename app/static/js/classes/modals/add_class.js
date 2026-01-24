@@ -1,4 +1,3 @@
-// static/js/classes/modals/add_class.js
 import { showModal, closeModal } from '../../core/modalManager.js';
 import { default_class_colors } from '../utils.js';
 import { saveAllInlineEditsSilently } from '../inlineEditing.js';

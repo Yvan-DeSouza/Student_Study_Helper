@@ -39,7 +39,10 @@ export function initEditAssignmentSubmit() {
     };
 
     await updateAssignment(id, payload);
-    location.reload();
+    // Close modal
+    document.querySelector("[data-close-modal]")?.click();
+    // Emit event
+    document.dispatchEvent(new CustomEvent("assignment:changed"));
   });
 }
 

@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, url_for, render_template, abort
+from flask import Blueprint, request, jsonify, redirect, url_for, render_template, abort, flash
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.assignment import Assignment, AssignmentExpectedGrade
@@ -40,7 +40,11 @@ def add_assignment():
 
     db.session.add(new_assignment)
     db.session.commit()
-    return redirect(url_for("main.home"))
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'success': True, 'assignment_id': new_assignment.assignment_id})
+    else:
+        flash('Assignment added successfully!', 'success')
+        return redirect(url_for('assignment.assignments'))
 
 # ---------------- LIST ASSIGNMENTS ----------------
 @assignment.route("/assignments")
@@ -157,7 +161,11 @@ def delete_assignment(assignment_id):
     assignment = Assignment.query.filter_by(assignment_id=assignment_id, user_id=current_user.user_id).first_or_404()
     db.session.delete(assignment)
     db.session.commit()
-    return jsonify({"success": True})
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({'success': True})
+    else:
+        flash('Assignment deleted successfully!', 'success')
+        return redirect(url_for('assignment.assignments'))
 
 # ---------------- SUMMARY ----------------
 @assignment.route("/assignments/<int:assignment_id>/summary", methods=["GET"])
@@ -170,3 +178,11 @@ def assignment_summary(assignment_id):
         "study_session_count": assignment.study_session_count,
         "study_minutes": assignment.study_minutes
     })
+
+
+@assignment.route("/assignments/table")
+@login_required
+def assignments_table():
+    assignments = Assignment.query.join(Class).filter(Class.user_id == current_user.user_id).all()
+    show_class_column = True
+    return render_template('partials/assignments_table.html', rows=assignments, show_class_column=show_class_column)

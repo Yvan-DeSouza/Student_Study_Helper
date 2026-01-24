@@ -8,6 +8,9 @@ import { initDeleteFromTable } from './adapters/delete_from_table.js';
 import { initDeleteAssignmentModal } from './modals/delete_assignment.js';
 import { initEditFromTable } from './adapters/edit_from_table.js';
 import { initModals, initUnsavedChangesModal } from './modals.js';
+import { refreshAssignmentsTable } from "./refresh/refresh_table.js";
+import { refreshCharts } from "./refresh/refresh_charts.js";
+import { registerRefresh } from "../core/refreshBus.js";
 
 
 
@@ -38,6 +41,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Sort category logic
     initSortCategory();
+
+    // Register refresh
+    registerRefresh("table", refreshAssignmentsTable);
+    registerRefresh("charts", refreshCharts);
+
+    // Listen for assignment changes
+    document.addEventListener("assignment:changed", async () => {
+        await runRefreshes(["table", "charts"]);
+    });
+
+    // AJAX for add assignment form
+    const addAssignmentForm = document.querySelector('form[action="/assignment"]');
+    if (addAssignmentForm) {
+        addAssignmentForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const response = await fetch(addAssignmentForm.action, {
+                method: 'POST',
+                body: new FormData(addAssignmentForm),
+                headers: { 'Accept': 'application/json' }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                addAssignmentForm.reset();
+                document.dispatchEvent(new CustomEvent("assignment:changed"));
+            } else {
+                const err = await response.json();
+                // Handle error
+            }
+        });
+    }
 });
 
 function initSortCategory() {

@@ -1,4 +1,3 @@
-// static/js/classes/modals/delete_class.js
 import { showModal, closeModal } from '../../core/modalManager.js';
 import { runRefreshes } from "../../core/refreshBus.js";
 import { saveAllInlineEditsSilently } from '../inlineEditing.js';
