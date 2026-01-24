@@ -107,7 +107,7 @@ async function executeDelete() {
                 // JSON parsing failed, maybe the response was empty
                 err.error = "Server responded but not in JSON format";
             }
-            throw new Error(err.error || "Failed to update class");
+            throw new Error(err.error || "Failed to delete class");
         }
 
 
@@ -122,7 +122,7 @@ async function executeDelete() {
 
     } catch (error) {
         console.error("Error deleting class:", error);
-        alert("Failed to delete class. Please try again.");
+        alert(error);
     }
 }
 

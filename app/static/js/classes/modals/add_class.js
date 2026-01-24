@@ -27,48 +27,52 @@ export function initAddClassModal() {
     });
 }
 
+
+
+
 async function submitAddClass(form) {
     try {
+        const csrf = document.querySelector("meta[name='csrf-token']").content;
+
         const response = await fetch(form.action, {
             method: "POST",
             body: new FormData(form),
-            headers: { Accept: "application/json" }
+            headers: {
+                "Accept": "application/json",
+            }
         });
-
+        console.log(response)
 
         if (!response.ok) {
             let err = {};
             try {
                 err = await response.json();
             } catch {
-                if (err.error === "DUPLICATE_CLASS_CODE") {
-                    alert(`A class with this code already exists: ${err.existing_class_name}`);
-                    return;
-                }
-                err.error = "Server responded but not in JSON format";
+                err.error = "Server error (non-JSON response)";
             }
-            throw new Error(err.error || "Failed to update class");
+
+            if (err.error === "duplicate_name") {
+                document.getElementById("invalidNameMessage").textContent = err.message;
+                showModal("invalidNameModal");
+                return;
+            }
+
+            if (err.error === "duplicate_code") {
+                document.getElementById("invalidCodeMessage").textContent = err.message;
+                showModal("invalidCodeModal");
+                return;
+            }
+
+            throw new Error(err.error || "Failed to create class");
         }
 
+        // ✅ Safe success handling
+        await response.json();
 
-        const result = await response.json();
-
-        // Close modal
         closeModal("addClassModal");
 
-        // Determine which page we're on and refresh accordingly
-        const isHomePage = window.location.pathname === "/" || window.location.pathname.includes("/home");
-        const isClassesPage = window.location.pathname.includes("/classes");
+        document.dispatchEvent(new CustomEvent("class:changed"));
 
-        if (isHomePage) {
-            // Refresh home page elements
-            await runRefreshes(["home:charts", "home:assignments", "home:sessions"]);
-        } else if (isClassesPage) {
-            // Refresh classes page elements
-            await runRefreshes(["classes", "charts"]);
-        }
-
-        // Emit global event for any additional listeners
         document.dispatchEvent(new CustomEvent("class:changed"));
 
     } catch (error) {
@@ -76,6 +80,7 @@ async function submitAddClass(form) {
         alert("Failed to create class. Please try again.");
     }
 }
+
 
 function resetClassModal() {
     const addModal = document.getElementById("addClassModal");

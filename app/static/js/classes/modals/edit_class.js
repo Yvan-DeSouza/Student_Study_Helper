@@ -50,20 +50,32 @@ async function submitEditClass(form) {
             try {
                 err = await response.json();
             } catch {
-                // JSON parsing failed, maybe the response was empty
-                err.error = "Server responded but not in JSON format";
+                err.error = "Server error (non-JSON response)";
             }
+
+            if (err.error === "duplicate_name") {
+                document.getElementById("invalidNameMessage").textContent = err.message;
+                showModal("invalidNameModal");
+                return;
+            }
+
+            if (err.error === "duplicate_code") {
+                document.getElementById("invalidCodeMessage").textContent = err.message;
+                showModal("invalidCodeModal");
+                return;
+            }
+
             throw new Error(err.error || "Failed to update class");
         }
 
 
-        const result = await response.json();
+        if (response.headers.get("content-type")?.includes("application/json")) {
+            await response.json();
+        }
+
 
         // Close modal
         closeModal("editClassModal");
-
-        // Refresh appropriate page elements
-        await runRefreshes(["classes", "charts"]);
 
         // Emit global event
         document.dispatchEvent(new CustomEvent("class:changed"));

@@ -50,21 +50,36 @@ def list_classes():
 @classes.route("/classes", methods=["POST"])
 @login_required
 def create_class():
+    class_name = request.form["class_name"].strip()
     class_code = request.form["class_code"].strip()
 
-    existing = Class.query.filter(
+    # Check for duplicate name
+    existing_name = Class.query.filter(
+        and_(
+            Class.user_id == current_user.user_id,
+            Class.class_name == class_name
+        )
+    ).first()
+
+    if existing_name:
+        return jsonify({
+            "error": "duplicate_name",
+            "message": f"The {class_name} is already taken for your class with a code of {existing_name.class_code}, please choose another name."
+        }), 400
+
+    # Check for duplicate code
+    existing_code = Class.query.filter(
         and_(
             Class.user_id == current_user.user_id,
             Class.class_code == class_code
         )
     ).first()
 
-    if existing:
+    if existing_code:
         return jsonify({
-            "success": False,
-            "error": "DUPLICATE_CLASS_CODE",
-            "existing_class_name": existing.class_name
-        }), 409
+            "error": "duplicate_code",
+            "message": f"The {class_code} class code is already taken by your class with name '{existing_code.class_name}', please choose another one."
+        }), 400
 
     importance = request.form.get("importance")
     if importance == "":
@@ -75,7 +90,7 @@ def create_class():
 
     new_class = Class(
         user_id=current_user.user_id,
-        class_name=request.form["class_name"],
+        class_name=class_name,
         class_code=class_code,
         class_type=request.form["class_type"],
         teacher_name=request.form.get("teacher_name") or None,
@@ -88,7 +103,9 @@ def create_class():
     db.session.add(new_class)
     db.session.commit()
 
-    return jsonify({"success": True}), 201
+    return jsonify({
+        "success": True
+    }), 200 
 
 
 
@@ -114,13 +131,45 @@ def update_class(class_id):
         user_id=current_user.user_id
     ).first_or_404()
 
-    cls.class_name = request.form["class_name"]
-    cls.class_code = request.form["class_code"]
+    new_name = request.form["class_name"].strip()
+    new_code = request.form["class_code"].strip()
+
+    # Check for duplicate name if changed
+    if new_name != cls.class_name:
+        existing_name = Class.query.filter(
+            and_(
+                Class.user_id == current_user.user_id,
+                Class.class_name == new_name
+            )
+        ).first()
+        if existing_name:
+            return jsonify({
+                "error": "duplicate_name",
+                "message": f"The {new_name} is already taken for your class with a code of {existing_name.class_code}, please choose another name."
+            }), 400
+
+    # Check for duplicate code if changed
+    if new_code != cls.class_code:
+        existing_code = Class.query.filter(
+            and_(
+                Class.user_id == current_user.user_id,
+                Class.class_code == new_code
+            )
+        ).first()
+        if existing_code:
+            return jsonify({
+                "error": "duplicate_code",
+                "message": f"The {new_code} class code is already taken by your class with name '{existing_code.class_name}', please choose another one."
+            }), 400
+
+    cls.class_name = new_name
+    cls.class_code = new_code
     cls.class_type = request.form["class_type"]
 
     importance = request.form.get("importance")
     cls.importance = importance if importance else None
-
+    teacher_name = request.form.get("teacher_name")
+    cls.teacher_name = teacher_name if teacher_name else None
     cls.color = request.form.get("color")
 
     difficulty_raw = request.form.get("difficulty")
@@ -132,7 +181,6 @@ def update_class(class_id):
     if not cls.is_finished:
         grade_raw = request.form.get("grade")
         cls.grade = float(grade_raw) if grade_raw else None
-
 
     db.session.commit()
     return jsonify({"success": True}), 200
