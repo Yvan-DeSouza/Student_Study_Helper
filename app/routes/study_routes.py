@@ -72,11 +72,9 @@ def add_session():
         db.session.add(session)
         db.session.commit()
 
-        if request.headers.get('Accept') == 'application/json':
-            return jsonify({'success': True, 'session_id': session.session_id})
-        else:
-            flash('Study session logged successfully!', 'success')
-            return redirect(url_for('study.study'))
+
+        return jsonify({'success': True, 'session_id': session.session_id})
+
 
 
     # GET request: render form

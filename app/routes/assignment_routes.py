@@ -42,6 +42,20 @@ def add_assignment():
     db.session.commit()
     return jsonify({'success': True, 'assignment_id': new_assignment.assignment_id})
 
+@assignment.route("/assignments/json")
+@login_required
+def list_assignments_json():
+    """Return assignments as JSON for dropdown population"""
+    assignments_list = Assignment.query.join(Class).filter(
+        Class.user_id == current_user.user_id
+    ).all()
+    
+    return jsonify([{
+        "assignment_id": a.assignment_id,
+        "title": a.title,
+        "class_id": a.class_id,
+        "assignment_type": a.assignment_type
+    } for a in assignments_list])
 
 # ---------------- LIST ASSIGNMENTS ----------------
 @assignment.route("/assignments")

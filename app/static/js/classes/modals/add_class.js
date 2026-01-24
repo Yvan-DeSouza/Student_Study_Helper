@@ -1,6 +1,5 @@
 import { showModal, closeModal } from '../../core/modalManager.js';
 import { default_class_colors } from '../utils.js';
-import { saveAllInlineEditsSilently } from '../inlineEditing.js';
 import { runRefreshes } from "../../core/refreshBus.js";
 
 export function initAddClassModal() {
@@ -120,8 +119,9 @@ function resetClassModal() {
 }
 
 export async function openAddClassModal() {
-    if (typeof saveAllInlineEditsSilently === 'function') {
-        await saveAllInlineEditsSilently();
+    // Check if saveAllInlineEditsSilently exists (only on classes page)
+    if (typeof window.saveAllInlineEditsSilently === 'function') {
+        await window.saveAllInlineEditsSilently();
     }
     resetClassModal();
     showModal("addClassModal");

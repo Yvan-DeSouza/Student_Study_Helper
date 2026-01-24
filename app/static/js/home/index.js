@@ -3,7 +3,6 @@ import { refreshHomeCharts } from './refresh/refresh_charts.js';
 import { refreshHomeSessions } from './refresh/refresh_sessions.js';
 import { refreshHomeAssignments } from './refresh/refresh_assignments.js';
 import { refreshHomeUpcomingDeadlines } from './refresh/refresh_upcoming_deadlines.js';
-
 // Register all home page refresh listeners
 function registerHomeListeners() {
     console.log("[Home] Registering refresh listeners");

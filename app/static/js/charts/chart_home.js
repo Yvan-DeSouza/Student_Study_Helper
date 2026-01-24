@@ -149,7 +149,6 @@ let efficiencyChart = null;
         const data = await res.json();
 
 
-        console.log("[TimePerClass] eligibility:", data.eligible, data);
 
 
         const allowed = gateChart(card, data, renderTimeDistributionFront, renderTimeDistributionBack);
@@ -209,7 +208,6 @@ let efficiencyChart = null;
         const data = await res.json();
 
 
-        console.log("[WeeklyStudy] data:", data);
 
 
         if (!gateChart(card, data, renderWeeklyStudyFront, null)) {
@@ -379,7 +377,6 @@ let efficiencyChart = null;
         const data = await res.json();
 
 
-        console.log("[Efficiency] data:", data);
 
 
         if (!gateChart(card, data, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
