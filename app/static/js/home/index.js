@@ -1,108 +1,41 @@
-// static/js/home/index.js
-import { initModalEvents } from "../core/modalManager.js";
-import { registerRefresh, runRefreshes } from "../core/refreshBus.js";
+import { registerRefresh, unregisterRefresh } from '../core/refreshBus.js';
+import { refreshHomeCharts } from './refresh/refresh_charts.js';
+import { refreshHomeSessions } from './refresh/refresh_sessions.js';
+import { refreshHomeAssignments } from './refresh/refresh_assignments.js';
+import { refreshHomeUpcomingDeadlines } from './refresh/refresh_upcoming_deadlines.js';
 
-// Home refresh handlers
-import { refreshHomeCharts } from "./refresh/refresh_charts.js";
-import { refreshHomeAssignments } from "./refresh/refresh_assignments.js";
-import { refreshHomeSessions } from "./refresh/refresh_sessions.js";
-import { refreshUpcomingDeadlines } from "../global_refresh/refresh_upcoming_deadlines.js";
-
-document.addEventListener("DOMContentLoaded", () => {
-    // Initialize modal system
-    initModalEvents();
-
-
-    // Register refresh handlers
+// Register all home page refresh listeners
+function registerHomeListeners() {
+    console.log("[Home] Registering refresh listeners");
+    
+    // Charts refresh
     registerRefresh("home:charts", refreshHomeCharts);
-    registerRefresh("home:assignments", refreshHomeAssignments);
+    
+    // Session form refresh
     registerRefresh("home:sessions", refreshHomeSessions);
-    registerRefresh("upcoming-deadlines", refreshUpcomingDeadlines);
+    
+    // Assignment form refresh
+    registerRefresh("home:assignments", refreshHomeAssignments);
+    
+    // Upcoming deadlines refresh (shared component)
+    registerRefresh("upcoming-deadlines", refreshHomeUpcomingDeadlines);
+}
 
-    // Listen for class changes to refresh home page
-    document.addEventListener("class:changed", async () => {
-        await runRefreshes(["home:charts", "home:assignments", "home:sessions", "upcoming-deadlines"]);
-    });
+// Cleanup when leaving page
+function cleanup() {
+    console.log("[Home] Cleaning up listeners");
+    unregisterRefresh("home:charts");
+    unregisterRefresh("home:sessions");
+    unregisterRefresh("home:assignments");
+    unregisterRefresh("upcoming-deadlines");
+}
 
-    // Listen for class grade changes
-    document.addEventListener("class:grade:changed", async () => {
-        await runRefreshes(["home:charts"]);
-    });
+// Initialize on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', registerHomeListeners);
+} else {
+    registerHomeListeners();
+}
 
-    // Listen for class completion changes
-    document.addEventListener("class:completion:changed", async () => {
-        await runRefreshes(["home:charts", "home:assignments", "upcoming-deadlines"]);
-    });
-
-    // Listen for assignment changes
-    document.addEventListener("assignment:changed", async () => {
-        await runRefreshes(["home:charts", "home:assignments", "home:sessions", "upcoming-deadlines"]);
-    });
-
-    // Listen for assignment grade changes
-    document.addEventListener("assignment:grade:changed", async () => {
-        await runRefreshes(["home:charts"]);
-    });
-
-    // Listen for assignment completion changes
-    document.addEventListener("assignment:completion:changed", async () => {
-        await runRefreshes(["home:charts", "home:assignments", "upcoming-deadlines"]);
-    });
-
-    // Listen for study logged
-    document.addEventListener("study:logged", async () => {
-        await runRefreshes(["home:charts", "upcoming-deadlines"]);
-    });
-
-    // AJAX for add assignment form
-    const addAssignmentForm = document.querySelector('form[action="/assignment"]');
-    if (addAssignmentForm) {
-        addAssignmentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const response = await fetch(addAssignmentForm.action, {
-                    method: 'POST',
-                    body: new FormData(addAssignmentForm),
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (response.ok) {
-                    const result = await response.json();
-                    addAssignmentForm.reset();
-                    document.dispatchEvent(new CustomEvent("assignment:changed"));
-                } else {
-                    const err = await response.json();
-                    alert("Error: " + (err.message || "Failed to add assignment"));
-                }
-            } catch (error) {
-                console.error("Error adding assignment:", error);
-            }
-        });
-    }
-
-    // AJAX for study form
-    const studyForm = document.getElementById('study-session-form');
-    if (studyForm) {
-        studyForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const response = await fetch(studyForm.action, {
-                    method: 'POST',
-                    body: new FormData(studyForm),
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (response.ok) {
-                    const result = await response.json();
-                    studyForm.reset();
-                    // Update session lock state
-                    studyForm.dataset.hasActiveSession = "true";
-                    document.dispatchEvent(new CustomEvent("study:logged"));
-                } else {
-                    const err = await response.json();
-                    alert("Error: " + (err.message || "Failed to log session"));
-                }
-            } catch (error) {
-                console.error("Error logging study session:", error);
-            }
-        });
-    }
-});
+// Cleanup on page unload
+window.addEventListener('beforeunload', cleanup);

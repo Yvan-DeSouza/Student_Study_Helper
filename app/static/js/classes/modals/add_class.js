@@ -26,9 +26,6 @@ export function initAddClassModal() {
     });
 }
 
-
-
-
 async function submitAddClass(form) {
     try {
         const response = await fetch(form.action, {
@@ -67,8 +64,21 @@ async function submitAddClass(form) {
         resetClassModal();
         closeModal("addClassModal");
         
-        // Emit event to trigger refresh
-        document.dispatchEvent(new CustomEvent("class:changed"));
+        // Determine which page we're on and trigger appropriate refreshes
+        const currentPage = getCurrentPage();
+        
+        if (currentPage === 'home') {
+            await runRefreshes([
+                "home:sessions",      // Update study session form dropdown
+                "home:assignments",   // Update assignment form dropdown
+                "home:charts"         // Update charts (new class appears)
+            ]);
+        } else if (currentPage === 'classes') {
+            await runRefreshes([
+                "classes:cards",      // Refresh class cards
+                "classes:charts"      // Refresh class charts
+            ]);
+        }
 
     } catch (error) {
         console.error("Error creating class:", error);
@@ -76,6 +86,17 @@ async function submitAddClass(form) {
     }
 }
 
+function getCurrentPage() {
+    // Determine current page from URL or active nav link
+    const activeNav = document.querySelector('.nav-link.active');
+    if (activeNav) {
+        const href = activeNav.getAttribute('href');
+        if (href.includes('/main')) return 'home';
+        if (href.includes('/classes')) return 'classes';
+        if (href.includes('/assignment')) return 'assignments';
+    }
+    return 'unknown';
+}
 
 function resetClassModal() {
     const addModal = document.getElementById("addClassModal");
@@ -99,7 +120,9 @@ function resetClassModal() {
 }
 
 export async function openAddClassModal() {
-    await saveAllInlineEditsSilently();
+    if (typeof saveAllInlineEditsSilently === 'function') {
+        await saveAllInlineEditsSilently();
+    }
     resetClassModal();
     showModal("addClassModal");
 }
