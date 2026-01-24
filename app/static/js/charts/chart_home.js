@@ -1,6 +1,22 @@
 import { gateChart } from './chart_gatekeeper.js';
 
+let timePerClassChart = null;
+let weeklyStudyChart = null;
+let assignmentLoadChart = null;
+let efficiencyChart = null;
+
 document.addEventListener("DOMContentLoaded", async () => {
+
+    const timePerClassCtx = document.getElementById("timePerClassChart")?.getContext("2d");
+    const weeklyStudyCtx = document.getElementById("weeklyStudyTime")?.getContext("2d");
+    const efficiencyCtx = document.getElementById("StudyEffByCls")?.getContext("2d");
+
+    console.log({
+        timePerClassCtx,
+        weeklyStudyCtx,
+        efficiencyCtx
+    });
+
 
     function getThemeColor(lightColor, darkColor) {
         const theme = document.documentElement.getAttribute('data-theme');
@@ -133,20 +149,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     /* ========= TIME PER CLASS ========= */
-    const classCtx = document.getElementById("timePerClassChart").getContext("2d");
-    const classCard = document.querySelector('[data-card-id="home-time-per-class"]');
-    const classRes = await fetch("/charts/home/time_per_class");
-    const classData = await classRes.json();
+    async function renderTimePerClass() {
+        if (!timePerClassCtx) return;
 
-    if (gateChart(classCard, classData, renderTimeDistributionFront, renderTimeDistributionBack)) {
-        const classWrapper = classCard.querySelector('.chart-wrapper');
-        const classChart = new Chart(classCtx, {
+        const card = document.querySelector('[data-card-id="home-time-per-class"]');
+        const res = await fetch("/charts/home/time_per_class");
+        const data = await res.json();
+
+        console.log("[TimePerClass] eligibility:", data.eligible, data);
+
+        const allowed = gateChart(card, data, renderTimeDistributionFront, renderTimeDistributionBack);
+        if (!allowed) return;
+
+
+
+        if (timePerClassChart) {
+            timePerClassChart.destroy();
+        }
+
+        timePerClassChart = new Chart(timePerClassCtx, {
             type: "doughnut",
             data: {
-                labels: classData.labels,
+                labels: data.labels,
                 datasets: [{
-                    data: classData.data,
-                    backgroundColor: classData.colors,
+                    data: data.data,
+                    backgroundColor: data.colors,
                     borderWidth: 2
                 }]
             },
@@ -168,21 +195,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    /* ========= WEEKLY STUDY TIME ========= */
-    const weeklyCtx = document.getElementById("weeklyStudyTime").getContext("2d");
-    const weeklyCard = document.querySelector('[data-card-id="home-weekly-study"]');
-    const weeklyRes = await fetch("/charts/home/weekly_study_time");
-    const weeklyData = await weeklyRes.json();
 
-    if (gateChart(weeklyCard, weeklyData, renderWeeklyStudyFront, null)) {
-        const weeklyWrapper = weeklyCard.querySelector('.chart-wrapper');
-        const weeklyChart = new Chart(weeklyCtx, {
+    /* ========= WEEKLY STUDY TIME ========= */
+    async function renderWeeklyStudy() {
+        if (!weeklyStudyCtx) return;
+
+        const card = document.querySelector('[data-card-id="home-weekly-study"]');
+        const res = await fetch("/charts/home/weekly_study_time");
+        const data = await res.json();
+
+        console.log("[WeeklyStudy] data:", data);
+
+        if (!gateChart(card, data, renderWeeklyStudyFront, null)) {
+            return;
+        }
+
+        if (weeklyStudyChart) {
+            weeklyStudyChart.destroy();
+        }
+
+        weeklyStudyChart = new Chart(weeklyStudyCtx, {
             type: "line",
             data: {
-                labels: weeklyData.labels,
+                labels: data.labels,
                 datasets: [{
                     label: "Study Time (hours)",
-                    data: weeklyData.data.map(m => m / 60), // convert minutes → hours
+                    data: data.data.map(m => m / 60), // convert minutes → hours
                     tension: 0.3,
                     fill: true,
                     borderWidth: 2,
@@ -213,99 +251,116 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
+
     /* ========= ASSIGNMENT LOAD ========= */
-    const assignmentCtx = document.getElementById("assignmentLoad").getContext("2d");
-    const assignmentCard = document.querySelector('[data-card-id="home-assignment-load"]');
-    const loadDailyBtn = document.getElementById("loadDailyBtn");
-    const loadWeeklyBtn = document.getElementById("loadWeeklyBtn");
+    const assignmentCtx = document.getElementById("assignmentLoad")?.getContext("2d");
 
-    let assignmentChart;
-    let currentMode = "daily";
-    let isEligible = false;
 
-    async function loadAssignmentChart(mode = "daily") {
-        currentMode = mode;
-        const url = mode === "daily"
-            ? "/charts/home/assignment_load_daily"
-            : "/charts/home/assignment_load_weekly";
 
-        const chartRes = await fetch(url);
-        const chartData = await chartRes.json();
+    if (assignmentCtx){
+        const assignmentCard = document.querySelector('[data-card-id="home-assignment-load"]');
+        const loadDailyBtn = document.getElementById("loadDailyBtn");
+        const loadWeeklyBtn = document.getElementById("loadWeeklyBtn");
 
-        // Check eligibility on first load
-        if (!assignmentChart) {
-            isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
-            if (!isEligible) {
-                return; // Don't create chart if not eligible
+        let assignmentChart;
+        let currentMode = "daily";
+        let isEligible = false;
+        async function loadAssignmentChart(mode = "daily") {
+            currentMode = mode;
+            const url = mode === "daily"
+                ? "/charts/home/assignment_load_daily"
+                : "/charts/home/assignment_load_weekly";
+
+            const chartRes = await fetch(url);
+            const chartData = await chartRes.json();
+
+            // Check eligibility on first load
+            if (!assignmentChart) {
+                isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
+                if (!isEligible) {
+                    return; // Don't create chart if not eligible
+                }
+            }
+
+            if (!assignmentChart) {
+                const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
+                assignmentChart = new Chart(assignmentCtx, {
+                    type: "bar",
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: "Assignments Due",
+                            data: chartData.data,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            } else {
+                assignmentChart.data.labels = chartData.labels;
+                assignmentChart.data.datasets[0].data = chartData.data;
+                assignmentChart.update();
             }
         }
 
-        if (!assignmentChart) {
-            const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
-            assignmentChart = new Chart(assignmentCtx, {
-                type: "bar",
-                data: {
-                    labels: chartData.labels,
-                    datasets: [{
-                        label: "Assignments Due",
-                        data: chartData.data,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
+
+        /* Initial load */
+        await loadAssignmentChart("daily");
+
+        /* Toggle handlers */
+        if (isEligible) {
+            loadDailyBtn.addEventListener("click", () => {
+                loadDailyBtn.classList.add("active");
+                loadWeeklyBtn.classList.remove("active");
+                loadAssignmentChart("daily");
             });
-        } else {
-            assignmentChart.data.labels = chartData.labels;
-            assignmentChart.data.datasets[0].data = chartData.data;
-            assignmentChart.update();
+
+            loadWeeklyBtn.addEventListener("click", () => {
+                loadWeeklyBtn.classList.add("active");
+                loadDailyBtn.classList.remove("active");
+                loadAssignmentChart("weekly");
+            });
         }
     }
 
-    /* Initial load */
-    await loadAssignmentChart("daily");
-
-    /* Toggle handlers */
-    if (isEligible) {
-        loadDailyBtn.addEventListener("click", () => {
-            loadDailyBtn.classList.add("active");
-            loadWeeklyBtn.classList.remove("active");
-            loadAssignmentChart("daily");
-        });
-
-        loadWeeklyBtn.addEventListener("click", () => {
-            loadWeeklyBtn.classList.add("active");
-            loadDailyBtn.classList.remove("active");
-            loadAssignmentChart("weekly");
-        });
-    }
-
     /* ========= STUDY EFFICIENCY BY CLASS ========= */
-    const effCtx = document.getElementById("StudyEffByCls").getContext("2d");
-    const effCard = document.querySelector('[data-card-id="home-performance"]');
-    const effRes = await fetch("/charts/home/study_efficiency_by_class");
-    const effData = await effRes.json();
+    async function renderStudyEfficiency() {
+        if (!efficiencyCtx) return;
 
-    if (gateChart(effCard, effData, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
-        const effWrapper = effCard.querySelector('.chart-wrapper');
-        const effChart = new Chart(effCtx, {
+        const card = document.querySelector('[data-card-id="home-performance"]');
+
+        const res = await fetch("/charts/home/study_efficiency_by_class");
+        const data = await res.json();
+
+        console.log("[Efficiency] data:", data);
+
+        if (!gateChart(card, data, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
+            return;
+        }
+
+        if (efficiencyChart) {
+            efficiencyChart.destroy();
+        }
+
+        efficiencyChart = new Chart(efficiencyCtx, {
             type: "radar",
             data: {
-                labels: effData.axes,
-                datasets: effData.datasets.map(cls => ({
+                labels: data.axes,
+                datasets: data.datasets.map(cls => ({
                     label: cls.label,
                     data: cls.values,
                     borderColor: cls.color,
@@ -357,5 +412,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             }
         });
-    }
+}
+
+
+    document.addEventListener("home:charts:refresh", async () => {
+        await renderTimePerClass();
+        await renderWeeklyStudy();
+        await loadAssignmentChart("daily");
+        await renderStudyEfficiency();
     });
+
+
+});

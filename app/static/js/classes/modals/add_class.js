@@ -18,8 +18,9 @@ export function initAddClassModal() {
     classForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         await submitClassForm(classForm, {
-            refresh: ["classes", "charts"]
+            refresh: ["home:charts", "home:assignments", "home:sessions"]
         });
+
     });
 
     document.querySelectorAll("#openAddClassModal, #openAddClassModalEmpty").forEach(btn => {
