@@ -6,63 +6,68 @@ const csrfToken = document
     .querySelector("meta[name='csrf-token']")
     ?.getAttribute("content");
 
-export function initClassSelector() {
+export async function initClassSelector() {
     const container = document.querySelector(".classes-grid");
     if (!container) return;
 
     let allItems = [...container.querySelectorAll(".class-card")];
     let personalPrefs = null;
 
-    const DEFAULT = {
-        sortBy: "name_asc",
-        status: "all",
-        importance: { high: true, medium: true, low: true },
-        classTypes: [...document.querySelectorAll(
-            "input[name='class_type_selector']"
-        )].map(cb => cb.id.replace("class_type_selector_", ""))
-    };
+    // -------------------------
+    // APPLY PREFS → UI
+    // -------------------------
+    function applyPreferencesToUI(prefs) {
+        document.querySelector("#sortSelect").value =
+            prefs.sort_by ?? "name_asc";
+        document.querySelector("#statusFilter").value =
+            prefs.status_filter ?? "all";
 
-    function setControlsFromState(state) {
-        document.querySelector("#sortSelect").value = state.sortBy;
-        document.querySelector("#statusFilter").value = state.status;
+        // ---------- IMPORTANCE ----------
+        const importanceSet = new Set(
+            prefs.filter_importance ?? ["high", "medium", "low", "none"]
+        );
 
-        ["high", "medium", "low"].forEach(v => {
-            const cb = document.querySelector(`input[value='${v}']`);
-            if (cb) cb.checked = !!state.importance[v];
-        });
+        document
+            .querySelectorAll(".selector-group input[type='checkbox'][value]")
+            .forEach(cb => {
+                cb.checked = importanceSet.has(cb.value);
+            });
 
-        document.querySelectorAll("input[name='class_type_selector']").forEach(cb => {
-            const key = cb.id.replace("class_type_selector_", "");
-            cb.checked = state.classTypes.includes(key);
-        });
+        // ---------- CLASS TYPES ----------
+        const noneCheckbox = document.querySelector("#class_type_none");
+
+        // Restore "None / Unset" independently
+        noneCheckbox.checked = prefs.filter_class_types === null;
+
+        // Restore individual class type checkboxes
+        const typeSet = new Set(prefs.filter_class_types ?? []);
+
+        document
+            .querySelectorAll("input[name='class_type_selector']")
+            .forEach(cb => {
+                if (cb.id === "class_type_none") return;
+
+                const type = cb.id.replace("class_type_selector_", "");
+                cb.checked = typeSet.has(type);
+            });
+
     }
 
+    // -------------------------
+    // APPLY FILTERS
+    // -------------------------
     async function apply() {
         const state = getClassSelectorState();
         const orderedIds = await fetchFilteredClassIds(state);
         applyClassOrdering(container, allItems, orderedIds, state.sortBy);
     }
 
-    async function loadPersonalPrefs() {
-        const res = await fetch("/api/preferences/classes?page=classes");
-        if (!res.ok) return;
-
-        const data = await res.json();
-        if (!data) return;
-
-        personalPrefs = {
-            sortBy: data.sort_by,
-            status: data.status_filter,
-            importance: data.filter_importance,
-            classTypes: data.filter_class_types ?? []
-        };
-
-        setControlsFromState(personalPrefs);
-        await apply();
-    }
-
+    // -------------------------
+    // SAVE PREFS (SAFE)
+    // -------------------------
     async function savePrefs() {
         const state = getClassSelectorState();
+
         await fetch("/api/preferences/classes?page=classes", {
             method: "PUT",
             headers: {
@@ -75,37 +80,71 @@ export function initClassSelector() {
                 status_filter: state.status,
                 filter_importance: state.importance,
                 filter_class_types: state.classTypes
-            }),
-            keepalive: true
+            })
         });
     }
 
-    document.getElementById("applyClassFilters")
-        ?.addEventListener("click", apply);
+    // -------------------------
+    // LOAD PREFS
+    // -------------------------
+    async function loadPersonalPrefs() {
+        const res = await fetch("/api/preferences/classes?page=classes");
+        if (!res.ok) return;
 
-    document.getElementById("resetSystemClassFilters")
+        const prefs = await res.json();
+        personalPrefs = prefs;
+        applyPreferencesToUI(prefs);
+        await apply();
+    }
+
+    // -------------------------
+    // BUTTONS
+    // -------------------------
+    document
+        .getElementById("applyClassFilters")
         ?.addEventListener("click", async () => {
-            setControlsFromState(DEFAULT);
             await apply();
+            await savePrefs();
         });
 
-    document.getElementById("resetPersonalClassFilters")
+    document
+        .getElementById("resetSystemClassFilters")
+        ?.addEventListener("click", async () => {
+            applyPreferencesToUI({
+                sort_by: "name_asc",
+                status_filter: "all",
+                filter_importance: ["high", "medium", "low", "none"],
+                filter_class_types: [
+                    ...document.querySelectorAll(
+                        "input[name='class_type_selector']"
+                    )
+                ].map(cb => cb.id.replace("class_type_selector_", ""))
+            });
+            await apply();
+            await savePrefs();
+        });
+
+    document
+        .getElementById("resetPersonalClassFilters")
         ?.addEventListener("click", async () => {
             if (!personalPrefs) await loadPersonalPrefs();
             if (personalPrefs) {
-                setControlsFromState(personalPrefs);
+                applyPreferencesToUI(personalPrefs);
                 await apply();
+                await savePrefs();
             }
         });
 
-    window.addEventListener("pagehide", savePrefs);
-    window.addEventListener("beforeunload", savePrefs);
-
+    // -------------------------
+    // LIVE REFRESH
+    // -------------------------
     document.addEventListener("classes:updated", async () => {
         allItems = [...container.querySelectorAll(".class-card")];
         await apply();
     });
 
-    apply();
-    loadPersonalPrefs();
+    // -------------------------
+    // INIT
+    // -------------------------
+    await loadPersonalPrefs();
 }

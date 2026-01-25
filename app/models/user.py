@@ -86,6 +86,9 @@ class UserAssignmentTypeColor(db.Model):
     )
 
 
+
+
+
 # ================= CLASS VIEW PREFERENCES =================
 class ClassViewPreferences(db.Model):
     __tablename__ = "class_view_preferences"
@@ -117,32 +120,22 @@ class ClassViewPreferences(db.Model):
         server_default="all"
     )
 
-    filter_importance_high = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=True,
-        server_default="true"
+    # JSON ARRAY:
+    # null  = no filter
+    # []    = show nothing
+    # ["high","medium","low","none"]
+    filter_importance = db.Column(
+        db.JSON,
+        nullable=True
     )
 
-    filter_importance_medium = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=True,
-        server_default="true"
-    )
-
-    filter_importance_low = db.Column(
-        db.Boolean,
-        nullable=False,
-        default=True,
-        server_default="true"
-    )
-
+    # JSON ARRAY:
+    # null  = no filter
+    # []    = show nothing
+    # ["math","science",...]
     filter_class_types = db.Column(
         db.JSON,
-        nullable=False,
-        default=dict,
-        server_default="{}"
+        nullable=True
     )
 
     updated_at = db.Column(
@@ -156,6 +149,7 @@ class ClassViewPreferences(db.Model):
     )
 
     user = db.relationship("User", backref="class_view_preferences")
+
 
 
 

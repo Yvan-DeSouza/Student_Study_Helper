@@ -62,12 +62,22 @@ def register():
         db.session.add(UserPreferences(user_id=new_user.user_id))
 
         # ---------------- CLASS VIEW PREFERENCES ----------------
+        ALL_IMPORTANCE_VALUES = ["high", "medium", "low", "none"]
+        ALL_CLASS_TYPES = list(DEFAULT_CLASS_COLORS.keys())
+
         for page in ("classes", "assignments"):
             db.session.add(ClassViewPreferences(
                 user_id=new_user.user_id,
                 page_name=page,
-                filter_class_types={k: True for k in DEFAULT_CLASS_COLORS}
+                sort_by="name_asc",
+                status_filter="all",
+
+                # IMPORTANT: JSONB arrays, not booleans
+                filter_importance=ALL_IMPORTANCE_VALUES,
+                filter_class_types=ALL_CLASS_TYPES
             ))
+
+
 
         # ---------------- ASSIGNMENT VIEW PREFERENCES ----------------
         db.session.add(AssignmentViewPreferences(

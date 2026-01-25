@@ -95,6 +95,9 @@
                 <label class="selector-check">
                     <input type="checkbox" value="low" checked> Low
                 </label>
+                <label class="selector-check">
+                    <input type="checkbox" value="none"> None / Unset
+                </label>
             </div>
         </div>
 
@@ -102,6 +105,11 @@
         <div class="selector-group wide">
             <span class="selector-label">Class type</span>
             <div class="selector-checks grid">
+                <label class="selector-check" for="class_type_none">
+                <input type="checkbox" id="class_type_none" name="class_type_selector">
+                    None / Unset
+                </label>
+
                 <label class="selector-check" for="class_type_selector_math"><input type="checkbox" name="class_type_selector" id="class_type_selector_math" checked> Math</label>
                 <label class="selector-check" for="class_type_selector_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_science" checked> Science</label>
                 <label class="selector-check" for="class_type_selector_language"><input type="checkbox" name="class_type_selector" id="class_type_selector_language" checked> Language</label>

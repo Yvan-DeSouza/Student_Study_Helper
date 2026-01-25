@@ -5,33 +5,48 @@ from app.models.user import (
     ClassViewPreferences,
     AssignmentViewPreferences
 )
+DEFAULT_CLASS_COLORS = {
+    "math": "#F50000",
+    "science": "#16a34a",
+    "language": "#FF7B00",
+    "social_science": "#db2777",
+    "art": "#9333ea",
+    "engineering": "#0011FF",
+    "technology": "#00BFFF",
+    "finance": "#D2B604",
+    "other": "#6D6D69"
+}
 ALLOWED_CLASS_PREF_PAGES = {"classes", "assignments"}
 
 preferences = Blueprint("preferences", __name__)
 @preferences.route("/api/preferences/classes", methods=["GET"])
 @login_required
-def get_class_preferences():
+def class_preferences():
     page_name = request.args.get("page", "classes")
 
     if page_name not in ALLOWED_CLASS_PREF_PAGES:
         return jsonify({"error": "Invalid page_name"}), 400
+    
     pref = ClassViewPreferences.query.filter_by(
         user_id=current_user.user_id,
         page_name=page_name
     ).first()
 
     if not pref:
-        return jsonify(None), 200
+        return jsonify({
+            "page_name": page_name,
+            "sort_by": "name_asc",
+            "status_filter": "all",
+            "filter_importance": ["high","medium","low","none"],
+            "filter_class_types": list(DEFAULT_CLASS_COLORS.keys())
+        }), 200
+
 
     return jsonify({
         "page_name": pref.page_name,
         "sort_by": pref.sort_by,
         "status_filter": pref.status_filter,
-        "filter_importance": {
-            "high": pref.filter_importance_high,
-            "medium": pref.filter_importance_medium,
-            "low": pref.filter_importance_low,
-        },
+        "filter_importance": pref.filter_importance,
         "filter_class_types": pref.filter_class_types
     })
 
@@ -58,13 +73,11 @@ def save_class_preferences():
 
     pref.sort_by = data.get("sort_by", pref.sort_by)
     pref.status_filter = data.get("status_filter", pref.status_filter)
+    if "filter_class_types" in data:
+        pref.filter_class_types = data["filter_class_types"]
+    if "filter_importance" in data:
+        pref.filter_importance = data["filter_importance"]
 
-    importance = data.get("filter_importance", {})
-    pref.filter_importance_high = importance.get("high", True)
-    pref.filter_importance_medium = importance.get("medium", True)
-    pref.filter_importance_low = importance.get("low", True)
-
-    pref.filter_class_types = data.get("filter_class_types", pref.filter_class_types)
 
     db.session.commit()
 
@@ -73,7 +86,7 @@ def save_class_preferences():
 
 @preferences.route("/api/preferences/assignments", methods=["GET"])
 @login_required
-def get_assignment_preferences():
+def assignment_preferences():
     pref = AssignmentViewPreferences.query.filter_by(
         user_id=current_user.user_id
     ).first()

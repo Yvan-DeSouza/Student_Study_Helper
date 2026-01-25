@@ -4,13 +4,15 @@ export async function fetchFilteredClassIds(state, page = "classes") {
         sort: state.sortBy,
         filters: {
             status: state.status,
-            importance: Object.entries(state.importance)
-                .filter(([, enabled]) => enabled)
-                .map(([key]) => key),
+            importance: state.importance,
             class_types: state.classTypes
         }
     };
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
     const res = await fetch("/api/select/classes", {
         method: "POST",
         headers: {
@@ -25,6 +27,5 @@ export async function fetchFilteredClassIds(state, page = "classes") {
     }
 
     const data = await res.json();
-
     return data.classes.map(c => String(c.class_id));
 }

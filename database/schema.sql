@@ -91,11 +91,6 @@ CREATE TABLE assignments (
 	CHECK (
 	    grade IS NULL
 	    OR is_completed = TRUE
-	),
-
-	CHECK (
-		finished_at is NULL
-		or finished_at >= created_at
 	)
 
 
@@ -236,6 +231,7 @@ CREATE TABLE study_session_pauses (
 
 
 
+
 CREATE TABLE class_view_preferences (
     class_preference_id SERIAL PRIMARY KEY,
 
@@ -264,11 +260,14 @@ CREATE TABLE class_view_preferences (
         status_filter IN ('all', 'in_progress', 'finished')
     ),
 
-    filter_importance_high   BOOLEAN NOT NULL DEFAULT TRUE,
-    filter_importance_medium BOOLEAN NOT NULL DEFAULT TRUE,
-    filter_importance_low    BOOLEAN NOT NULL DEFAULT TRUE,
+    -- JSON ARRAY OF ALLOWED IMPORTANCE VALUES
+    -- null   = no filtering
+    -- []     = show nothing
+    -- ["high","medium"] = filter
+    filter_importance JSONB,
 
-    filter_class_types JSONB NOT NULL DEFAULT '{}'::jsonb,
+    -- JSON ARRAY OF ALLOWED CLASS TYPES
+    filter_class_types JSONB,
 
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -336,8 +335,6 @@ CREATE TABLE assignment_view_preferences (
         REFERENCES users(user_id)
         ON DELETE CASCADE
 );
-
-
 
 
 

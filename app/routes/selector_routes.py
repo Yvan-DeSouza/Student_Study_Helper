@@ -1,11 +1,12 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from sqlalchemy import and_, or_, func
+from sqlalchemy import and_, or_, func, false
 from datetime import datetime, timedelta, timezone
 
 from app.extensions import db
 from app.models.course import Class
 from app.models.assignment import Assignment
+
 
 selector = Blueprint("selector", __name__)
 
@@ -17,33 +18,47 @@ def select_classes():
 
     filters = data.get("filters", {})
     sort_by = data.get("sort", "name_asc")
-    page = data.get("page", "classes")
 
     query = Class.query.filter(Class.user_id == current_user.user_id)
+
     # -------------------------
     # STATUS FILTER
     # -------------------------
-    status = filters.get("status", "all")
+    status = filters.get("status")
     if status == "in_progress":
         query = query.filter(Class.is_finished.is_(False))
     elif status == "finished":
         query = query.filter(Class.is_finished.is_(True))
 
-
     # -------------------------
     # IMPORTANCE FILTER
     # -------------------------
-    importance = filters.get("importance", [])
-    if importance:
-        query = query.filter(Class.importance.in_(importance))
+    importance = filters.get("importance")
+
+    if importance is not None:
+        if len(importance) == 0:
+            # Explicit "show nothing"
+            query = query.filter(false())
+        else:
+            # Include NULL if "none" is selected
+            if "none" in importance:
+                query = query.filter(
+                    (Class.importance.in_([i for i in importance if i != "none"]))
+                    | (Class.importance.is_(None))
+                )
+            else:
+                query = query.filter(Class.importance.in_(importance))
 
     # -------------------------
     # CLASS TYPE FILTER
     # -------------------------
-    class_types = filters.get("class_types", [])
-    if class_types:
-        query = query.filter(Class.class_type.in_(class_types))
+    class_types = filters.get("class_types")
 
+    if class_types is not None:
+        if len(class_types) == 0:
+            query = query.filter(false())
+        else:
+            query = query.filter(Class.class_type.in_(class_types))
 
     # -------------------------
     # SORTING
@@ -64,6 +79,7 @@ def select_classes():
     query = query.order_by(sort_map.get(sort_by, Class.class_name.asc()))
 
     classes = query.all()
+
     return jsonify({
         "classes": [
             {
@@ -79,6 +95,7 @@ def select_classes():
             for c in classes
         ]
     }), 200
+
 
 
 @selector.route("/api/select/assignments", methods=["POST"])
