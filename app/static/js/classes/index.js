@@ -1,7 +1,7 @@
 import { initModalEvents } from "../core/modalManager.js";
 import { registerRefresh, unregisterRefresh } from "../core/refreshBus.js";
 
-import { initClassSelector } from "../selector/selector_init.js";
+import { initClassSelector } from "../selector/classes/init.js";
 import { initVisualElements } from "./utils.js";
 import { initInlineEditing } from "./inlineEditing.js";
 import { initCompletion } from "./completion.js";

@@ -1,4 +1,3 @@
-let lastSortBy = null;
 
 function isElementVisible(el) {
     return !el.classList.contains('hidden');
@@ -47,7 +46,8 @@ function showWithAnimation(el) {
     el.addEventListener('transitionend', onEnd);
 }
 
-export function applyVisibilityAndOrder(container, allItems, orderedVisibleItems, currentSortBy) {
+function applyVisibilityAndOrder(container, allItems, orderedVisibleItems, currentSortBy) {
+    let lastSortBy = null;
     const visibleSet = new Set(orderedVisibleItems);
 
     // Record positions of currently visible items (before changes)
@@ -101,4 +101,21 @@ export function applyVisibilityAndOrder(container, allItems, orderedVisibleItems
             // Newly visible: fade/scale in handled by showWithAnimation
         }
     });
+}
+
+export function applyClassOrdering(container, allItems, orderedIds, sortBy) {
+    const map = new Map(
+        allItems.map(el => [el.dataset.classId, el])
+    );
+
+    const orderedVisibleItems = orderedIds
+        .map(id => map.get(id))
+        .filter(Boolean);
+
+    applyVisibilityAndOrder(
+        container,
+        allItems,
+        orderedVisibleItems,
+        sortBy
+    );
 }

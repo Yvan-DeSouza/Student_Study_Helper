@@ -2,9 +2,10 @@
 import { showModal, closeModal } from '../core/modalManager.js';
 import { forceCloseInlineEdit } from './inlineEditing.js';
 import { emitRefresh } from '../core/refreshBus.js';
-import { getClassSelectorState } from '../selector/selector_state.js';
-import { filterAndSortClasses } from '../selector/selector_filter.js';
-import { applyVisibilityAndOrder } from '../selector/selector_apply.js';
+import { getClassSelectorState } from '../selector/core/state_classes.js';
+import { fetchFilteredClassIds } from '../selector/core/filter_classes.js';
+import { applyClassOrdering } from '../selector/classes/apply.js';
+
 
 let pendingClassCard = null;
 let pendingFinishCheckbox = null;
@@ -95,7 +96,7 @@ async function handleComplete() {
     pendingFinishCheckbox.checked = true;
     pendingClassCard.dataset.finished = "finished";
 
-    updateClassFinishedUI(pendingClassCard, true);
+    await updateClassFinishedUI(pendingClassCard, true);
 
     closeModal("completeAssignmentModal");
 
@@ -119,7 +120,7 @@ async function handleUncomplete() {
     pendingFinishCheckbox.checked = false;
     pendingClassCard.dataset.finished = "in_progress";
 
-    updateClassFinishedUI(pendingClassCard, false);
+    await updateClassFinishedUI(pendingClassCard, false);
 
     closeModal("uncompleteConfirmModal");
 
@@ -156,7 +157,7 @@ async function sendClassFinishedUpdate(classId, isFinished, finishedAt) {
 
 
 
-function updateClassFinishedUI(card, isFinished) {
+async function updateClassFinishedUI(card, isFinished) {
     const statusEl = card.querySelector(".status");
     const inlineEditBtn = card.querySelector(".edit-inline-btn");
     const hint = card.querySelector(".hint-icon");
@@ -181,9 +182,9 @@ function updateClassFinishedUI(card, isFinished) {
     const container = document.querySelector('.classes-grid');
     const allItems = [...container.querySelectorAll('.class-card')];
     const state = getClassSelectorState();
-    const filteredAndSorted = filterAndSortClasses(allItems, state);
+    const orderedIds = await fetchFilteredClassIds(state);
+    applyClassOrdering(container, allItems, orderedIds, state.sortBy);
 
-    applyVisibilityAndOrder(container, allItems, filteredAndSorted, state.sortBy);
 }
 
 

@@ -52,94 +52,94 @@
     <header class="classes-header card">
         <h1>Your Classes</h1>
     </header>
-        <!-- ================= FILTER / SORT BAR ================= -->
-        <section class="selector-bar">
+    <!-- ================= FILTER / SORT BAR ================= -->
+    <section class="selector-bar">
 
-            <!-- Sort -->
-            <div class="selector-group">
-                <label class="selector-label">Sort by</label>
-                <select class="selector-select" id="sortSelect">
-                    <option value="name_asc">Name (A → Z)</option>
-                    <option value="name_desc">Name (Z → A)</option>
-                    <option value="importance_high_low">Importance (High → Low)</option>
-                    <option value="importance_low_high">Importance (Low → High)</option>
-                    <option value="difficulty_high_low">Difficulty (High → Low)</option>
-                    <option value="difficulty_low_high">Difficulty (Low → High)</option>
-                    <option value="grade_high_low">Grade (High → Low)</option>
-                    <option value="grade_low_high">Grade (Low → High)</option>
-                    <option value="created_newest">Newest</option>
-                    <option value="created_oldest">Oldest</option>
-                </select>
+        <!-- Sort -->
+        <div class="selector-group">
+            <label class="selector-label">Sort by</label>
+            <select class="selector-select" id="sortSelect">
+                <option value="name_asc">Name (A → Z)</option>
+                <option value="name_desc">Name (Z → A)</option>
+                <option value="importance_high_low">Importance (High → Low)</option>
+                <option value="importance_low_high">Importance (Low → High)</option>
+                <option value="difficulty_high_low">Difficulty (High → Low)</option>
+                <option value="difficulty_low_high">Difficulty (Low → High)</option>
+                <option value="grade_high_low">Grade (High → Low)</option>
+                <option value="grade_low_high">Grade (Low → High)</option>
+                <option value="created_newest">Newest</option>
+                <option value="created_oldest">Oldest</option>
+            </select>
+        </div>
+
+        <!-- Status -->
+        <div class="selector-group">
+            <label class="selector-label">Status</label>
+            <select class="selector-select" id="statusFilter">
+                <option value="all">All</option>
+                <option value="in_progress">In Progress</option>
+                <option value="finished">Finished</option>
+            </select>
+        </div>
+
+        <!-- Importance -->
+        <div class="selector-group wide">
+            <span class="selector-label">Importance</span>
+            <div class="selector-checks">
+                <label class="selector-check">
+                    <input type="checkbox" value="high" checked> High
+                </label>
+                <label class="selector-check">
+                    <input type="checkbox" value="medium" checked> Medium
+                </label>
+                <label class="selector-check">
+                    <input type="checkbox" value="low" checked> Low
+                </label>
             </div>
+        </div>
 
-            <!-- Status -->
-            <div class="selector-group">
-                <label class="selector-label">Status</label>
-                <select class="selector-select" id="statusFilter">
-                    <option value="all">All</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="finished">Finished</option>
-                </select>
+        <!-- Class types -->
+        <div class="selector-group wide">
+            <span class="selector-label">Class type</span>
+            <div class="selector-checks grid">
+                <label class="selector-check" for="class_type_selector_math"><input type="checkbox" name="class_type_selector" id="class_type_selector_math" checked> Math</label>
+                <label class="selector-check" for="class_type_selector_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_science" checked> Science</label>
+                <label class="selector-check" for="class_type_selector_language"><input type="checkbox" name="class_type_selector" id="class_type_selector_language" checked> Language</label>
+                <label class="selector-check" for="class_type_selector_social_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_social_science" checked> Social Science</label>
+                <label class="selector-check" for="class_type_selector_art"><input type="checkbox" name="class_type_selector" id="class_type_selector_art" checked> Art</label>
+                <label class="selector-check" for="class_type_selector_engineering"><input type="checkbox" name="class_type_selector" id="class_type_selector_engineering" checked> Engineering</label>
+                <label class="selector-check" for="class_type_selector_technology"><input type="checkbox" name="class_type_selector" id="class_type_selector_technology" checked> Tech</label>
+                <label class="selector-check" for="class_type_selector_finance"><input type="checkbox" name="class_type_selector" id="class_type_selector_finance" checked> Finance</label>
+                <label class="selector-check" for="class_type_selector_other"><input type="checkbox" name="class_type_selector" id="class_type_selector_other"checked> Other</label>
             </div>
+        </div>
 
-            <!-- Importance -->
-            <div class="selector-group wide">
-                <span class="selector-label">Importance</span>
-                <div class="selector-checks">
-                    <label class="selector-check">
-                        <input type="checkbox" value="high" checked> High
-                    </label>
-                    <label class="selector-check">
-                        <input type="checkbox" value="medium" checked> Medium
-                    </label>
-                    <label class="selector-check">
-                        <input type="checkbox" value="low" checked> Low
-                    </label>
-                </div>
-            </div>
-
-            <!-- Class types -->
-            <div class="selector-group wide">
-                <span class="selector-label">Class type</span>
-                <div class="selector-checks grid">
-                    <label class="selector-check" for="class_type_selector_math"><input type="checkbox" name="class_type_selector" id="class_type_selector_math" checked> Math</label>
-                    <label class="selector-check" for="class_type_selector_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_science" checked> Science</label>
-                    <label class="selector-check" for="class_type_selector_language"><input type="checkbox" name="class_type_selector" id="class_type_selector_language" checked> Language</label>
-                    <label class="selector-check" for="class_type_selector_social_science"><input type="checkbox" name="class_type_selector" id="class_type_selector_social_science" checked> Social Science</label>
-                    <label class="selector-check" for="class_type_selector_art"><input type="checkbox" name="class_type_selector" id="class_type_selector_art" checked> Art</label>
-                    <label class="selector-check" for="class_type_selector_engineering"><input type="checkbox" name="class_type_selector" id="class_type_selector_engineering" checked> Engineering</label>
-                    <label class="selector-check" for="class_type_selector_technology"><input type="checkbox" name="class_type_selector" id="class_type_selector_technology" checked> Tech</label>
-                    <label class="selector-check" for="class_type_selector_finance"><input type="checkbox" name="class_type_selector" id="class_type_selector_finance" checked> Finance</label>
-                    <label class="selector-check" for="class_type_selector_other"><input type="checkbox" name="class_type_selector" id="class_type_selector_other"checked> Other</label>
-                </div>
-            </div>
-
-            <!-- Action -->
-            <div class="selector-actions stacked">
-                <button
-                    class="btn-tiny"
-                    data-open-modal="addClassModal"
-                    id="openAddClassModal"
-                >
-                    + Add Class
+        <!-- Action -->
+        <div class="selector-actions stacked">
+            <button
+                class="btn-tiny"
+                data-open-modal="addClassModal"
+                id="openAddClassModal"
+            >
+                + Add Class
+            </button>
+            <div class="selector-actions">
+                <button class="btn-tiny" id="applyClassFilters">
+                    Apply filters
                 </button>
-                <div class="selector-actions">
-                  <button class="btn-tiny" id="applyClassFilters">
-                      Apply filters
-                  </button>
 
-                  <button class="btn-tiny" id="resetSystemClassFilters" type="button">
-                      Reset system filters
-                  </button>
+                <button class="btn-tiny" id="resetSystemClassFilters" type="button">
+                    Reset system filters
+                </button>
 
-                  <button class="btn-tiny ghost-btn" id="resetPersonalClassFilters" type="button">
-                      Reset personal filters
-                  </button>
-                </div>
+                <button class="btn-tiny ghost-btn" id="resetPersonalClassFilters" type="button">
+                    Reset personal filters
+                </button>
             </div>
+        </div>
 
 
-        </section>
+    </section>
 
 
     

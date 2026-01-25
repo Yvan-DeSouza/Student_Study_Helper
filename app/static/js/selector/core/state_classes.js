@@ -1,7 +1,7 @@
 export function getClassSelectorState(root = document) {
     return {
-        sortBy: root.querySelector("#sortSelect")?.value,
-        status: root.querySelector("#statusFilter")?.value,
+        sortBy: root.querySelector("#sortSelect")?.value ?? "name_asc",
+        status: root.querySelector("#statusFilter")?.value ?? "all",
 
         importance: {
             high: root.querySelector("input[value='high']")?.checked ?? true,
@@ -9,7 +9,10 @@ export function getClassSelectorState(root = document) {
             low: root.querySelector("input[value='low']")?.checked ?? true
         },
 
-        classTypes: [...root.querySelectorAll("input[name='class_type_selector']:checked")]
-            .map(cb => cb.id.replace("class_type_selector_", ""))
+        classTypes: [...root.querySelectorAll(
+            "input[name='class_type_selector']:checked"
+        )].map(cb =>
+            cb.id.replace("class_type_selector_", "")
+        )
     };
 }

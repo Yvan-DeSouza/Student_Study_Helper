@@ -1,7 +1,7 @@
 // static/js/classes/refresh/refresh_card.js
-import { getClassSelectorState } from '../../selector/selector_state.js';
-import { filterAndSortClasses } from '../../selector/selector_filter.js';
-import { applyVisibilityAndOrder } from '../../selector/selector_apply.js';
+import { getClassSelectorState } from '../../selector/core/state_classes.js';
+import { fetchFilteredClassIds } from '../../selector/core/filter_classes.js';
+import { applyClassOrdering } from '../../selector/classes/apply.js';
 import { initVisualElementsForCard } from '../utils.js';
 
 export async function refreshSingleCard({ classId }) {
@@ -39,16 +39,10 @@ export async function refreshSingleCard({ classId }) {
     initInlineEditing();
     initCompletion();
 
-    const allItems = [...container.querySelectorAll('.class-card')];
     const state = getClassSelectorState();
-    const filteredAndSorted = filterAndSortClasses(allItems, state);
-
-    applyVisibilityAndOrder(
-        container,
-        allItems,
-        filteredAndSorted,
-        state.sortBy
-    );
+    const orderedIds = await fetchFilteredClassIds(state);
+    const allItems = [...container.querySelectorAll('.class-card')];
+    applyClassOrdering(container, allItems, orderedIds, state.sortBy);
 }
 
 
