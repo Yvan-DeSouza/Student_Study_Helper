@@ -24,7 +24,6 @@ def list_classes_json():
         "color": c.color
     } for c in classes_list])
 
-# Or modify the existing list_classes route to handle both:
 @classes.route("/classes")
 @login_required
 def list_classes():

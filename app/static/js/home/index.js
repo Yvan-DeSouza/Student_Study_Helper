@@ -7,12 +7,17 @@ import { initModalEvents } from "../core/modalManager.js";
 
 import { initStudySessionSubmit } from './study_session_submit.js';
 import { initAssignmentSubmit } from './assignment_submit.js';
+import { initClassModals } from "../classes/modals/classModal.controller.js";
+import { refreshHomeClasses } from './refresh/refresh_classes.js';
+
 document.addEventListener("DOMContentLoaded", () => {
    initModalEvents(); 
+   initClassModals();
 });
 function registerHomeListeners() {
     console.log("[Home] Registering refresh listeners");
 
+    registerRefresh("classes:changed", refreshHomeClasses);
     registerRefresh("home:charts", refreshHomeCharts);
     registerRefresh("home:sessions", refreshHomeSessions);
     registerRefresh("home:assignments", refreshHomeAssignments);
@@ -26,6 +31,7 @@ function registerHomeListeners() {
 }
 
 function cleanup() {
+    unregisterRefresh("classes:changed");
     unregisterRefresh("home:charts");
     unregisterRefresh("home:sessions");
     unregisterRefresh("home:assignments");

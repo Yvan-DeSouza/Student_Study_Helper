@@ -58,8 +58,12 @@ async function submitAddClass(form) {
         closeModal("addClassModal");
         
         // Emit refresh events
-        await emitRefresh("classes:cards", "classes:charts");
-        document.dispatchEvent(new Event("classes:updated"));
+        await emitRefresh(
+            "classes:changed",
+            "classes:cards",
+            "classes:charts"
+        );
+
 
 
     } catch (error) {
