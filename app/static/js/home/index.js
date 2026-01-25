@@ -3,10 +3,13 @@ import { refreshHomeCharts } from './refresh/refresh_charts.js';
 import { refreshHomeSessions } from './refresh/refresh_sessions.js';
 import { refreshHomeAssignments } from './refresh/refresh_assignments.js';
 import { refreshHomeUpcomingDeadlines } from './refresh/refresh_upcoming_deadlines.js';
+import { initModalEvents } from "../core/modalManager.js";
 
 import { initStudySessionSubmit } from './study_session_submit.js';
 import { initAssignmentSubmit } from './assignment_submit.js';
-
+document.addEventListener("DOMContentLoaded", () => {
+   initModalEvents(); 
+});
 function registerHomeListeners() {
     console.log("[Home] Registering refresh listeners");
 

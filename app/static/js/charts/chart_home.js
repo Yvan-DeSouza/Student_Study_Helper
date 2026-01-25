@@ -6,6 +6,15 @@ let weeklyStudyChart = null;
 let assignmentLoadChart = null;
 let efficiencyChart = null;
 
+function setAssignmentToggleVisibility(visible) {
+    if (!loadDailyBtn || !loadWeeklyBtn) return;
+
+    const toggleWrapper = loadDailyBtn.closest(".chart-toggle");
+    if (!toggleWrapper) return;
+
+    toggleWrapper.style.display = visible ? "flex" : "none";
+}
+
     function  renderTimeDistributionFront(progress){
         return `
             <div class="chart-empty">
@@ -289,11 +298,18 @@ let efficiencyChart = null;
 
         // Check eligibility on first load
         if (!assignmentChart) {
-            isEligible = gateChart(assignmentCard, chartData, renderAssignmentLoadFront, renderAssignmentLoadBack);
-            if (!isEligible) {
-                return; // Don't create chart if not eligible
-            }
+            isEligible = gateChart(
+                assignmentCard,
+                chartData,
+                renderAssignmentLoadFront,
+                renderAssignmentLoadBack
+            );
+
+            setAssignmentToggleVisibility(isEligible);
+
+            if (!isEligible) return;
         }
+
 
 
         if (!assignmentChart) {
@@ -334,24 +350,16 @@ let efficiencyChart = null;
 
     if (assignmentCtx){
 
-
-
-
-
-
-
-
         /* Initial load */
 
 
-        /* Toggle handlers */
-        if (isEligible) {
+        if (assignmentCtx && loadDailyBtn && loadWeeklyBtn) {
+
             loadDailyBtn.addEventListener("click", () => {
                 loadDailyBtn.classList.add("active");
                 loadWeeklyBtn.classList.remove("active");
                 loadAssignmentChart("daily");
             });
-
 
             loadWeeklyBtn.addEventListener("click", () => {
                 loadWeeklyBtn.classList.add("active");
@@ -359,6 +367,7 @@ let efficiencyChart = null;
                 loadAssignmentChart("weekly");
             });
         }
+
     }
 
 
