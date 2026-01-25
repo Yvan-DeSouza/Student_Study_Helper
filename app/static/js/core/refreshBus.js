@@ -1,3 +1,5 @@
+// static/js/core/refreshBus.js
+
 const listeners = {};
 
 export function registerRefresh(key, fn) {
@@ -6,26 +8,21 @@ export function registerRefresh(key, fn) {
 }
 
 export function unregisterRefresh(key) {
-    if (listeners[key]) {
-        delete listeners[key];
-    }
+    delete listeners[key];
 }
 
-export async function runRefreshes(keys = []) {
-    console.log("[RefreshBus] Running refreshes for:", keys);
-    for (const key of keys) {
+export async function runRefreshes(events = []) {
+    for (const event of events) {
+        const key = typeof event === "string" ? event : event.key;
+        const payload = typeof event === "string" ? undefined : event.payload;
+
         const fns = listeners[key] || [];
-        console.log(`[RefreshBus] ${key}: ${fns.length} listeners`);
         for (const fn of fns) {
-            try {
-                await fn();
-            } catch (error) {
-                console.error(`[RefreshBus] Error in ${key}:`, error);
-            }
+            await fn(payload);
         }
     }
 }
 
-export function emitRefresh(...keys) {
-    return runRefreshes(keys);
+export function emitRefresh(...events) {
+    return runRefreshes(events);
 }

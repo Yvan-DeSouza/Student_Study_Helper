@@ -1,37 +1,48 @@
+// static/js/classes/refresh/refresh_cards.js
+import { getClassSelectorState } from '../../selector/selector_state.js';
+import { filterAndSortClasses } from '../../selector/selector_filter.js';
+import { applyVisibilityAndOrder } from '../../selector/selector_apply.js';
+import { initVisualElements } from '../utils.js';
+import { initInlineEditing } from '../inlineEditing.js';
+import { initCompletion } from '../completion.js';
+
 export async function refreshClassCards() {
-    // Capture state
-    const statusFilter = document.getElementById('statusFilter');
-    const typeFilter = document.getElementById('typeFilter');
-    const sortSelect = document.getElementById('sortSelect');
-    const currentStatus = statusFilter ? statusFilter.value : '';
-    const currentType = typeFilter ? typeFilter.value : '';
-    const currentSort = sortSelect ? sortSelect.value : '';
-
+    console.log("[Classes] Refreshing class cards");
+    
+    // 1. Capture current selector state
+    const state = getClassSelectorState();
+    
     try {
-        // Fetch fresh cards HTML
+        // 2. Fetch fresh HTML
         const response = await fetch('/classes?partial=cards');
+        if (!response.ok) throw new Error('Failed to fetch cards');
+        
         const html = await response.text();
-
-        // Replace
+        
+        // 3. Replace DOM
         const container = document.querySelector('.classes-grid');
-        if (container) {
-            container.innerHTML = html;
-        }
-
-        // Reapply state
-        if (statusFilter && currentStatus) {
-            statusFilter.value = currentStatus;
-            statusFilter.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        if (typeFilter && currentType) {
-            typeFilter.value = currentType;
-            typeFilter.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        if (sortSelect && currentSort) {
-            sortSelect.value = currentSort;
-            sortSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+        if (!container) return;
+        
+        container.innerHTML = html;
+        
+        // 4. Re-initialize interactive elements
+        initVisualElements();
+        initInlineEditing();
+        initCompletion();
+        
+        // 5. Reapply filters and sorting
+        const allItems = [...container.querySelectorAll('.class-card')];
+        const filteredAndSorted = filterAndSortClasses(allItems, state);
+        
+        applyVisibilityAndOrder(
+            container,
+            allItems,
+            filteredAndSorted,
+            state.sortBy
+        );
+        
+        console.log("[Classes] Cards refreshed with state preserved");
     } catch (error) {
-        console.error("Error refreshing class cards:", error);
+        console.error("[Classes] Error refreshing cards:", error);
     }
 }

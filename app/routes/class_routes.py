@@ -264,3 +264,14 @@ def classes_cards():
     classes = Class.query.filter_by(user_id=current_user.user_id).all()
     return render_template('partials/classes/cards.html', classes=classes)
 
+
+@classes.route("/classes/<int:class_id>/card")
+@login_required
+def get_class_card(class_id):
+    """Return HTML for a single class card"""
+    cls = Class.query.filter_by(
+        class_id=class_id,
+        user_id=current_user.user_id
+    ).first_or_404()
+    
+    return render_template("partials/classes/cards.html", c=cls)

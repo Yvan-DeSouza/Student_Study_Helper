@@ -1,5 +1,6 @@
+// static/js/classes/modals/delete_class.controller.js
 import { showModal, closeModal } from '../../core/modalManager.js';
-import { runRefreshes } from "../../core/refreshBus.js";
+import { emitRefresh } from '../../core/refreshBus.js';
 import { saveAllInlineEditsSilently } from '../inlineEditing.js';
 
 let currentStep = 1;
@@ -10,15 +11,11 @@ export function initDeleteClassModal() {
     const deleteModal = document.getElementById("deleteClassModal");
     if (!deleteModal) return;
 
-    const deleteText = document.getElementById("deleteStepText");
-    const impactBox = document.getElementById("deleteImpactBox");
-    const inputBox = document.getElementById("deleteInputBox");
     const confirmInput = document.getElementById("deleteConfirmInput");
     const confirmBtn = document.getElementById("confirmDelete");
     const cancelBtn = document.getElementById("cancelDelete");
     const backBtn = document.getElementById("deleteBackBtn");
 
-    // Next/Confirm button
     confirmBtn.addEventListener("click", async (e) => {
         if (currentStep < 3) {
             e.preventDefault();
@@ -27,16 +24,13 @@ export function initDeleteClassModal() {
             return;
         }
 
-        // FINAL DELETE STEP
         await executeDelete();
     });
 
-    // Enable delete only when name matches
     confirmInput.addEventListener("input", () => {
         confirmBtn.disabled = confirmInput.value !== className;
     });
 
-    // Back button
     backBtn.addEventListener("click", () => {
         if (currentStep > 1) {
             currentStep--;
@@ -44,7 +38,6 @@ export function initDeleteClassModal() {
         }
     });
 
-    // Cancel delete
     cancelBtn.addEventListener("click", () => {
         closeModal("deleteClassModal");
     });
@@ -58,7 +51,6 @@ function renderDeleteStep() {
     const confirmInput = document.getElementById("deleteConfirmInput");
     const backBtn = document.getElementById("deleteBackBtn");
 
-    // Reset state
     confirmBtn.disabled = currentStep === 3;
     confirmInput.value = "";
 
@@ -66,18 +58,15 @@ function renderDeleteStep() {
     inputBox.classList.add("hidden");
     backBtn.style.display = currentStep === 1 ? "none" : "inline-block";
 
-    // Step 1: Confirmation question
     if (currentStep === 1) {
         deleteText.textContent = `Are you sure you want to delete the "${className}" class?`;
     }
 
-    // Step 2: Show impact
     if (currentStep === 2) {
         deleteText.textContent = "Deleting this class will permanently remove:";
         impactBox.classList.remove("hidden");
     }
 
-    // Step 3: Type name to confirm
     if (currentStep === 3) {
         deleteText.textContent = `To confirm deletion of "${className}", type the class name below.`;
         inputBox.classList.remove("hidden");
@@ -98,27 +87,20 @@ async function executeDelete() {
             }
         });
 
-        console.log(response.ok)
         if (!response.ok) {
             let err = {};
             try {
                 err = await response.json();
             } catch {
-                // JSON parsing failed, maybe the response was empty
                 err.error = "Server responded but not in JSON format";
             }
             throw new Error(err.error || "Failed to delete class");
         }
 
-
-        // Close modal
         closeModal("deleteClassModal");
-
-        // Refresh appropriate page elements
-        await runRefreshes(["classes", "charts"]);
-
-        // Emit global event
-        document.dispatchEvent(new CustomEvent("class:changed"));
+        
+        // Emit refresh events
+        await emitRefresh("classes:cards", "classes:charts");
 
     } catch (error) {
         console.error("Error deleting class:", error);

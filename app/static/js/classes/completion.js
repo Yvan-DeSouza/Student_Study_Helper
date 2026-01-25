@@ -1,12 +1,15 @@
 // static/js/classes/completion.js
 import { showModal, closeModal } from '../core/modalManager.js';
 import { forceCloseInlineEdit } from './inlineEditing.js';
+import { emitRefresh } from '../core/refreshBus.js';
+import { getClassSelectorState } from '../selector/selector_state.js';
+import { filterAndSortClasses } from '../selector/selector_filter.js';
+import { applyVisibilityAndOrder } from '../selector/selector_apply.js';
 
 let pendingClassCard = null;
 let pendingFinishCheckbox = null;
 
 export function initCompletion() {
-    // Finished checkbox logic
     document.querySelectorAll(".finish-checkbox").forEach(cb => {
         cb.addEventListener("change", e => {
             e.preventDefault();
@@ -16,7 +19,6 @@ export function initCompletion() {
             const wasFinished = card.dataset.finished === "finished";
             const wantsFinished = cb.checked;
 
-            // Always revert until confirmed
             cb.checked = wasFinished;
 
             pendingClassCard = card;
@@ -34,7 +36,6 @@ export function initCompletion() {
         });
     });
 
-    // Radio button behavior
     document.querySelectorAll('input[name="completion_time"]').forEach(radio => {
         radio.addEventListener("change", e => {
             document
@@ -43,18 +44,14 @@ export function initCompletion() {
         });
     });
 
-    // Confirm complete
-    document.getElementById("confirmComplete").addEventListener("click", handleComplete);
-
-    // Confirm uncomplete
-    document.getElementById("confirmUncomplete").addEventListener("click", handleUncomplete);
+    document.getElementById("confirmComplete")?.addEventListener("click", handleComplete);
+    document.getElementById("confirmUncomplete")?.addEventListener("click", handleUncomplete);
 }
 
 function openCompleteClassModal(className) {
     document.getElementById("completeMessage").innerText =
         `You have marked your "${className}" class as finished. Please indicate the date/time of completion.`;
 
-    // Reset modal state
     document.querySelector('input[name="completion_time"][value="now"]').checked = true;
     document.getElementById("pickedCompletionDate").classList.add("hidden");
     document.getElementById("pickedCompletionDate").value = "";
@@ -92,7 +89,8 @@ async function handleComplete() {
         finishedAt = pickedDate.toISOString();
     }
 
-    await sendClassFinishedUpdate(true, finishedAt);
+    const classId = pendingClassCard.dataset.classId;
+    await sendClassFinishedUpdate(classId, true, finishedAt);
 
     pendingFinishCheckbox.checked = true;
     pendingClassCard.dataset.finished = "finished";
@@ -101,6 +99,12 @@ async function handleComplete() {
 
     closeModal("completeAssignmentModal");
 
+    // Emit refresh events - completion affects both card and charts
+    await emitRefresh(
+        { key: "classes:card", payload: { classId } },
+        "classes:charts"
+    );
+
     pendingClassCard = null;
     pendingFinishCheckbox = null;
 }
@@ -108,7 +112,8 @@ async function handleComplete() {
 async function handleUncomplete() {
     if (!pendingClassCard || !pendingFinishCheckbox) return;
 
-    await sendClassFinishedUpdate(false, null);
+    const classId = pendingClassCard.dataset.classId;
+    await sendClassFinishedUpdate(classId, false, null);
 
     pendingFinishCheckbox.checked = false;
     pendingClassCard.dataset.finished = "in_progress";
@@ -117,12 +122,17 @@ async function handleUncomplete() {
 
     closeModal("uncompleteConfirmModal");
 
+    // Emit refresh events
+    await emitRefresh(
+        { key: "classes:card", payload: { classId } },
+        "classes:charts"
+    );
+
     pendingClassCard = null;
     pendingFinishCheckbox = null;
 }
 
-async function sendClassFinishedUpdate(isFinished, finishedAt) {
-    const classId = pendingClassCard.dataset.classId;
+async function sendClassFinishedUpdate(classId, isFinished, finishedAt) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
     try {
@@ -137,13 +147,12 @@ async function sendClassFinishedUpdate(isFinished, finishedAt) {
                 finished_at: finishedAt
             })
         });
-
-        // Emit refresh event for completion change
-        document.dispatchEvent(new CustomEvent("class:completion:changed"));
     } catch (error) {
         console.error("Error updating class completion:", error);
     }
 }
+
+
 
 function updateClassFinishedUI(card, isFinished) {
     const statusEl = card.querySelector(".status");
@@ -165,4 +174,21 @@ function updateClassFinishedUI(card, isFinished) {
         hint.style.display = "none";
         forceCloseInlineEdit(card, { disable: false });
     }
+
+    // --- Handle filter visibility ---
+    const container = document.querySelector('.classes-grid');
+    const allItems = [...container.querySelectorAll('.class-card')];
+    const state = getClassSelectorState();
+    const filteredAndSorted = filterAndSortClasses(allItems, state);
+
+    applyVisibilityAndOrder(container, allItems, filteredAndSorted, state.sortBy);
 }
+
+
+
+
+
+
+
+
+

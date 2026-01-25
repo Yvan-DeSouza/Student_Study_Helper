@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Re-fetch scatter
         const scatterRes = await fetch("/charts/classes/grade_vs_study_time");
         const scatterData = await scatterRes.json();
-        const scatterCard = document.querySelector('.scatter-card');
+        const scatterCard = document.querySelector('[data-card-id="class-scatter"]');
 
         if (gateChart(scatterCard, scatterData, renderGradeVsStudyFront, renderGradeVsStudyBack)) {
             renderScatter(scatterData);

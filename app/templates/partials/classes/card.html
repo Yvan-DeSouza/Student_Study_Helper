@@ -1,0 +1,13 @@
+{# templates/partials/classes/card.html #}
+<div class="card class-card"
+     data-class-id="{{ c.class_id }}"
+     data-name="{{ c.class_name | lower }}"
+     data-importance="{{ c.importance or '' }}"
+     data-difficulty="{{ c.difficulty or '' }}"
+     data-grade="{{ c.grade or '' }}"
+     data-finished="{{ 'finished' if c.is_finished else 'in_progress' }}"
+     data-class-type="{{ c.class_type }}"
+     data-created-at="{{ c.created_at.timestamp() if c.created_at else '' }}"
+>
+    {% include "partials/classes/card_inner.html" %}
+</div>
