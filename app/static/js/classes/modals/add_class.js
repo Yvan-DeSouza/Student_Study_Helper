@@ -1,4 +1,3 @@
-// static/js/classes/modals/add_class.controller.js
 import { showModal, closeModal } from '../../core/modalManager.js';
 import { default_class_colors } from '../utils.js';
 import { emitRefresh } from '../../core/refreshBus.js';
@@ -55,12 +54,13 @@ async function submitAddClass(form) {
             throw new Error(err.error || "Failed to create class");
         }
 
-        await response.json();
         resetClassModal();
         closeModal("addClassModal");
         
         // Emit refresh events
         await emitRefresh("classes:cards", "classes:charts");
+        document.dispatchEvent(new Event("classes:updated"));
+
 
     } catch (error) {
         console.error("Error creating class:", error);

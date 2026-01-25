@@ -1,4 +1,3 @@
-// static/js/classes/modals/delete_class.controller.js
 import { showModal, closeModal } from '../../core/modalManager.js';
 import { emitRefresh } from '../../core/refreshBus.js';
 import { saveAllInlineEditsSilently } from '../inlineEditing.js';
@@ -101,6 +100,8 @@ async function executeDelete() {
         
         // Emit refresh events
         await emitRefresh("classes:cards", "classes:charts");
+        document.dispatchEvent(new Event("classes:updated"));
+
 
     } catch (error) {
         console.error("Error deleting class:", error);

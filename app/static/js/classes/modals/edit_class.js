@@ -12,6 +12,9 @@ export function initEditClassModal() {
     const typeSelect = document.getElementById("edit-classTypeSelect");
     const colorInput = document.getElementById("edit-classColor");
 
+
+
+
     classForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         await submitEditClass(classForm);
@@ -36,6 +39,8 @@ export function initEditClassModal() {
 }
 
 async function submitEditClass(form) {
+    console.log("worked")
+
     try {
         const response = await fetch(form.action, {
             method: "PATCH",
@@ -43,7 +48,10 @@ async function submitEditClass(form) {
             headers: { Accept: "application/json" }
         });
 
+        
+
         if (!response.ok) {
+
             let err = {};
             try {
                 err = await response.json();
@@ -66,14 +74,13 @@ async function submitEditClass(form) {
             throw new Error(err.error || "Failed to update class");
         }
 
-        if (response.headers.get("content-type")?.includes("application/json")) {
-            await response.json();
-        }
 
         closeModal("editClassModal");
         
         // Emit refresh events - editing affects both cards and charts
         await emitRefresh("classes:cards", "classes:charts");
+        document.dispatchEvent(new Event("classes:updated"));
+
 
     } catch (error) {
         console.error("Error updating class:", error);
@@ -108,8 +115,7 @@ export async function openEditClassModal(btn) {
     }
 
     classForm.action = `/classes/${btn.dataset.classId}`;
-    classForm.method = "POST";
-    document.getElementById("editClassFormMethod").value = "PATCH";
+
 
     showModal("editClassModal");
 }
