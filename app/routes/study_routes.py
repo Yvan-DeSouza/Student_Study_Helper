@@ -22,27 +22,31 @@ def add_session():
         ).first()
 
         if existing_active:
-            return "You already have an active study session", 400
-  
+            return jsonify({
+                "success": False,
+                "error": "ACTIVE_SESSION_EXISTS"
+            }), 400
+
         class_id = request.form.get("class_id")
         assignment_id = request.form.get("assignment_id") or None
         session_type = request.form.get("session_type")
-        expected_duration = request.form.get("expected_duration_minutes") or None
+        expected_duration = request.form.get("expected_duration_minutes")
         expected_duration = int(expected_duration) if expected_duration else None
 
+        course = Class.query.filter_by(
+            class_id=class_id,
+            user_id=current_user.user_id
+        ).first_or_404()
 
-        # 🔐 Security: class must belong to current user
-        course = Class.query.filter_by(class_id=class_id, user_id=current_user.user_id).first_or_404()
-
-        # Optional: check assignment belongs to the class
         assignment = None
         if assignment_id:
             assignment = Assignment.query.filter_by(
-                assignment_id=assignment_id, class_id=course.class_id
+                assignment_id=assignment_id,
+                class_id=course.class_id
             ).first_or_404()
             assignment_id = assignment.assignment_id
 
-        start_option = request.form.get("start_option")  # "now" or "later"
+        start_option = request.form.get("start_option")
         started_at_input = request.form.get("started_at")
         now = datetime.now(timezone.utc)
 
@@ -50,9 +54,11 @@ def add_session():
             started_at = now
             expected_started_at = None
             is_active = True
-        elif start_option == "later":
+        else:
             if not started_at_input:
-                return "Started at is required for future sessions", 400
+                return jsonify({"success": False, "error": "MISSING_STARTED_AT"}), 400
+
+
             expected_started_at = datetime.fromisoformat(started_at_input).astimezone(timezone.utc)
             started_at = None
             is_active = False
@@ -72,8 +78,24 @@ def add_session():
         db.session.add(session)
         db.session.commit()
 
+        return jsonify({
+            "success": True,
+            "session_id": session.session_id
+        })
 
-        return jsonify({'success': True, 'session_id': session.session_id})
+
+    # GET unchanged
+    classes = Class.query.filter_by(user_id=current_user.user_id).all()
+    assignments = Assignment.query.filter(
+        Assignment.class_id.in_([c.class_id for c in classes])
+    ).all()
+
+    return render_template(
+        "new_study.html",
+        classes=classes,
+        assignments=assignments
+    )
+
 
 
 

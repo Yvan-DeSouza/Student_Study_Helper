@@ -14,7 +14,10 @@ assignment = Blueprint("assignment", __name__)
 @login_required
 def add_assignment():
     class_id = request.form.get("class_id")
-    course = Class.query.filter_by(class_id=class_id, user_id=current_user.user_id).first_or_404()
+    course = Class.query.filter_by(
+        class_id=class_id,
+        user_id=current_user.user_id
+    ).first_or_404()
 
     is_graded = "is_graded" in request.form
     ponderation = int(request.form.get("ponderation")) if is_graded and request.form.get("ponderation") else None
@@ -40,7 +43,19 @@ def add_assignment():
 
     db.session.add(new_assignment)
     db.session.commit()
-    return jsonify({'success': True, 'assignment_id': new_assignment.assignment_id})
+
+    # 🔑 RESPONSE MODE SWITCH
+    if request.is_json or "application/json" in request.headers.get("Accept", ""):
+        return jsonify({
+            "success": True,
+            "assignment_id": new_assignment.assignment_id
+        })
+
+
+    return jsonify({
+        "success": True,
+        "assignment_id": new_assignment.assignment_id
+    })
 
 @assignment.route("/assignments/json")
 @login_required
