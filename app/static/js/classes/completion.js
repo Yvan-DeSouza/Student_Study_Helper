@@ -104,6 +104,7 @@ async function handleComplete() {
         { key: "classes:card", payload: { classId } },
         "classes:charts"
     );
+    document.dispatchEvent(new Event("classes:updated"));
 
     pendingClassCard = null;
     pendingFinishCheckbox = null;
@@ -127,6 +128,7 @@ async function handleUncomplete() {
         { key: "classes:card", payload: { classId } },
         "classes:charts"
     );
+    document.dispatchEvent(new Event("classes:updated"));
 
     pendingClassCard = null;
     pendingFinishCheckbox = null;

@@ -19,7 +19,6 @@ def get_class_preferences():
         user_id=current_user.user_id,
         page_name=page_name
     ).first()
-    print("hello")
 
     if not pref:
         return jsonify(None), 200

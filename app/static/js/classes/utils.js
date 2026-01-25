@@ -139,3 +139,62 @@ export function validateGradeInput(value) {
     const num = parseFloat(value);
     return !isNaN(num) && num >= 0 && num <= 100;
 }
+
+// Initialize visual elements for a single class card
+export function initVisualElementsForCard(card) {
+    if (!card) return;
+
+    // Class color dot
+    const dot = card.querySelector(".class-dot");
+    if (dot?.dataset.color) {
+        dot.style.backgroundColor = dot.dataset.color;
+    }
+
+    // Class type emoji
+    const typeEl = card.querySelector(".class-type");
+    if (typeEl) {
+        const type = typeEl.dataset.type;
+        if (class_type_emojis[type] && !typeEl.dataset.enhanced) {
+            typeEl.textContent = `${class_type_emojis[type]} ${typeEl.textContent}`;
+            typeEl.dataset.enhanced = "true"; // prevent double emoji
+        }
+    }
+
+    // Importance dot
+    const impDot = card.querySelector(".importance-dot");
+    if (impDot) {
+        const level = impDot.dataset.importance;
+        if (importance_colors[level]) {
+            impDot.style.backgroundColor = importance_colors[level];
+        }
+    }
+
+    // Difficulty bar (remove old one first)
+    const diffValue = card.querySelector(".difficulty-value");
+    if (diffValue) {
+        card.querySelectorAll(".difficulty-bar").forEach(b => b.remove());
+
+        const difficulty = parseInt(diffValue.dataset.difficulty, 10);
+        if (!isNaN(difficulty)) {
+            const bar = document.createElement("span");
+            bar.className = "difficulty-bar";
+
+            const fill = document.createElement("span");
+            fill.className = "difficulty-bar-fill";
+            fill.style.width = `${difficulty * 10}%`;
+            fill.style.backgroundColor = getDifficultyColor(difficulty);
+
+            bar.appendChild(fill);
+            diffValue.insertAdjacentElement("afterend", bar);
+        }
+    }
+
+    // Grade dot
+    const display = card.querySelector(".grade-display");
+    const gradeDot = card.querySelector(".grade-dot");
+    if (display && gradeDot) {
+        const grade = display.dataset.grade ? parseFloat(display.dataset.grade) : null;
+        const pass = display.dataset.passGrade ? parseFloat(display.dataset.passGrade) : null;
+        gradeDot.style.backgroundColor = getGradeColor(grade, pass);
+    }
+}

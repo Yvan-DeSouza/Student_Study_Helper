@@ -1,7 +1,16 @@
+// static/js/classes/refresh/refresh_card.js
+import { getClassSelectorState } from '../../selector/selector_state.js';
+import { filterAndSortClasses } from '../../selector/selector_filter.js';
+import { applyVisibilityAndOrder } from '../../selector/selector_apply.js';
+import { initVisualElementsForCard } from '../utils.js';
+
 export async function refreshSingleCard({ classId }) {
     if (!classId) return;
 
-    const container = document.querySelector(`.class-card[data-class-id="${classId}"]`);
+    const oldCard = document.querySelector(`.class-card[data-class-id="${classId}"]`);
+    if (!oldCard) return;
+
+    const container = oldCard.closest('.classes-grid');
     if (!container) return;
 
     const response = await fetch(`/classes/${classId}/card`);
@@ -11,20 +20,35 @@ export async function refreshSingleCard({ classId }) {
     const temp = document.createElement("div");
     temp.innerHTML = html;
 
-    // Look specifically for the class-card element inside temp
     const newCard = temp.querySelector(`.class-card[data-class-id="${classId}"]`);
-
     if (!newCard) {
         console.error("No card found in fetched HTML for classId:", classId);
         return;
     }
 
-    const cardParent = container.parentElement;
-    if (!cardParent) return;
+    // Replace card
+    container.replaceChild(newCard, oldCard);
+    initVisualElementsForCard(newCard);
 
-    cardParent.replaceChild(newCard, container);
+    // Re-init interactive behavior for the new DOM
+    const [{ initInlineEditing }, { initCompletion }] = await Promise.all([
+        import('../inlineEditing.js'),
+        import('../completion.js')
+    ]);
 
-    // Re-init interactive elements
-    import('../inlineEditing.js').then(mod => mod.initInlineEditing());
-    import('../classes/completion.js').then(mod => mod.initCompletion());
+    initInlineEditing();
+    initCompletion();
+
+    const allItems = [...container.querySelectorAll('.class-card')];
+    const state = getClassSelectorState();
+    const filteredAndSorted = filterAndSortClasses(allItems, state);
+
+    applyVisibilityAndOrder(
+        container,
+        allItems,
+        filteredAndSorted,
+        state.sortBy
+    );
 }
+
+

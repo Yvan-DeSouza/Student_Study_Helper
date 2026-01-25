@@ -220,7 +220,6 @@ def toggle_class_completion(class_id):
     else:
         c.is_finished = False
         c.finished_at = None
-        c.grade = None
 
     db.session.commit()
     return {"status": "ok"}, 200
@@ -233,8 +232,7 @@ def toggle_class_completion(class_id):
 @classes.route("/classes/<int:class_id>/grade", methods=["PATCH"])
 @login_required
 def update_grade(class_id):
-    print(class_id)
-    print(current_user.user_id)
+
 
     cls = Class.query.filter_by(
         class_id=class_id,
@@ -243,7 +241,6 @@ def update_grade(class_id):
 
     if cls.is_finished:
         return "Class is finished", 400
-
     try:
         grade = float(request.form.get("grade"))
     except (TypeError, ValueError):
@@ -268,10 +265,12 @@ def classes_cards():
 @classes.route("/classes/<int:class_id>/card")
 @login_required
 def get_class_card(class_id):
-    """Return HTML for a single class card"""
     cls = Class.query.filter_by(
         class_id=class_id,
         user_id=current_user.user_id
     ).first_or_404()
-    
-    return render_template("partials/classes/cards.html", c=cls)
+
+    return render_template(
+        "partials/classes/card.html",
+        c=cls
+    )
