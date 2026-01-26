@@ -4,6 +4,7 @@ import { refreshHomeSessions } from './refresh/refresh_sessions.js';
 import { refreshHomeAssignments } from './refresh/refresh_assignments.js';
 import { refreshHomeUpcomingDeadlines } from './refresh/refresh_upcoming_deadlines.js';
 import { initModalEvents } from "../core/modalManager.js";
+import { saveUpcomingDeadlinesIfDirty } from '../global_refresh/save_upcoming_deadlines.js';
 
 import { initStudySessionSubmit } from './study_session_submit.js';
 import { initAssignmentSubmit } from './assignment_submit.js';
@@ -31,6 +32,7 @@ function registerHomeListeners() {
 }
 
 function cleanup() {
+    saveUpcomingDeadlinesIfDirty("home");
     unregisterRefresh("classes:changed");
     unregisterRefresh("home:charts");
     unregisterRefresh("home:sessions");

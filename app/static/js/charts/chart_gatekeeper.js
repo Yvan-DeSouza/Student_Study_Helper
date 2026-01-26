@@ -2,7 +2,6 @@ export function gateChart(cardEl, response, renderFront, renderBack) {
   const frontEl = cardEl.querySelector('.card-front');
   const backEl = cardEl.querySelector('.min_requirements');
 
-  // ---- Normalize backend payload ----
   const data = response.eligibility ?? response;
 
   const {
@@ -13,17 +12,32 @@ export function gateChart(cardEl, response, renderFront, renderBack) {
     representative = null
   } = data;
 
-  // ---- Front (not eligible) ----
+  // Clear back by default (important)
+  if (backEl) backEl.innerHTML = "";
+
   if (!eligible) {
     frontEl.innerHTML = renderFront(progress, representative);
+
+    // Ensure chart wrapper exists and is visible
     const wrapper = frontEl.querySelector('.chart-wrapper');
-    if (wrapper) wrapper.style.height = '220px';
+    if (wrapper) {
+      wrapper.style.height = "220px";
+      wrapper.style.display = "block";
+    }
+
     return false;
   }
 
-  // ---- Back (eligible but partial data hidden) ----
-  if ((ineligible_classes.length > 0 || ineligible_assignments.length > 0) && renderBack) {
-    backEl.innerHTML = renderBack(ineligible_classes, ineligible_assignments);
+  // Eligible → front should be empty so canvas can render
+
+  if (
+    (ineligible_classes.length > 0 || ineligible_assignments.length > 0) &&
+    renderBack
+  ) {
+    backEl.innerHTML = renderBack(
+      ineligible_classes,
+      ineligible_assignments
+    );
   }
 
   return true;

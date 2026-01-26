@@ -82,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+window.addEventListener("beforeunload", saveUpcomingDeadlinesIfDirty("assignments"));
+
 
 function initSortCategory() {
     const radios = document.querySelectorAll("input[name='sortCategory']");

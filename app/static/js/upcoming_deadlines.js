@@ -10,7 +10,15 @@ class UpcomingDeadlines {
   }
 
   async init() {
-    await this.loadDeadlines();
+    // Wait for the loadDeadlines() call to set the currentCount from backend
+    await this.loadDeadlines(); 
+    const input = document.getElementById(`deadlines-count-input-${this.pageId}`);
+    if (input) {
+        this.currentCount = parseInt(input.value);
+    }
+    this.isDirty = false;
+
+
     this.attachEventListeners();
     this.setupBeforeUnloadHandler();
   }
@@ -246,21 +254,18 @@ Estimated completion percentage: ${completionPercentage}%`;
    
     try {
       const data = JSON.stringify({ count });
-      const blob = new Blob([data], { type: 'application/json' });
-     
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/user-preferences/deadlines-count', blob);
-      } else {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
         await fetch('/api/user-preferences/deadlines-count', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken 
+           },
           body: data,
           keepalive: true
         });
-      }
-     
-      this.isDirty = false;
-    } catch (error) {
+        this.isDirty = false
+      } catch (error) {
       console.error('Error saving count:', error);
     }
   }

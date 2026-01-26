@@ -25,10 +25,15 @@ export function initAddClassModal() {
 
 async function submitAddClass(form) {
     try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
         const response = await fetch(form.action, {
             method: "POST",
             body: new FormData(form),
-            headers: { "Accept": "application/json" }
+            headers: { 
+                "Accept": "application/json",
+                "X-CSRFToken": csrfToken
+             }
         });
 
         if (!response.ok) {

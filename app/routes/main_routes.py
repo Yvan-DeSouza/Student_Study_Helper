@@ -36,5 +36,5 @@ def upcoming_deadlines_partial():
     assignments = Assignment.query.join(Class).filter(Class.user_id == current_user.user_id).all()
     prefs = UserPreferences.query.filter_by(user_id=current_user.user_id).first()
     deadline_count = prefs.default_upcoming_deadlines_count if prefs else 3
-    return render_template('partials/upcoming_deadlines.html', assignments=assignments, deadline_count=deadline_count, page_id='main')
+    return render_template('partials/upcoming_deadlines.html', assignments=assignments, deadline_count=deadline_count, page_id='home')
 

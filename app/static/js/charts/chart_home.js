@@ -3,8 +3,20 @@ import { gateChart } from './chart_gatekeeper.js';
 
 let timePerClassChart = null;
 let weeklyStudyChart = null;
-let assignmentLoadChart = null;
 let efficiencyChart = null;
+function resetChart(chartRef, canvasId) {
+    if (chartRef) {
+        chartRef.destroy();
+        chartRef = null;
+    }
+
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+        canvas.style.display = "block";
+    }
+
+    return null;
+}
 
 function setAssignmentToggleVisibility(visible) {
     if (!loadDailyBtn || !loadWeeklyBtn) return;
@@ -147,33 +159,31 @@ function setAssignmentToggleVisibility(visible) {
 
     /* ========= TIME PER CLASS ========= */
     async function renderTimePerClass() {
-        const classCtx = document.getElementById("timePerClassChart").getContext("2d");
+        const canvas = document.getElementById("timePerClassChart");
+        if (!canvas) return;
 
-
-        if (!classCtx) return;
-
-
+        const ctx = canvas.getContext("2d");
         const card = document.querySelector('[data-card-id="home-time-per-class"]');
+
         const res = await fetch("/charts/home/time_per_class");
         const data = await res.json();
 
+        const allowed = gateChart(
+            card,
+            data,
+            renderTimeDistributionFront,
+            renderTimeDistributionBack
+        );
 
-
-
-        const allowed = gateChart(card, data, renderTimeDistributionFront, renderTimeDistributionBack);
-        if (!allowed) return;
-
-
-
-
-
-
-        if (timePerClassChart) {
-            timePerClassChart.destroy();
+        if (!allowed) {
+            timePerClassChart = resetChart(timePerClassChart, "timePerClassChart");
+            return;
         }
 
+        timePerClassChart = resetChart(timePerClassChart, "timePerClassChart");
 
-        timePerClassChart = new Chart(classCtx, {
+
+        timePerClassChart = new Chart(ctx, {
             type: "doughnut",
             data: {
                 labels: data.labels,
@@ -206,30 +216,26 @@ function setAssignmentToggleVisibility(visible) {
 
     /* ========= WEEKLY STUDY TIME ========= */
     async function renderWeeklyStudy() {
-        const weeklyStudyCtx = document.getElementById("weeklyStudyTime").getContext("2d");
+        const canvas = document.getElementById("weeklyStudyTime");
+        if (!canvas) return;
 
-
-        if (!weeklyStudyCtx) return;
-
-
+        const ctx = canvas.getContext("2d");
         const card = document.querySelector('[data-card-id="home-weekly-study"]');
+
         const res = await fetch("/charts/home/weekly_study_time");
         const data = await res.json();
 
+        const allowed = gateChart(card, data, renderWeeklyStudyFront, null);
 
-
-
-        if (!gateChart(card, data, renderWeeklyStudyFront, null)) {
+        if (!allowed) {
+            weeklyStudyChart = resetChart(weeklyStudyChart, "weeklyStudyTime");
             return;
         }
 
-
-        if (weeklyStudyChart) {
-            weeklyStudyChart.destroy();
-        }
+        weeklyStudyChart = resetChart(weeklyStudyChart, "weeklyStudyTime");
 
 
-        weeklyStudyChart = new Chart(weeklyStudyCtx, {
+        weeklyStudyChart = new Chart(ctx, {
             type: "line",
             data: {
                 labels: data.labels,
@@ -277,8 +283,6 @@ function setAssignmentToggleVisibility(visible) {
 
 
     let assignmentChart;
-    let currentMode = "daily";
-    let isEligible = false;
 
 
 
@@ -286,70 +290,71 @@ function setAssignmentToggleVisibility(visible) {
 
 
     async function loadAssignmentChart(mode = "daily") {
-        currentMode = mode;
+
+        const canvas = document.getElementById("assignmentLoad");
+        if (!canvas) return;
+
+
+
+        const ctx = canvas.getContext("2d");
+
         const url = mode === "daily"
             ? "/charts/home/assignment_load_daily"
             : "/charts/home/assignment_load_weekly";
 
+        const res = await fetch(url);
+        const data = await res.json();
 
-        const chartRes = await fetch(url);
-        const chartData = await chartRes.json();
+        const allowed = gateChart(
+            assignmentCard,
+            data,
+            renderAssignmentLoadFront,
+            renderAssignmentLoadBack
+        );
 
+        setAssignmentToggleVisibility(allowed);
 
-        // Check eligibility on first load
-        if (!assignmentChart) {
-            isEligible = gateChart(
-                assignmentCard,
-                chartData,
-                renderAssignmentLoadFront,
-                renderAssignmentLoadBack
-            );
+        if (!allowed) {
 
-            setAssignmentToggleVisibility(isEligible);
-
-            if (!isEligible) return;
+            assignmentChart = resetChart(assignmentChart, "assignmentLoad");
+            return;
         }
 
+        canvas.style.display = "block";
 
 
-        if (!assignmentChart) {
-            const assignmentWrapper = assignmentCard.querySelector('.chart-wrapper');
-            assignmentChart = new Chart(assignmentCtx, {
-                type: "bar",
-                data: {
-                    labels: chartData.labels,
-                    datasets: [{
-                        label: "Assignments Due",
-                        data: chartData.data,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0
-                            }
+        assignmentChart = resetChart(assignmentChart, "assignmentLoad");
+        assignmentChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: "Assignments Due",
+                    data: data.data,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
                         }
-                    },
-                    plugins: {
-                        legend: { display: false }
                     }
+                },
+                plugins: {
+                    legend: { display: false }
                 }
-            });
-        } else {
-            assignmentChart.data.labels = chartData.labels;
-            assignmentChart.data.datasets[0].data = chartData.data;
-            assignmentChart.update();
-        }
+            }
+        });
+
     }
 
 
     if (assignmentCtx){
-
         /* Initial load */
 
 
@@ -373,32 +378,31 @@ function setAssignmentToggleVisibility(visible) {
 
     /* ========= STUDY EFFICIENCY BY CLASS ========= */
     async function renderStudyEfficiency() {
-        const efficiencyCtx = document.getElementById("StudyEffByCls").getContext("2d");
+        const canvas = document.getElementById("StudyEffByCls");
+        if (!canvas) return;
 
-
-        if (!efficiencyCtx) return;
-
-
+        const ctx = canvas.getContext("2d");
         const card = document.querySelector('[data-card-id="home-performance"]');
-
 
         const res = await fetch("/charts/home/study_efficiency_by_class");
         const data = await res.json();
 
+        const allowed = gateChart(
+            card,
+            data,
+            renderPerformanceRadarFront,
+            renderPerformanceRadarBack
+        );
 
-
-
-        if (!gateChart(card, data, renderPerformanceRadarFront, renderPerformanceRadarBack)) {
+        if (!allowed) {
+            efficiencyChart = resetChart(efficiencyChart, "StudyEffByCls");
             return;
         }
 
-
-        if (efficiencyChart) {
-            efficiencyChart.destroy();
-        }
+        efficiencyChart = resetChart(efficiencyChart, "StudyEffByCls");
 
 
-        efficiencyChart = new Chart(efficiencyCtx, {
+        efficiencyChart = new Chart(ctx, {
             type: "radar",
             data: {
                 labels: data.axes,
