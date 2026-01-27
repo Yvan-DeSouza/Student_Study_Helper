@@ -600,3 +600,29 @@
     margin-bottom: 0;
 }
 
+/* ================= NO ASSIGNMENTS MESSAGE ================= */
+
+.no-assignments-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.no-assignments-message p {
+    margin: 10px 0;
+    color: var(--text-color);
+}
+
+.no-assignments-message p:first-child {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.no-assignments-message p:last-child {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+

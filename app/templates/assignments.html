@@ -161,6 +161,10 @@
                 <label class="selector-check" for="class_type_selector_technology"><input type="checkbox" name="class_type_selector" id="class_type_selector_technology"> Tech</label>
                 <label class="selector-check" for="class_type_selector_finance"><input type="checkbox" name="class_type_selector" id="class_type_selector_finance"> Finance</label>
                 <label class="selector-check" for="class_type_selector_other"><input type="checkbox" name="class_type_selector" id="class_type_selector_other"> Other</label>
+                <label class="selector-check" for="class_type_none">
+                <input type="checkbox" id="class_type_none" name="class_type_selector">
+                    None / Unset
+                </label>
             </div>
         </div>
 
@@ -686,6 +690,5 @@
 
 <script type="module" src="{{ url_for('static', filename='js/assignments/index.js') }}"></script>
 <script src="{{ url_for('static', filename='js/constants.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='js/selector/assignments_selector.js') }}"></script>
 <script src="{{ url_for('static', filename='js/upcoming_deadlines.js') }}"></script>
 {% endblock%}

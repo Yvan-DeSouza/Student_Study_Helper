@@ -11,6 +11,7 @@ import { initModals, initUnsavedChangesModal } from './modals.js';
 import { refreshAssignmentsTable } from "./refresh/refresh_table.js";
 import { refreshCharts } from "./refresh/refresh_charts.js";
 import { registerRefresh, runRefreshes } from "../core/refreshBus.js";
+import { initAssignmentSelector } from "../selector/assignments/init.js";
 import { saveUpcomingDeadlinesIfDirty } from '../global_refresh/save_upcoming_deadlines.js';
 
 
@@ -34,14 +35,13 @@ document.addEventListener("DOMContentLoaded", () => {
     initModals();
     initInlineEditing();
     initCompletion();
-    initDeleteAssignmentModal();  
-    initDeleteFromTable();      
-
+    initDeleteAssignmentModal();
+    initDeleteFromTable();
     initEditFromTable();
     initUnsavedChangesModal();
 
-    // Sort category logic
-    initSortCategory();
+    // Initialize new selector system
+    initAssignmentSelector();
 
     // Register refresh
     registerRefresh("table", refreshAssignmentsTable);
