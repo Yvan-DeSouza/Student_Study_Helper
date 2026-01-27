@@ -32,6 +32,7 @@ def class_preferences():
         page_name=page_name
     ).first()
 
+
     if not pref:
         return jsonify({
             "page_name": page_name,
@@ -41,7 +42,14 @@ def class_preferences():
             "filter_class_types": list(DEFAULT_CLASS_COLORS.keys())
         }), 200
 
-
+    print(page_name)
+    print(jsonify({
+        "page_name": pref.page_name,
+        "sort_by": pref.sort_by,
+        "status_filter": pref.status_filter,
+        "filter_importance": pref.filter_importance,
+        "filter_class_types": pref.filter_class_types
+    }))
     return jsonify({
         "page_name": pref.page_name,
         "sort_by": pref.sort_by,
@@ -63,24 +71,22 @@ def save_class_preferences():
         user_id=current_user.user_id,
         page_name=page_name
     ).first()
-
     if not pref:
         pref = ClassViewPreferences(
             user_id=current_user.user_id,
             page_name="classes"
         )
         db.session.add(pref)
-
     pref.sort_by = data.get("sort_by", pref.sort_by)
     pref.status_filter = data.get("status_filter", pref.status_filter)
     if "filter_class_types" in data:
         pref.filter_class_types = data["filter_class_types"]
     if "filter_importance" in data:
+
         pref.filter_importance = data["filter_importance"]
 
 
     db.session.commit()
-
     return jsonify({"success": True}), 200
 
 

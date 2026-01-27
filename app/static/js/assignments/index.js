@@ -11,6 +11,7 @@ import { initModals, initUnsavedChangesModal } from './modals.js';
 import { refreshAssignmentsTable } from "./refresh/refresh_table.js";
 import { refreshCharts } from "./refresh/refresh_charts.js";
 import { registerRefresh, runRefreshes } from "../core/refreshBus.js";
+import { saveUpcomingDeadlinesIfDirty } from '../global_refresh/save_upcoming_deadlines.js';
 
 
 

@@ -10,18 +10,16 @@ const csrfToken = document
     .querySelector('meta[name="csrf-token"]')
     ?.getAttribute("content");
 
-const IMPORTANCE_RANK = { high: 3, medium: 2, low: 1 };
+const IMPORTANCE_RANK = { high: 3, medium: 2, low: 1, none: 0 };
 
 function getClassFilters(root = document) {
 
     return {
         sortBy: root.querySelector('#classSortBy')?.value,
         status: root.querySelector('#classStatusFilter')?.value,
-        importance: {
-            high: !!root.querySelector(".selector-group input[value='high']")?.checked,
-            medium: !!root.querySelector(".selector-group input[value='medium']")?.checked,
-            low: !!root.querySelector(".selector-group input[value='low']")?.checked
-        },
+        importance: [...root.querySelectorAll(".selector-group input[type='checkbox']")]
+            .filter(cb => cb.checked)
+            .map(cb => cb.value),
         classTypes: [...root.querySelectorAll("input[name='class_type_selector']")]
             .map(cb => normalizeClassType(cb.id.replace('class_type_selector_', '')))
     };
@@ -51,8 +49,11 @@ function classMatches(filters, classData) {
     if (filters.status !== 'all' && classData.classFinished !== filters.status) return false;
 
     // importance
-    const imp = classData.classImportance || '';
-    if (imp && !filters.importance[imp]) return false;
+    const imp = classData.classImportance || 'none';
+    if (filters.importance.length > 0 && !filters.importance.includes(imp)) {
+        return false;
+    }
+
 
     // classTypes
     if (filters.classTypes.length > 0) {
@@ -271,20 +272,20 @@ export function initAssignmentsSelector() {
 
     // defaults
     const DEFAULT_CLASS = {
-    sortBy: 'name_asc',
-    status: 'all',
-    importance: { high: true, medium: true, low: true },
-    classTypes: [
-        "math",
-        "science",
-        "language",
-        "social_science",
-        "art",
-        "engineering",
-        "technology",
-        "finance",
-        "other"
-    ]
+        sortBy: 'name_asc',
+        status: 'all',
+        importance: ['high', 'low', 'medium', 'none'],
+        classTypes: [
+            "math",
+            "science",
+            "language",
+            "social_science",
+            "art",
+            "engineering",
+            "technology",
+            "finance",
+            "other"
+        ]
     };
 
 
@@ -439,13 +440,16 @@ export function initAssignmentsSelector() {
         const sortBy = pref.sort_by || DEFAULT_CLASS.sortBy;
         document.getElementById('classSortBy').value = sortBy;
         document.getElementById('classStatusFilter').value = pref.status_filter || DEFAULT_CLASS.status;
-        const imp = pref.filter_importance || DEFAULT_CLASS.importance;
-        document.querySelector(".selector-group input[value='high']").checked = !!imp.high;
-        document.querySelector(".selector-group input[value='medium']").checked = !!imp.medium;
-        document.querySelector(".selector-group input[value='low']").checked = !!imp.low;
-        let types;
-        console.log(pref.filter_class_types);
+        const imp = Array.isArray(pref.filter_importance)
+            ? pref.filter_importance
+            : DEFAULT_CLASS.importance;
 
+        ['high', 'medium', 'low', 'none'].forEach(val => {
+            const cb = document.querySelector(`.selector-group input[value='${val}']`);
+            if (cb) cb.checked = imp.includes(val);
+        });
+        let types;
+        console.log(imp)
         if (Array.isArray(pref.filter_class_types)) {
             // Use exactly what the user saved (even if empty)
             types = pref.filter_class_types;
@@ -495,6 +499,7 @@ export function initAssignmentsSelector() {
             const res = await fetch('/api/preferences/classes?page=assignments');
             if (res.ok) {
                 const data = await res.json();
+                console.log("save")
                 console.log(data)
                 if (data) {
                     personalClassPrefs = data;
@@ -532,13 +537,13 @@ export function initAssignmentsSelector() {
                 page_name: 'assignments',
                 sort_by: document.getElementById('classSortBy')?.value,
                 status_filter: document.getElementById('classStatusFilter')?.value,
-                filter_importance: {
-                    high: !!document.querySelector(".selector-group input[value='high']")?.checked,
-                    medium: !!document.querySelector(".selector-group input[value='medium']")?.checked,
-                    low: !!document.querySelector(".selector-group input[value='low']")?.checked
-                },
+                filter_importance: [...document.querySelectorAll("input[name='importance_check']:checked")]
+                    .map(cb => cb.value),
                 filter_class_types: [...document.querySelectorAll("input[name='class_type_selector']:checked")].map(cb => cb.id.replace('class_type_selector_', ''))
             };
+            console.log("saving")
+            console.log(body.filter_importance)
+            console.log(body)
             await fetch('/api/preferences/classes?page=assignments', { 
                 method: 'PUT', 
                 headers: { 
@@ -621,9 +626,7 @@ export function initAssignmentsSelector() {
         }
     });
 
-    // Save on pagehide / beforeunload (keepalive if possible)
-    window.addEventListener('pagehide', () => { savePreferences().catch(e => console.error(e)); });
-    window.addEventListener('beforeunload', () => { savePreferences().catch(e => console.error(e)); });
+
 
     // Load personal prefs (if any) and apply them
     loadPersonalPrefs();

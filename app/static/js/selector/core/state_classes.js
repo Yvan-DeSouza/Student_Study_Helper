@@ -38,6 +38,7 @@ export function getClassSelectorState(root = document) {
             : checkedTypes;
 
 
+
     return {
         sortBy,
         status,

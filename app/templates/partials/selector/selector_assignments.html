@@ -1,0 +1,87 @@
+<section
+    class="selector-bar"
+    data-page-id="{{ page_id }}"
+    data-selector-type="assignment"
+>
+
+    {% set simple_selects = [
+        ("table-layout","Table layout",[
+            ("single","Single table"),
+            ("per_class","One table per class")
+        ]),
+        ("due-status","Due status",[
+            ("all","All"),
+            ("overdue","Overdue"),
+            ("not_due","Not due")
+        ]),
+        ("completion","Completion",[
+            ("all","All"),
+            ("completed","Completed"),
+            ("uncompleted","Uncompleted")
+        ]),
+        ("graded","Graded",[
+            ("all","All"),
+            ("graded","Graded"),
+            ("ungraded","Ungraded")
+        ]),
+        ("created","Created",[
+            ("all","All"),
+            ("last_7_days","Last 7 days"),
+            ("last_30_days","Last 30 days")
+        ])
+    ] %}
+
+    {% for key,label,options in simple_selects %}
+    <div class="selector-group">
+        <label class="selector-label">{{ label }}</label>
+        <select class="selector-select" data-role="{{ key }}">
+            {% for v,t in options %}
+            <option value="{{ v }}">{{ t }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endfor %}
+
+    <!-- Assignment types -->
+    <div class="selector-group wide">
+        <span class="selector-label">Assignment type</span>
+        <div class="selector-checks grid">
+            {% for t in assignment_types %}
+            <label class="selector-check">
+                <input type="checkbox" name="assignment_type_selector" value="{{ t }}" checked>
+                {{ t.replace("_"," ")|title }}
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sort category -->
+    <div class="selector-group wide">
+        <span class="selector-label">Sort category</span>
+        <div class="selector-checks">
+            {% for cat in ["name","academic","dates","time"] %}
+            <label class="selector-check">
+                <input type="radio" name="sortCategory" value="{{ cat }}" {% if loop.first %}checked{% endif %}>
+                {{ cat|title }}
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sort by -->
+    <div class="selector-group">
+        <label class="selector-label">Sort by</label>
+        <select class="selector-select" data-role="assignment-sort">
+            {{ assignment_sort_options|safe }}
+        </select>
+    </div>
+
+    <div class="selector-actions stacked">
+        <button class="full-btn" data-action="apply">Apply filters</button>
+        <div class="row">
+            <button class="btn-tiny" data-action="reset-system">Reset system filters</button>
+            <button class="btn-tiny ghost-btn" data-action="reset-personal">Reset personal filters</button>
+        </div>
+    </div>
+
+</section>

@@ -147,6 +147,9 @@ def assignments_type_load():
     color_map = {r.assignment_type: r.color for r in color_rows}
     colors_list = [color_map.get(t, '#4f46e5') for t in types]
 
+    types = [
+        'Homework','Project','Quiz','Test','Writing','Exam','Lab report','Presentation','Reading','Other'
+    ]
     return jsonify({
         'eligible': eligibility['eligible'],
         'eligibility': eligibility,

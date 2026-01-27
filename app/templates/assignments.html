@@ -140,9 +140,11 @@
         <div class="selector-group wide">
             <span class="selector-label">Importance</span>
             <div class="selector-checks">
-                <label class="selector-check"><input type="checkbox" value="high" checked> High</label>
-                <label class="selector-check"><input type="checkbox" value="medium" checked> Medium</label>
-                <label class="selector-check"><input type="checkbox" value="low" checked> Low</label>
+                <label class="selector-check"><input type="checkbox" name="importance_check" value="high" checked> High</label>
+                <label class="selector-check"><input type="checkbox" name="importance_check" value="medium" checked> Medium</label>
+                <label class="selector-check"><input type="checkbox" name="importance_check" value="low" checked> Low</label>
+                <label class="selector-check"><input type="checkbox" name="importance_check"value="none" checked> None</label>
+
             </div>
         </div>
 
@@ -166,10 +168,12 @@
         <div class="selector-actions stacked">
             <button class="full-btn" id="applyClassFilters">
                 Apply filters
-            </button>            <div style="display:flex; gap:8px; margin-top:8px;">
+            </button>            
+            <div style="display:flex; gap:8px; margin-top:8px;">
                 <button class="btn-tiny" id="resetSystemClassFilters" type="button">Reset system filters</button>
                 <button class="btn-tiny ghost-btn" id="resetPersonalClassFilters" type="button">Reset personal filters</button>
-            </div>        </div>
+            </div>        
+        </div>
 
     </section>
 
