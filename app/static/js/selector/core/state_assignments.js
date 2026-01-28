@@ -27,17 +27,7 @@ export function getAssignmentSelectorState(root = document) {
 
     // ------------------------- SORT BY -------------------------
     const sortBy = root.querySelector('#assignmentSortBy')?.value ?? "name_asc";
-    console.log("hello")
-    console.log({
-        tableLayout,
-        dueStatus,
-        completion,
-        graded,
-        created,
-        assignmentTypes: finalAssignmentTypes,
-        sortCategory,
-        sortBy
-    })
+
     return {
         tableLayout,
         dueStatus,

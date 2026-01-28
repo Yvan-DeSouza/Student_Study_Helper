@@ -1,8 +1,12 @@
+// selector/assignments/init.js
+// Assignment page orchestration
+
 import { getAssignmentSelectorState } from "../core/state_assignments.js";
 import { getClassSelectorState } from "../core/state_classes.js";
 import { fetchFilteredAssignments } from "../core/filter_assignments.js";
 import { fetchFilteredClassIds } from "../core/filter_classes.js";
 import { applyAssignmentOrdering } from "./apply.js";
+
 const SORT_VALUE_TO_CATEGORY = {
     // name
     name_asc: 'name',
@@ -29,13 +33,12 @@ const SORT_VALUE_TO_CATEGORY = {
     study_minutes_low_high: 'time'
 };
 
-
 const csrfToken = document
     .querySelector("meta[name='csrf-token']")
     ?.getAttribute("content");
 
 export async function initAssignmentSelector() {
-    const container = document.querySelector(".assignments-container");
+    const container = document.querySelector(".assignments-table-wrapper");
     if (!container) return;
 
     let allItems = [];
@@ -46,23 +49,35 @@ export async function initAssignmentSelector() {
     function updateAllItems() {
         if (currentLayout === "single") {
             // Single table: get all table rows
-            const tbody = container.querySelector("tbody");
+            const tbody = container.querySelector('[data-table-mode="single"] tbody');
             allItems = tbody ? [...tbody.querySelectorAll("tr")] : [];
         } else {
-            // Per-class: get all assignment cards
-            allItems = [...container.querySelectorAll(".assignments-table-card")];
+            // Per-class: get all per-class cards
+            allItems = [...container.querySelectorAll(".per-class-card")];
         }
     }
 
     // ------------------------- TABLE LAYOUT CHANGE -------------------------
     function handleLayoutChange(newLayout) {
+        const singleCard = container.querySelector('[data-table-mode="single"]');
+        const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
+        
+        if (newLayout === 'single') {
+            singleCard?.classList.remove('hidden');
+            perClassWrapper?.classList.add('hidden');
+        } else {
+            singleCard?.classList.add('hidden');
+            perClassWrapper?.classList.remove('hidden');
+        }
+        
         currentLayout = newLayout;
         updateAllItems();
     }
 
     // Listen for layout changes
-    document.getElementById("tableLayout")?.addEventListener("change", (e) => {
+    document.getElementById("tableLayout")?.addEventListener("change", async (e) => {
         handleLayoutChange(e.target.value);
+        await apply();
     });
 
     // ------------------------- APPLY PREFS → UI -------------------------
@@ -86,7 +101,9 @@ export async function initAssignmentSelector() {
 
             // Class types
             const noneCheckbox = document.querySelector("#class_type_none");
-            noneCheckbox.checked = classPrefs.filter_class_types === null;
+            if (noneCheckbox) {
+                noneCheckbox.checked = classPrefs.filter_class_types === null;
+            }
 
             const typeSet = new Set(classPrefs.filter_class_types ?? []);
             document
@@ -100,8 +117,11 @@ export async function initAssignmentSelector() {
 
         // Apply assignment preferences
         if (assignmentPrefs) {
-            document.querySelector("#tableLayout").value =
-                assignmentPrefs.table_layout ?? "single";
+            const tableLayoutSelect = document.querySelector("#tableLayout");
+            if (tableLayoutSelect) {
+                tableLayoutSelect.value = assignmentPrefs.table_layout ?? "single";
+            }
+            
             document.querySelector("#dueStatusFilter").value =
                 assignmentPrefs.due_status_filter ?? "all";
             document.querySelector("#completionFilter").value =
@@ -112,27 +132,36 @@ export async function initAssignmentSelector() {
                 assignmentPrefs.created_filter ?? "all";
 
             // Assignment types
-            const typeSet = new Set(assignmentPrefs.filter_assignment_types ?? []);
+            const assignmentTypes = assignmentPrefs.filter_assignment_types ?? [];
+            const typeSet = new Set(Array.isArray(assignmentTypes) ? assignmentTypes : []);
+            
             document
                 .querySelectorAll("input[name='assignment_type_selector']")
                 .forEach(cb => {
-                    cb.checked = typeSet.has(cb.value) || typeSet.size === 0;
+                    // If no specific types saved, check all
+                    cb.checked = typeSet.size === 0 || typeSet.has(cb.value);
                 });
-
-
 
             // Sort category and sort by
             if (assignmentPrefs.sort_by) {
                 const sortBy = assignmentPrefs.sort_by;
-
                 const category = SORT_VALUE_TO_CATEGORY[sortBy] ?? 'name';
 
-                document.querySelector(`input[name='sortCategory'][value='${category}']`).checked = true;
+                const categoryRadio = document.querySelector(`input[name='sortCategory'][value='${category}']`);
+                if (categoryRadio) {
+                    categoryRadio.checked = true;
+                    
+                    // Update visible options
+                    document.querySelectorAll("#assignmentSortBy option").forEach(opt => {
+                        opt.hidden = opt.dataset.cat !== category;
+                    });
+                }
+                
                 document.querySelector("#assignmentSortBy").value = sortBy;
             }
 
-            // Update layout
-            handleLayoutChange(document.querySelector("#tableLayout").value);
+            // Update layout after setting preferences
+            handleLayoutChange(assignmentPrefs.table_layout ?? "single");
         }
     }
 
@@ -140,25 +169,25 @@ export async function initAssignmentSelector() {
     async function apply() {
         const assignmentState = getAssignmentSelectorState();
         const classState = getClassSelectorState();
-        console.log('apply')
-        console.log(classState)
 
+        // Get filtered class IDs (for per-class mode filtering)
+        const filteredClassIds = await fetchFilteredClassIds(classState, 'assignments');
+        
+        // Fetch filtered assignments
+        const data = await fetchFilteredAssignments(assignmentState);
 
         if (assignmentState.tableLayout === 'per_class') {
-            // For per-class layout, we need to filter classes first, then assignments within classes
-            const classIds = await fetchFilteredClassIds({ ...classState, page: 'assignments' });
-            const data = await fetchFilteredAssignments(assignmentState);
-
-            // Filter the data to only include classes that match the class filters
+            // For per-class layout, filter out classes that don't match class filters
             const filteredData = {
                 layout: 'per_class',
-                classes: data.classes.filter(cls => classIds.includes(String(cls.class_id)))
+                classes: data.classes.filter(cls => 
+                    filteredClassIds.includes(String(cls.class_id))
+                )
             };
-
+            
             applyAssignmentOrdering(container, allItems, filteredData, assignmentState.tableLayout);
         } else {
-            // For single layout, just fetch filtered assignments (API handles class filtering)
-            const data = await fetchFilteredAssignments(assignmentState);
+            // For single layout, just apply the data as-is
             applyAssignmentOrdering(container, allItems, data, assignmentState.tableLayout);
         }
     }
@@ -259,8 +288,8 @@ export async function initAssignmentSelector() {
         .getElementById("resetPersonalClassFilters")
         ?.addEventListener("click", async () => {
             if (!personalPrefs) await loadPersonalPrefs();
-            if (personalPrefs) {
-                applyPreferencesToUI(personalPrefs.classPrefs, personalPrefs?.assignmentPrefs);
+            if (personalPrefs?.classPrefs) {
+                applyPreferencesToUI(personalPrefs.classPrefs, personalPrefs.assignmentPrefs);
                 await apply();
                 await savePrefs();
             }
@@ -275,7 +304,7 @@ export async function initAssignmentSelector() {
                 completion_filter: "all",
                 graded_filter: "all",
                 created_filter: "all",
-                filter_assignment_types: null,
+                filter_assignment_types: [],
                 sort_by: "name_asc"
             });
             await apply();
@@ -286,7 +315,7 @@ export async function initAssignmentSelector() {
         .getElementById("resetPersonalAssignmentFilters")
         ?.addEventListener("click", async () => {
             if (!personalPrefs) await loadPersonalPrefs();
-            if (personalPrefs) {
+            if (personalPrefs?.assignmentPrefs) {
                 applyPreferencesToUI(personalPrefs.classPrefs, personalPrefs.assignmentPrefs);
                 await apply();
                 await savePrefs();
@@ -296,15 +325,16 @@ export async function initAssignmentSelector() {
     // ------------------------- SORT CATEGORY CHANGE -------------------------
     document.querySelectorAll("input[name='sortCategory']").forEach(radio => {
         radio.addEventListener("change", () => {
-            // Update sort options visibility based on category
             const category = radio.value;
+            
+            // Update sort options visibility based on category
             document.querySelectorAll("#assignmentSortBy option").forEach(opt => {
-                const cat = opt.dataset.cat;
-                opt.hidden = cat !== category;
+                opt.hidden = opt.dataset.cat !== category;
             });
 
             // Select first visible option
-            const firstVisible = [...document.querySelectorAll("#assignmentSortBy option")].find(o => !o.hidden);
+            const firstVisible = [...document.querySelectorAll("#assignmentSortBy option")]
+                .find(o => !o.hidden);
             if (firstVisible) {
                 document.querySelector("#assignmentSortBy").value = firstVisible.value;
             }
@@ -317,6 +347,20 @@ export async function initAssignmentSelector() {
         await apply();
     });
 
+    document.addEventListener("assignment:grade:changed", async () => {
+        updateAllItems();
+        await apply();
+    });
+
+    document.addEventListener("assignment:completion:changed", async () => {
+        updateAllItems();
+        await apply();
+    });
+
     // ------------------------- INIT -------------------------
+    // Initialize current layout from DOM
+    const initialLayout = document.querySelector("#tableLayout")?.value ?? "single";
+    handleLayoutChange(initialLayout);
+    
     await loadPersonalPrefs();
 }

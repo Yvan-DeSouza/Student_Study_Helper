@@ -1,15 +1,18 @@
+// selector/assignments/apply.js
+// Page-specific animation logic for assignments page
+
 function isElementVisible(el) {
     return !el.classList.contains('hidden');
 }
 
 function hideWithAnimation(el) {
-    // If already hidden via class, nothing to do
     if (el.classList.contains('hidden') || el.dataset.hiding === 'true') return;
+    
     el.dataset.hiding = 'true';
-    // start transition to invisible
     el.style.transition = 'transform 200ms ease, opacity 200ms ease';
-    el.style.opacity = 0;
+    el.style.opacity = '0';
     el.style.transform = 'scale(0.98)';
+    
     const onEnd = (e) => {
         if (e && e.propertyName !== 'opacity' && e.propertyName !== 'transform') return;
         el.classList.add('hidden');
@@ -19,94 +22,49 @@ function hideWithAnimation(el) {
         el.dataset.hiding = '';
         el.removeEventListener('transitionend', onEnd);
     };
+    
     el.addEventListener('transitionend', onEnd);
+    // Fallback in case transitionend doesn't fire
+    setTimeout(() => {
+        if (el.dataset.hiding === 'true') {
+            onEnd();
+        }
+    }, 250);
 }
 
 function showWithAnimation(el) {
-    // If already visible or already showing, just ensure visible
     if (!el.classList.contains('hidden')) return;
+    
     el.classList.remove('hidden');
-    // start hidden state
-    el.style.opacity = 0;
+    el.style.opacity = '0';
     el.style.transform = 'scale(0.98)';
-    // Force reflow
-    void el.offsetWidth;
+    
+    void el.offsetWidth; // Force reflow
+    
     requestAnimationFrame(() => {
         el.style.transition = 'transform 250ms ease, opacity 220ms ease';
-        el.style.opacity = '';
-        el.style.transform = '';
+        el.style.opacity = '1';
+        el.style.transform = 'scale(1)';
     });
+    
     const onEnd = () => {
         el.style.transition = '';
         el.style.opacity = '';
         el.style.transform = '';
         el.removeEventListener('transitionend', onEnd);
     };
+    
     el.addEventListener('transitionend', onEnd);
-}
-
-function applyVisibilityAndOrder(container, allItems, orderedVisibleItems, currentSortBy) {
-    let lastSortBy = null;
-    const visibleSet = new Set(orderedVisibleItems);
-
-    // Record positions of currently visible items (before changes)
-    const previouslyVisible = allItems.filter(isElementVisible);
-    const firstRects = new Map();
-    previouslyVisible.forEach(el => firstRects.set(el, el.getBoundingClientRect()));
-
-    // 1. Hide / show elements with animation
-    allItems.forEach(el => {
-        const shouldShow = visibleSet.has(el);
-        if (shouldShow) {
-            showWithAnimation(el);
-        } else {
-            hideWithAnimation(el);
-        }
-    });
-
-    // 2. Always reorder to match desired order (so visible items appear in correct order)
-    orderedVisibleItems.forEach(el => {
-        container.appendChild(el);
-    });
-
-    lastSortBy = currentSortBy;
-
-    // Compute last positions and animate changes (FLIP) for visible items
-    const lastRects = new Map();
-    orderedVisibleItems.forEach(el => lastRects.set(el, el.getBoundingClientRect()));
-
-    orderedVisibleItems.forEach(el => {
-        const first = firstRects.get(el);
-        const last = lastRects.get(el);
-        if (first) {
-            const dx = first.left - last.left;
-            const dy = first.top - last.top;
-            if (dx !== 0 || dy !== 0) {
-                el.style.transition = 'none';
-                el.style.transform = `translate(${dx}px, ${dy}px)`;
-                // Force reflow
-                void el.offsetWidth;
-                requestAnimationFrame(() => {
-                    el.style.transition = 'transform 350ms ease';
-                    el.style.transform = '';
-                });
-                const cleanup = () => {
-                    el.style.transition = '';
-                    el.removeEventListener('transitionend', cleanup);
-                };
-                el.addEventListener('transitionend', cleanup);
-            }
-        } else {
-            // Newly visible: fade/scale in handled by showWithAnimation
-        }
-    });
+    // Fallback
+    setTimeout(() => {
+        onEnd();
+    }, 300);
 }
 
 function showNoAssignmentsMessage(container, layout) {
-    // Remove existing message if any
     const existing = container.querySelector('.no-assignments-message');
-    if (existing) existing.remove();
-
+    if (existing) return; // Already showing
+    
     const message = document.createElement('div');
     message.className = 'no-assignments-message card';
     message.innerHTML = `
@@ -115,99 +73,164 @@ function showNoAssignmentsMessage(container, layout) {
             <p>Try adjusting your filter settings or add some new assignments.</p>
         </div>
     `;
+    
+    // Add with animation
+    message.style.opacity = '0';
+    message.style.transform = 'scale(0.95)';
     container.appendChild(message);
+    
+    requestAnimationFrame(() => {
+        message.style.transition = 'transform 250ms ease, opacity 220ms ease';
+        message.style.opacity = '1';
+        message.style.transform = 'scale(1)';
+    });
 }
 
 function hideNoAssignmentsMessage(container) {
     const message = container.querySelector('.no-assignments-message');
-    if (message) message.remove();
+    if (!message) return;
+    
+    message.style.transition = 'transform 200ms ease, opacity 200ms ease';
+    message.style.opacity = '0';
+    message.style.transform = 'scale(0.95)';
+    
+    setTimeout(() => {
+        message.remove();
+    }, 200);
 }
 
 export function applyAssignmentOrdering(container, allItems, data, layout) {
     if (layout === 'single') {
-        // Single table layout
-        const tbody = container.querySelector('tbody');
+        applySingleTableOrdering(container, allItems, data);
+    } else {
+        applyPerClassOrdering(container, allItems, data);
+    }
+}
+
+function applySingleTableOrdering(container, allItems, data) {
+    const singleCard = container.querySelector('[data-table-mode="single"]');
+    if (!singleCard) return;
+    
+    const tbody = singleCard.querySelector('tbody');
+    if (!tbody) return;
+    
+    // Build map of all rows by assignment ID
+    const assignmentMap = new Map(
+        allItems.map(row => [String(row.dataset.assignmentId), row])
+    );
+    
+    // Get ordered visible rows from API response
+    const orderedVisibleRows = data.assignments
+        .map(a => assignmentMap.get(String(a.assignment_id)))
+        .filter(Boolean);
+    
+    const visibleSet = new Set(orderedVisibleRows);
+    
+    // Hide rows that shouldn't be visible
+    allItems.forEach(row => {
+        const shouldShow = visibleSet.has(row);
+        if (shouldShow) {
+            showWithAnimation(row);
+        } else {
+            hideWithAnimation(row);
+        }
+    });
+    
+    // Reorder visible rows in tbody
+    orderedVisibleRows.forEach(row => {
+        tbody.appendChild(row);
+    });
+    
+    // Show/hide no assignments message
+    if (orderedVisibleRows.length === 0) {
+        showNoAssignmentsMessage(singleCard, 'single');
+    } else {
+        hideNoAssignmentsMessage(singleCard);
+    }
+}
+
+function applyPerClassOrdering(container, allItems, data) {
+    const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
+    if (!perClassWrapper) return;
+    
+    // Build map of all per-class cards by class ID
+    const classCardMap = new Map();
+    allItems.forEach(card => {
+        // Get class ID from first row in the table
+        const firstRow = card.querySelector('tbody tr');
+        if (firstRow) {
+            const classId = String(firstRow.dataset.classId);
+            classCardMap.set(classId, card);
+        }
+    });
+    
+    // Track which cards should be visible
+    const visibleCardIds = new Set();
+    const orderedVisibleCards = [];
+    
+    // Process each class from API response
+    data.classes.forEach(cls => {
+        const classId = String(cls.class_id);
+        const card = classCardMap.get(classId);
+        
+        if (!card) return;
+        
+        const tbody = card.querySelector('tbody');
         if (!tbody) return;
-
-        const assignmentMap = new Map(
-            allItems.map(row => [String(row.dataset.assignmentId), row])
+        
+        // Build map of rows in this card
+        const rowMap = new Map(
+            [...tbody.querySelectorAll('tr')].map(row => [String(row.dataset.assignmentId), row])
         );
-
-        const orderedVisibleRows = data.assignments
-            .map(a => assignmentMap.get(String(a.assignment_id)))
+        
+        // Get ordered rows for this class
+        const orderedRows = cls.assignments
+            .map(a => rowMap.get(String(a.assignment_id)))
             .filter(Boolean);
-
-        // Show/hide rows with animation
-        allItems.forEach(row => {
-            const shouldShow = orderedVisibleRows.includes(row);
-            if (shouldShow) {
-                showWithAnimation(row);
-            } else {
-                hideWithAnimation(row);
-            }
-        });
-
-        // Reorder visible rows
-        orderedVisibleRows.forEach(row => {
+        
+        if (orderedRows.length === 0) {
+            // No assignments in this class - hide the card
+            hideWithAnimation(card);
+            return;
+        }
+        
+        // This card should be visible
+        visibleCardIds.add(classId);
+        orderedVisibleCards.push(card);
+        
+        // Clear and rebuild tbody with ordered rows
+        tbody.innerHTML = '';
+        orderedRows.forEach(row => {
+            row.classList.remove('hidden');
+            row.style.opacity = '';
+            row.style.transform = '';
             tbody.appendChild(row);
         });
-
-        // Show/hide no assignments message
-        if (orderedVisibleRows.length === 0) {
-            showNoAssignmentsMessage(container, layout);
-        } else {
-            hideNoAssignmentsMessage(container);
+        
+        // Show the card
+        showWithAnimation(card);
+    });
+    
+    // Hide cards that aren't in the visible set
+    allItems.forEach(card => {
+        const firstRow = card.querySelector('tbody tr');
+        if (firstRow) {
+            const classId = String(firstRow.dataset.classId);
+            if (!visibleCardIds.has(classId)) {
+                hideWithAnimation(card);
+            }
         }
-
+    });
+    
+    // Reorder visible cards in the wrapper
+    orderedVisibleCards.forEach(card => {
+        perClassWrapper.appendChild(card);
+    });
+    
+    // Show/hide no assignments message
+    if (orderedVisibleCards.length === 0) {
+        showNoAssignmentsMessage(perClassWrapper, 'per_class');
     } else {
-        // Per-class layout
-        const classMap = new Map(
-            allItems.map(card => [String(card.dataset.classId), card])
-        );
-
-        const orderedVisibleCards = data.classes
-            .map(cls => {
-                const card = classMap.get(String(cls.class_id));
-                if (!card) return null;
-
-                // Update the assignments in this card
-                const tbody = card.querySelector('tbody');
-                if (tbody) {
-                    const assignmentMap = new Map(
-                        [...tbody.querySelectorAll('tr')].map(row => [String(row.dataset.assignmentId), row])
-                    );
-
-                    const orderedRows = cls.assignments
-                        .map(a => assignmentMap.get(String(a.assignment_id)))
-                        .filter(Boolean);
-
-                    // Clear and re-add rows
-                    tbody.innerHTML = '';
-                    orderedRows.forEach(row => tbody.appendChild(row));
-
-                    // Show/hide card based on whether it has assignments
-                    if (orderedRows.length === 0) {
-                        hideWithAnimation(card);
-                        return null;
-                    } else {
-                        showWithAnimation(card);
-                        return card;
-                    }
-                }
-                return card;
-            })
-            .filter(Boolean);
-
-        // Reorder visible cards
-        orderedVisibleCards.forEach(card => {
-            container.appendChild(card);
-        });
-
-        // Show/hide no assignments message
-        if (orderedVisibleCards.length === 0) {
-            showNoAssignmentsMessage(container, layout);
-        } else {
-            hideNoAssignmentsMessage(container);
-        }
+        hideNoAssignmentsMessage(perClassWrapper);
     }
 }

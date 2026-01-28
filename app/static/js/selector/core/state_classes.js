@@ -9,7 +9,7 @@ export function getClassSelectorState(root = document) {
     // IMPORTANCE
     // -------------------------
     const importance = [...root.querySelectorAll(
-        ".selector-group input[type='checkbox'][value]"
+        "input[name='importance_check'][value]"
     )]
         .filter(cb => cb.checked)
         .map(cb => cb.value);
@@ -38,7 +38,12 @@ export function getClassSelectorState(root = document) {
             : checkedTypes;
 
 
-
+    console.log({
+        sortBy,
+        status,
+        importance: finalImportance,
+        classTypes
+    })
     return {
         sortBy,
         status,
