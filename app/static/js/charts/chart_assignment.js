@@ -291,7 +291,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function renderDueTimeline() {
         if (!dueCanvas) return;
 
-        const dueCard = dueCanvas.closest('.chart-widget');
+        const cardId = dueCanvas.getAttribute('data-card-id');
+        const dueCard = cardId ? document.querySelector(`.chart-widget[data-card-id="${cardId}"]`) : null;
+        if (!dueCard) {
+            console.warn('[Charts] Due timeline card not found');
+            return;
+        }
         const mode = dueModeSelect?.value || 'days';
 
         const res = await fetch(`/charts/assignments/due_timeline?mode=${mode}`);
@@ -390,7 +395,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function renderTypeLoad() {
         if (!typeCanvas) return;
 
-        const typeCard = typeCanvas.closest('.chart-widget');
+        const cardId = typeCanvas.getAttribute('data-card-id');
+        const typeCard = cardId ? document.querySelector(`.chart-widget[data-card-id="${cardId}"]`) : null;
+        if (!typeCard) {
+            console.warn('[Charts] Type load card not found');
+            return;
+        }
         const metric =
             document.querySelector('.chart-toggle button.active')?.dataset
                 ?.metric || 'count';
@@ -469,7 +479,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function renderProgressDeadline() {
         if (!progressCanvas) return;
 
-        const progressCard = progressCanvas.closest('.chart-widget');
+        const cardId = progressCanvas.getAttribute('data-card-id');
+        const progressCard = cardId ? document.querySelector(`.chart-widget[data-card-id="${cardId}"]`) : null;
+        if (!progressCard) {
+            console.warn('[Charts] Progress deadline card not found');
+            return;
+        }
         const limit = progressDropdown?.value || '5';
 
         if (warningEl) {

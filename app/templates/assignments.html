@@ -87,7 +87,7 @@
                         </div>
                     </div>
                         <div class="chart-wrapper">
-                            <canvas id="assignmentDueTimelineChart"></canvas>
+                            <canvas id="assignmentDueTimelineChart" data-card-id="assignment-timeline"></canvas>
                         </div>
                 </div>
                 <div class="card-back">
@@ -356,7 +356,8 @@
         <!-- ===== PER CLASS MODE ===== -->
         <div class="per-class-wrapper hidden" data-table-mode="per_class">
             {% for class_name, rows in assignments_by_class.items() %}
-                <div class="card assignments-table-card per-class-card">
+                {% set class_id = rows[0].class_id if rows else None %}
+                <div class="card assignments-table-card per-class-card" {% if class_id %}data-class-id="{{ class_id }}"{% endif %}>
                     <div class="assignments-table-scroll">
 
                         <div class="table-header-bar">
@@ -414,7 +415,7 @@
                         </select>
                     </div>
                     <div class="chart-wrapper">
-                        <canvas id="assignmentTypeLoad"></canvas>
+                        <canvas id="assignmentTypeLoad" data-card-id="assignment-type-load"></canvas>
                     </div>
                 </div>
                 <div class="card-back">
@@ -445,7 +446,7 @@
                         <span class="selector-label">assignments</span>
                     </div>
                     <div class="chart-wrapper">
-                        <canvas id="assignmentProgressDeadline"></canvas>
+                        <canvas id="assignmentProgressDeadline" data-card-id="assignment-grade-dist"></canvas>
                     </div>
                     <div id="progressDeadlineWarning" class="deadlines-warning hidden"></div>
                 </div>

@@ -1,4 +1,10 @@
 export function gateChart(cardEl, response, renderFront, renderBack) {
+  // Defensive check: if cardEl is null, log warning and return false
+  if (!cardEl) {
+    console.warn('[gateChart] Card element is null, cannot render chart');
+    return false;
+  }
+  
   const frontEl = cardEl.querySelector('.card-front');
   const backEl = cardEl.querySelector('.min_requirements');
 

@@ -17,6 +17,7 @@ export function initAddAssignmentSubmit() {
         try {
             const formData = new FormData(form);
             const payload = {};
+            const classId = parseInt(formData.get('class_id')) || null;
             
             formData.forEach((value, key) => {
                 if (value !== '' && key !== 'csrf_token') {
@@ -24,7 +25,7 @@ export function initAddAssignmentSubmit() {
                 }
             });
 
-            await createAssignment(payload);
+            const result = await createAssignment(payload);
             
             // Reset form
             form.reset();
@@ -32,8 +33,14 @@ export function initAddAssignmentSubmit() {
             // Close modal
             closeModal("addAssignmentModal");
             
-            // Emit refresh
-            await emitRefresh("assignments:changed");
+            // Emit granular refresh events
+            if (classId) {
+                await emitRefresh({ key: "assignments:table", payload: { classId } });
+            } else {
+                await emitRefresh("assignments:table");
+            }
+            await emitRefresh("assignments:charts");
+            await emitRefresh("assignments:deadlines");
             
         } catch (error) {
             console.error("Error creating assignment:", error);

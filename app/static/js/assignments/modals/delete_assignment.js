@@ -10,7 +10,7 @@ let deleteState = {
     studyMinutes: 0
 };
 
-export function openDeleteAssignmentModal(data) {
+export async function openDeleteAssignmentModal(data) {
     deleteState = { step: 1, ...data };
 
     document.getElementById("deleteAssignmentConfirmName").innerText =
@@ -18,12 +18,26 @@ export function openDeleteAssignmentModal(data) {
 
     document.getElementById("deleteAssignmentNextBtn").disabled = false;
 
-    if ("studySessions" in data && "studyMinutes" in data) {
-        document.getElementById("deleteAssignmentSessionCount").innerText =
-            deleteState.studySessions;
-        document.getElementById("deleteAssignmentStudyMinutes").innerText =
-            deleteState.studyMinutes;
+    // FETCH SUMMARY DATA BEFORE DELETION (required for impact assessment)
+    // This must happen before delete to ensure assignment still exists
+    try {
+        const res = await fetch(`/assignments/${deleteState.id}/summary`);
+        if (res.ok) {
+            const summary = await res.json();
+            deleteState.studySessions = summary.study_session_count ?? 0;
+            deleteState.studyMinutes = summary.study_minutes ?? 0;
+        }
+    } catch (e) {
+        console.warn('Failed to fetch assignment summary for delete modal', e);
+        deleteState.studySessions = data.studySessions ?? 0;
+        deleteState.studyMinutes = data.studyMinutes ?? 0;
     }
+
+    // Display the fetched impact data
+    document.getElementById("deleteAssignmentSessionCount").innerText =
+        deleteState.studySessions;
+    document.getElementById("deleteAssignmentStudyMinutes").innerText =
+        deleteState.studyMinutes;
 
     updateDeleteStep();
     showModal("deleteAssignmentModal");
@@ -46,11 +60,50 @@ export function initDeleteAssignmentModal() {
 
     if (confirmBtn) {
         confirmBtn.addEventListener("click", async () => {
+            confirmBtn.disabled = true;
             try {
-                await deleteAssignmentAPI(deleteState.id);
-                location.reload();
-            } catch {
+                const assignmentId = deleteState.id;
+                
+                // STEP 1: FIND AND REMOVE ROW(S) FROM DOM
+                // Do this BEFORE deletion so we know what to remove
+                const rowsToRemove = document.querySelectorAll(`tr[data-assignment-id="${assignmentId}"]`);
+                const cardsToUpdate = new Set();
+                
+                rowsToRemove.forEach(row => {
+                    // Track which card this row is in
+                    const card = row.closest('.assignments-table-card');
+                    if (card) {
+                        cardsToUpdate.add(card);
+                    }
+                    // Remove the row from DOM immediately (for UX feedback)
+                    row.remove();
+                });
+                
+                // STEP 2: CLOSE MODAL (user sees row is gone)
+                closeModal("deleteAssignmentModal");
+                
+                // STEP 3: DELETE FROM DATABASE (AFTER DOM is updated and modal closed)
+                // This is the last step that requires the assignment to exist
+                await deleteAssignmentAPI(assignmentId);
+                
+                // STEP 4: EMIT REFRESH EVENTS
+                // Charts, deadlines, and any other dependent data will update
+                document.dispatchEvent(new CustomEvent("assignment:changed", {
+                    detail: { assignment_id: assignmentId }
+                }));
+                
+                // Reset state for next use
+                deleteState = {
+                    step: 1,
+                    id: null,
+                    title: "",
+                    studySessions: 0,
+                    studyMinutes: 0
+                };
+            } catch (error) {
+                console.error('Delete failed:', error);
                 alert("Failed to delete assignment");
+                confirmBtn.disabled = false;
             }
         });
     }

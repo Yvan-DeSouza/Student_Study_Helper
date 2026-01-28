@@ -11,6 +11,8 @@ import { refreshAssignmentsTable } from "./refresh/refresh_table.js";
 import { refreshAssignmentCharts } from "./refresh/refresh_charts.js";
 import { refreshAssignmentDeadlines } from "./refresh/refresh_deadlines.js";
 import { registerRefresh, unregisterRefresh } from "../core/refreshBus.js";
+import { emitRefresh } from "../core/refreshBus.js";
+import { refreshAssignmentRow } from "./refresh/refresh_row.js";
 import { initAssignmentSelector } from "../selector/assignments/init.js";
 import { saveUpcomingDeadlinesIfDirty } from '../global_refresh/save_upcoming_deadlines.js';
 
@@ -20,6 +22,12 @@ function registerAssignmentListeners() {
     registerRefresh("assignments:table", refreshAssignmentsTable);
     registerRefresh("assignments:charts", refreshAssignmentCharts);
     registerRefresh("assignments:deadlines", refreshAssignmentDeadlines);
+    registerRefresh("assignments:row", refreshAssignmentRow);
+    // alias for refreshing all tables (useful when many per-class cards exist)
+    registerRefresh("assignments:tables", async (payload) => {
+        // If single layout, behave like table; otherwise refresh whole table area
+        await refreshAssignmentsTable(payload || {});
+    });
     
     // Combined refresh for full assignment changes
     registerRefresh("assignments:changed", async () => {
@@ -34,6 +42,8 @@ function cleanup() {
     unregisterRefresh("assignments:charts");
     unregisterRefresh("assignments:deadlines");
     unregisterRefresh("assignments:changed");
+    unregisterRefresh("assignments:row");
+    unregisterRefresh("assignments:tables");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -70,25 +80,44 @@ document.addEventListener("DOMContentLoaded", () => {
     // Register refresh listeners
     registerAssignmentListeners();
 
-    // Listen for assignment events
-    document.addEventListener("assignment:changed", async () => {
-        console.log("[Assignments] Assignment changed event");
-        await refreshAssignmentsTable();
-        await refreshAssignmentCharts();
-        await refreshAssignmentDeadlines();
+    // Listen for assignment events and translate into semantic refresh events
+    document.addEventListener("assignment:changed", async (e) => {
+        const detail = e?.detail || {};
+        // If caller provided an assignmentId, refresh just that row
+        if (detail.assignment_id) {
+            await emitRefresh({ key: "assignments:row", payload: { assignmentId: detail.assignment_id } });
+        } else if (detail.class_id) {
+            await emitRefresh({ key: "assignments:table", payload: { classId: detail.class_id } });
+        } else {
+            await emitRefresh("assignments:changed");
+        }
+
+        // Always refresh charts + deadlines as separate semantic events
+        await emitRefresh("assignments:charts");
+        await emitRefresh("assignments:deadlines");
     });
 
-    document.addEventListener("assignment:grade:changed", async () => {
-        console.log("[Assignments] Grade changed event");
-        await refreshAssignmentsTable();
-        await refreshAssignmentCharts();
+    document.addEventListener("assignment:grade:changed", async (e) => {
+        const detail = e?.detail || {};
+        if (detail.assignment_id) {
+            await emitRefresh({ key: "assignments:row", payload: { assignmentId: detail.assignment_id } });
+        } else {
+            await emitRefresh("assignments:table");
+        }
+        await emitRefresh("assignments:charts");
     });
 
-    document.addEventListener("assignment:completion:changed", async () => {
-        console.log("[Assignments] Completion changed event");
-        await refreshAssignmentsTable();
-        await refreshAssignmentCharts();
-        await refreshAssignmentDeadlines();
+    document.addEventListener("assignment:completion:changed", async (e) => {
+        const detail = e?.detail || {};
+        if (detail.assignment_id) {
+            await emitRefresh({ key: "assignments:row", payload: { assignmentId: detail.assignment_id } });
+        } else if (detail.class_id) {
+            await emitRefresh({ key: "assignments:table", payload: { classId: detail.class_id } });
+        } else {
+            await emitRefresh("assignments:table");
+        }
+        await emitRefresh("assignments:charts");
+        await emitRefresh("assignments:deadlines");
     });
 });
 

@@ -1,4 +1,3 @@
-// selector/assignments/apply.js
 // Page-specific animation logic for assignments page
 
 function isElementVisible(el) {
@@ -156,11 +155,11 @@ function applyPerClassOrdering(container, allItems, data) {
     // Build map of all per-class cards by class ID
     const classCardMap = new Map();
     allItems.forEach(card => {
-        // Get class ID from first row in the table
-        const firstRow = card.querySelector('tbody tr');
-        if (firstRow) {
-            const classId = String(firstRow.dataset.classId);
-            classCardMap.set(classId, card);
+        // Prefer data-class-id attribute, fallback to extracting from first row
+        const classId = card.dataset.classId || 
+                       (card.querySelector('tbody tr')?.dataset.classId);
+        if (classId) {
+            classCardMap.set(String(classId), card);
         }
     });
     
@@ -213,16 +212,22 @@ function applyPerClassOrdering(container, allItems, data) {
     
     // Hide cards that aren't in the visible set
     allItems.forEach(card => {
-        const firstRow = card.querySelector('tbody tr');
-        if (firstRow) {
-            const classId = String(firstRow.dataset.classId);
-            if (!visibleCardIds.has(classId)) {
-                hideWithAnimation(card);
-            }
+        const classId = card.dataset.classId || 
+                       (card.querySelector('tbody tr')?.dataset.classId);
+        if (classId && !visibleCardIds.has(String(classId))) {
+            hideWithAnimation(card);
         }
     });
     
-    // Reorder visible cards in the wrapper
+    // IMPORTANT: Reorder visible cards in the wrapper without duplicating
+    // First, remove all visible cards from wrapper to prevent duplicates
+    orderedVisibleCards.forEach(card => {
+        if (card.parentElement === perClassWrapper) {
+            card.remove();
+        }
+    });
+    
+    // Then re-append in order
     orderedVisibleCards.forEach(card => {
         perClassWrapper.appendChild(card);
     });

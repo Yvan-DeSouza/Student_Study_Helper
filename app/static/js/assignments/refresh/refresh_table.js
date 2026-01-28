@@ -4,8 +4,8 @@ import { fetchFilteredAssignments } from '../../selector/core/filter_assignments
 import { fetchFilteredClassIds } from '../../selector/core/filter_classes.js';
 import { applyAssignmentOrdering } from '../../selector/assignments/apply.js';
 
-export async function refreshAssignmentsTable() {
-    console.log("[Assignments] Refreshing table");
+export async function refreshAssignmentsTable(options = {}) {
+    console.log("[Assignments] Refreshing table", options);
     
     try {
         // 1. Capture current state
@@ -14,10 +14,18 @@ export async function refreshAssignmentsTable() {
         const currentLayout = assignmentState.tableLayout;
         
         // 2. Fetch fresh HTML from server
-        const response = await fetch('/assignments?partial=table');
-        if (!response.ok) throw new Error('Failed to fetch table');
-        
-        const html = await response.text();
+        const classId = options.classId;
+        let html = null;
+
+        if (classId) {
+            const resp = await fetch(`/assignments/table?class_id=${classId}`);
+            if (!resp.ok) throw new Error('Failed to fetch class table');
+            html = await resp.text();
+        } else {
+            const response = await fetch('/assignments?partial=table');
+            if (!response.ok) throw new Error('Failed to fetch table');
+            html = await response.text();
+        }
         
         // 3. Update DOM based on layout
         const container = document.querySelector('.assignments-table-wrapper');
@@ -37,20 +45,35 @@ export async function refreshAssignmentsTable() {
                 }
             }
         } else {
-            // For per-class mode, we need to rebuild all cards
+            // For per-class mode, we can either replace a single class card or rebuild all cards
             const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
             if (perClassWrapper) {
-                // Fetch per-class HTML
-                const perClassResponse = await fetch('/assignments');
-                const fullHTML = await perClassResponse.text();
-                
-                // Parse and extract per-class wrapper
-                const temp = document.createElement('div');
-                temp.innerHTML = fullHTML;
-                const newPerClassWrapper = temp.querySelector('[data-table-mode="per_class"]');
-                
-                if (newPerClassWrapper) {
-                    perClassWrapper.innerHTML = newPerClassWrapper.innerHTML;
+                if (classId) {
+                    // HTML contains the class-specific table fragment
+                    const temp = document.createElement('div');
+                    temp.innerHTML = html;
+                    const newCard = temp.querySelector(`.per-class-card[data-class-id="${classId}"]`);
+                    if (newCard) {
+                        const oldCard = perClassWrapper.querySelector(`.per-class-card[data-class-id="${classId}"]`);
+                        if (oldCard) {
+                            oldCard.replaceWith(newCard);
+                        } else {
+                            perClassWrapper.appendChild(newCard);
+                        }
+                    }
+                } else {
+                    // Full rebuild
+                    const perClassResponse = await fetch('/assignments');
+                    const fullHTML = await perClassResponse.text();
+                    
+                    // Parse and extract per-class wrapper
+                    const temp = document.createElement('div');
+                    temp.innerHTML = fullHTML;
+                    const newPerClassWrapper = temp.querySelector('[data-table-mode="per_class"]');
+                    
+                    if (newPerClassWrapper) {
+                        perClassWrapper.innerHTML = newPerClassWrapper.innerHTML;
+                    }
                 }
             }
         }

@@ -27,6 +27,7 @@ export async function initAssignmentSelector() {
 
     let allItems = [];
     let currentLayout = "single";
+    let pendingLayout = "single";
     let personalPrefs = null;
 
     // Get all items based on current layout
@@ -39,7 +40,7 @@ export async function initAssignmentSelector() {
         }
     }
 
-    // ------------------------- TABLE LAYOUT CHANGE -------------------------
+    // Helper function to switch layout display (called during init and apply)
     function handleLayoutChange(newLayout) {
         const singleCard = container.querySelector('[data-table-mode="single"]');
         const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
@@ -56,14 +57,18 @@ export async function initAssignmentSelector() {
         updateAllItems();
     }
 
-    // REMOVED: Auto-apply on layout change - now requires button click
+    // ------------------------- TABLE LAYOUT CHANGE -------------------------
+    // NOTE: Layout change does NOT auto-apply. Must click Apply Filters.
+    // We store the desired layout value but don't switch the display until apply() is called
+
     const layoutSelect = document.getElementById("tableLayout");
     if (layoutSelect) {
         layoutSelect.addEventListener("change", (e) => {
-            handleLayoutChange(e.target.value);
-            // Don't auto-apply - wait for button click
+            pendingLayout = e.target.value;
+            // Don't auto-apply - just store the value until user clicks Apply
         });
     }
+
 
     // ------------------------- APPLY PREFS → UI -------------------------
     function applyPreferencesToUI(classPrefs, assignmentPrefs) {
@@ -93,7 +98,7 @@ export async function initAssignmentSelector() {
             const tableLayoutSelect = document.querySelector("#tableLayout");
             if (tableLayoutSelect) {
                 tableLayoutSelect.value = assignmentPrefs.table_layout ?? "single";
-                handleLayoutChange(assignmentPrefs.table_layout ?? "single");
+                pendingLayout = assignmentPrefs.table_layout ?? "single";
             }
             
             document.querySelector("#dueStatusFilter").value = assignmentPrefs.due_status_filter ?? "all";
@@ -128,6 +133,24 @@ export async function initAssignmentSelector() {
 
     // ------------------------- APPLY FILTERS -------------------------
     async function apply() {
+        // FIRST: Apply the layout change if it differs from current
+        if (pendingLayout !== currentLayout) {
+            const singleCard = container.querySelector('[data-table-mode="single"]');
+            const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
+            
+            if (pendingLayout === 'single') {
+                singleCard?.classList.remove('hidden');
+                perClassWrapper?.classList.add('hidden');
+            } else {
+                singleCard?.classList.add('hidden');
+                perClassWrapper?.classList.remove('hidden');
+            }
+            
+            currentLayout = pendingLayout;
+            updateAllItems();
+        }
+
+        // THEN: Apply filters with the potentially new layout
         const assignmentState = getAssignmentSelectorState();
         const classState = getClassSelectorState();
 
@@ -285,24 +308,24 @@ export async function initAssignmentSelector() {
     });
 
     // ------------------------- LIVE REFRESH (from events only) -------------------------
-    document.addEventListener("assignment:changed", async () => {
+    // NOTE: do not auto-apply filters when these events occur. Filters are
+    // applied only when the user clicks the Apply buttons. We still update
+    // the cached item list so refresh handlers can reapply ordering/state.
+    document.addEventListener("assignment:changed", () => {
         updateAllItems();
-        await apply();
     });
 
-    document.addEventListener("assignment:grade:changed", async () => {
+    document.addEventListener("assignment:grade:changed", () => {
         updateAllItems();
-        await apply();
     });
 
-    document.addEventListener("assignment:completion:changed", async () => {
+    document.addEventListener("assignment:completion:changed", () => {
         updateAllItems();
-        await apply();
     });
 
     // ------------------------- INIT -------------------------
     const initialLayout = document.querySelector("#tableLayout")?.value ?? "single";
+    pendingLayout = initialLayout;
     handleLayoutChange(initialLayout);
-    
     await loadPersonalPrefs();
 }

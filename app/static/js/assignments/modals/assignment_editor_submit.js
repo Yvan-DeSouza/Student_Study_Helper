@@ -22,13 +22,14 @@ export function initEditAssignmentSubmit() {
                 return;
             }
 
-            const id = document.getElementById("edit-assignment-id").value;
+            const id = parseInt(document.getElementById("edit-assignment-id").value);
+            const classId = parseInt(document.getElementById("edit-class").value) || null;
             const isGraded = document.getElementById("edit-is-graded").checked;
 
             const payload = {
                 title: document.getElementById("edit-title").value,
                 assignment_type: document.getElementById("edit-type").value,
-                class_id: document.getElementById("edit-class").value,
+                class_id: classId,
                 due_at: document.getElementById("edit-due-at").value || null,
                 finished_at: finishedAt || null,
                 is_graded: isGraded,
@@ -51,8 +52,10 @@ export function initEditAssignmentSubmit() {
             // Close modal
             closeModal("editAssignmentModal");
             
-            // Emit refresh events
-            await emitRefresh("assignments:changed");
+            // Emit granular refresh events
+            await emitRefresh({ key: "assignments:row", payload: { assignmentId: id } });
+            await emitRefresh("assignments:charts");
+            await emitRefresh("assignments:deadlines");
             
         } catch (error) {
             console.error("Error updating assignment:", error);

@@ -63,7 +63,13 @@ export function initInlineEditing() {
                 row.classList.add(isGraded ? "inline-graded" : "inline-not-graded");
 
                 if (isGraded) {
-                    const currentGrade = gradeCell.innerText.trim();
+                    let currentGrade = gradeCell.innerText.trim();
+                    // Sanitize: remove non-numeric characters except decimal point and minus sign
+                    currentGrade = currentGrade.replace(/[^0-9.\-]/g, '').trim();
+                    // Only use value if it's a valid number, otherwise leave empty
+                    const gradeValue = (currentGrade && currentGrade !== "—") ? parseFloat(currentGrade) : "";
+                    const gradeValueStr = (gradeValue === "" || isNaN(gradeValue)) ? "" : String(gradeValue);
+                    
                     gradeCell.innerHTML = `
                         <input
                             type="number"
@@ -71,7 +77,7 @@ export function initInlineEditing() {
                             min="0"
                             max="100"
                             step="0.1"
-                            value="${currentGrade !== "—" ? currentGrade : ""}"
+                            value="${gradeValueStr}"
                         >
                     `;
 
@@ -223,18 +229,21 @@ export async function saveInlineGrades(assignments, navUrl = null) {
             alert("Failed to save grades");
             return;
         }
+
+        // Emit granular refresh for each assignment
+        document.dispatchEvent(new CustomEvent("assignment:grade:changed", {
+            detail: { assignment_id: a.id }
+        }));
     }
 
     hasUnsavedInlineChanges = false;
-
-    // Emit refresh event
-    document.dispatchEvent(new CustomEvent("assignment:grade:changed"));
 
     const pendingUrl = navUrl || getPendingNavigation();
     if (pendingUrl) {
         window.location.href = pendingUrl;
     }
 }
+
 
 export function saveAllInlineGrades(assignments, navUrl = null) {
     return saveInlineGrades(assignments, navUrl);

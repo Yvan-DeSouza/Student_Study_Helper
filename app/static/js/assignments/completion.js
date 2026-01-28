@@ -61,13 +61,16 @@ function openCompleteModal(title, dueAt) {
 async function handleUncomplete() {
     if (!pendingCheckbox || !pendingRow) return;
 
+    const assignmentId = pendingRow.dataset.assignmentId;
     await sendCompletionUpdate(false, null);
 
     pendingCheckbox.checked = false;
     pendingRow.dataset.completed = "false";
 
-    // Emit refresh event
-    document.dispatchEvent(new CustomEvent("assignment:completion:changed"));
+    // Emit granular refresh event
+    document.dispatchEvent(new CustomEvent("assignment:completion:changed", {
+        detail: { assignment_id: parseInt(assignmentId) }
+    }));
 
     closeModal("uncompleteConfirmModal");
     pendingRow = null;
@@ -96,10 +99,13 @@ async function handleComplete() {
         finishedAt = pendingRow.dataset.dueAt;
     }
 
+    const assignmentId = pendingRow.dataset.assignmentId;
     await sendCompletionUpdate(true, finishedAt);
     
-    // Emit refresh event
-    document.dispatchEvent(new CustomEvent("assignment:completion:changed"));
+    // Emit granular refresh event
+    document.dispatchEvent(new CustomEvent("assignment:completion:changed", {
+        detail: { assignment_id: parseInt(assignmentId) }
+    }));
     
     closeModal("completeAssignmentModal");
     pendingRow = null;

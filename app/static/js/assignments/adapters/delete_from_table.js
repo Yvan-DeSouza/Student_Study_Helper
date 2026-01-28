@@ -17,20 +17,8 @@ export function initDeleteFromTable() {
                     title: row.dataset.title,
                 };
 
-                // Fetch summary only if needed
-                try {
-                    const res = await fetch(`/assignments/${data.id}/summary`);
-                    if (res.ok) {
-                        const summary = await res.json();
-                        data.studySessions = summary.study_session_count;
-                        data.studyMinutes = summary.study_minutes;
-                    }
-                } catch {
-                    data.studySessions = "—";
-                    data.studyMinutes = "—";
-                }
-
-                openDeleteAssignmentModal(data);
+                // Await the modal opening (which now fetches summary internally)
+                await openDeleteAssignmentModal(data);
             });
         });
     });
