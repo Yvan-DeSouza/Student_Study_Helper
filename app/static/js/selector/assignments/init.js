@@ -187,8 +187,15 @@ export async function initAssignmentSelector() {
             
             applyAssignmentOrdering(container, allItems, filteredData, assignmentState.tableLayout);
         } else {
-            // For single layout, just apply the data as-is
-            applyAssignmentOrdering(container, allItems, data, assignmentState.tableLayout);
+            // For single layout, filter assignments to only those in filtered classes
+            const filteredData = {
+                layout: 'single',
+                assignments: data.assignments.filter(a =>
+                    filteredClassIds.includes(String(a.class_id))
+                )
+            };
+            
+            applyAssignmentOrdering(container, allItems, filteredData, assignmentState.tableLayout);
         }
     }
 

@@ -2,8 +2,8 @@ export function getClassSelectorState(root = document) {
     // -------------------------
     // SORT & STATUS
     // -------------------------
-    const sortBy = root.querySelector("#sortSelect")?.value ?? "name_asc";
-    const status = root.querySelector("#statusFilter")?.value ?? "all";
+    const sortBy = root.querySelector("#sortSelect")?.value ?? root.querySelector("#classSortBy")?.value ?? "name_asc";
+    const status = root.querySelector("#statusFilter")?.value ?? root.querySelector("#classStatusFilter")?.value ?? "all";
 
     // -------------------------
     // IMPORTANCE
