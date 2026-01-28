@@ -1,25 +1,112 @@
+import { getAssignmentSelectorState } from '../../selector/core/state_assignments.js';
+import { getClassSelectorState } from '../../selector/core/state_classes.js';
+import { fetchFilteredAssignments } from '../../selector/core/filter_assignments.js';
+import { fetchFilteredClassIds } from '../../selector/core/filter_classes.js';
+import { applyAssignmentOrdering } from '../../selector/assignments/apply.js';
+
 export async function refreshAssignmentsTable() {
-    const sortRadios = document.querySelectorAll('input[name="sortCategory"]');
-    const currentSort = Array.from(sortRadios).find(r => r.checked)?.value || '';
-
+    console.log("[Assignments] Refreshing table");
+    
     try {
+        // 1. Capture current state
+        const assignmentState = getAssignmentSelectorState();
+        const classState = getClassSelectorState();
+        const currentLayout = assignmentState.tableLayout;
+        
+        // 2. Fetch fresh HTML from server
         const response = await fetch('/assignments?partial=table');
+        if (!response.ok) throw new Error('Failed to fetch table');
+        
         const html = await response.text();
-
-        const wrapper = document.querySelector('.assignments-table-card');
-        if (wrapper) {
-            wrapper.innerHTML = html;
-        }
-
-        // Reapply sort
-        if (currentSort) {
-            const newRadio = document.querySelector(`input[name="sortCategory"][value="${currentSort}"]`);
-            if (newRadio) {
-                newRadio.checked = true;
-                newRadio.dispatchEvent(new Event('change', { bubbles: true }));
+        
+        // 3. Update DOM based on layout
+        const container = document.querySelector('.assignments-table-wrapper');
+        if (!container) return;
+        
+        if (currentLayout === 'single') {
+            const singleCard = container.querySelector('[data-table-mode="single"]');
+            if (singleCard) {
+                const scrollDiv = singleCard.querySelector('.assignments-table-scroll');
+                if (scrollDiv) {
+                    // Replace table content but keep header bar
+                    const headerBar = scrollDiv.querySelector('.table-header-bar');
+                    scrollDiv.innerHTML = html;
+                    if (headerBar) {
+                        scrollDiv.insertBefore(headerBar, scrollDiv.firstChild);
+                    }
+                }
+            }
+        } else {
+            // For per-class mode, we need to rebuild all cards
+            const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
+            if (perClassWrapper) {
+                // Fetch per-class HTML
+                const perClassResponse = await fetch('/assignments');
+                const fullHTML = await perClassResponse.text();
+                
+                // Parse and extract per-class wrapper
+                const temp = document.createElement('div');
+                temp.innerHTML = fullHTML;
+                const newPerClassWrapper = temp.querySelector('[data-table-mode="per_class"]');
+                
+                if (newPerClassWrapper) {
+                    perClassWrapper.innerHTML = newPerClassWrapper.innerHTML;
+                }
             }
         }
+        
+        // 4. Re-initialize interactive elements
+        const [
+            { initInlineEditing },
+            { initCompletion },
+            { initDeleteFromTable },
+            { initEditFromTable }
+        ] = await Promise.all([
+            import('../inlineEditing.js'),
+            import('../completion.js'),
+            import('../adapters/delete_from_table.js'),
+            import('../adapters/edit_from_table.js')
+        ]);
+        
+        initInlineEditing();
+        initCompletion();
+        initDeleteFromTable();
+        initEditFromTable();
+        
+        // 5. Reapply filters and ordering
+        const filteredClassIds = await fetchFilteredClassIds(classState, 'assignments');
+        const data = await fetchFilteredAssignments(assignmentState);
+        
+        // Get current items
+        let allItems = [];
+        if (currentLayout === 'single') {
+            const tbody = container.querySelector('[data-table-mode="single"] tbody');
+            allItems = tbody ? [...tbody.querySelectorAll("tr")] : [];
+        } else {
+            allItems = [...container.querySelectorAll(".per-class-card")];
+        }
+        
+        // Apply ordering with class filter
+        if (currentLayout === 'per_class') {
+            const filteredData = {
+                layout: 'per_class',
+                classes: data.classes.filter(cls =>
+                    filteredClassIds.includes(String(cls.class_id))
+                )
+            };
+            applyAssignmentOrdering(container, allItems, filteredData, currentLayout);
+        } else {
+            const filteredData = {
+                layout: 'single',
+                assignments: data.assignments.filter(a =>
+                    filteredClassIds.includes(String(a.class_id))
+                )
+            };
+            applyAssignmentOrdering(container, allItems, filteredData, currentLayout);
+        }
+        
+        console.log("[Assignments] Table refreshed with state preserved");
     } catch (error) {
-        console.error("Error refreshing assignments table:", error);
+        console.error("[Assignments] Error refreshing table:", error);
     }
 }

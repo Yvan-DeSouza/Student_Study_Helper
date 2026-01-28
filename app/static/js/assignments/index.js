@@ -1,7 +1,6 @@
-// static/js/assignments/index.js
 import { initEditAssignmentModal } from "./modals/edit_assignment_init.js";
-import { initEditAssignmentSubmit } from "./modals/assignment_editor_submit.js";
-import { initEditAssignmentGradedToggle } from "./modals/assignment_editor.js";
+import { initEditAssignmentSubmit, initEditAssignmentGradedToggle } from "./modals/assignment_editor_submit.js";
+import { initAddAssignmentSubmit } from "./modals/add_assignment_submit.js";
 import { initInlineEditing } from './inlineEditing.js';
 import { initCompletion } from './completion.js';
 import { initDeleteFromTable } from './adapters/delete_from_table.js';
@@ -9,14 +8,33 @@ import { initDeleteAssignmentModal } from './modals/delete_assignment.js';
 import { initEditFromTable } from './adapters/edit_from_table.js';
 import { initModals, initUnsavedChangesModal } from './modals.js';
 import { refreshAssignmentsTable } from "./refresh/refresh_table.js";
-import { refreshCharts } from "./refresh/refresh_charts.js";
-import { registerRefresh, runRefreshes } from "../core/refreshBus.js";
+import { refreshAssignmentCharts } from "./refresh/refresh_charts.js";
+import { refreshAssignmentDeadlines } from "./refresh/refresh_deadlines.js";
+import { registerRefresh, unregisterRefresh } from "../core/refreshBus.js";
 import { initAssignmentSelector } from "../selector/assignments/init.js";
 import { saveUpcomingDeadlinesIfDirty } from '../global_refresh/save_upcoming_deadlines.js';
 
+function registerAssignmentListeners() {
+    console.log("[Assignments] Registering refresh listeners");
+    
+    registerRefresh("assignments:table", refreshAssignmentsTable);
+    registerRefresh("assignments:charts", refreshAssignmentCharts);
+    registerRefresh("assignments:deadlines", refreshAssignmentDeadlines);
+    
+    // Combined refresh for full assignment changes
+    registerRefresh("assignments:changed", async () => {
+        await refreshAssignmentsTable();
+        await refreshAssignmentCharts();
+        await refreshAssignmentDeadlines();
+    });
+}
 
-
-
+function cleanup() {
+    unregisterRefresh("assignments:table");
+    unregisterRefresh("assignments:charts");
+    unregisterRefresh("assignments:deadlines");
+    unregisterRefresh("assignments:changed");
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     // Normalize completed attributes
@@ -28,11 +46,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 : "false";
     });
 
+    // Initialize modal system
+    initModals();
+    
     // Initialize all modules
     initEditAssignmentModal();
     initEditAssignmentSubmit();
     initEditAssignmentGradedToggle();
-    initModals();
+    initAddAssignmentSubmit();
     initInlineEditing();
     initCompletion();
     initDeleteAssignmentModal();
@@ -40,51 +61,41 @@ document.addEventListener("DOMContentLoaded", () => {
     initEditFromTable();
     initUnsavedChangesModal();
 
-    // Initialize new selector system
+    // Initialize selector system
     initAssignmentSelector();
+    
+    // Initialize sort category
+    initSortCategory();
+    
+    // Register refresh listeners
+    registerAssignmentListeners();
 
-    // Register refresh
-    registerRefresh("table", refreshAssignmentsTable);
-    registerRefresh("charts", refreshCharts);
-
-    // Listen for assignment changes
+    // Listen for assignment events
     document.addEventListener("assignment:changed", async () => {
-        await runRefreshes(["table", "charts"]);
+        console.log("[Assignments] Assignment changed event");
+        await refreshAssignmentsTable();
+        await refreshAssignmentCharts();
+        await refreshAssignmentDeadlines();
     });
 
-    // Listen for assignment grade changes
     document.addEventListener("assignment:grade:changed", async () => {
-        await runRefreshes(["table", "charts"]);
+        console.log("[Assignments] Grade changed event");
+        await refreshAssignmentsTable();
+        await refreshAssignmentCharts();
     });
 
-    // Listen for assignment completion changes
     document.addEventListener("assignment:completion:changed", async () => {
-        await runRefreshes(["table", "charts"]);
+        console.log("[Assignments] Completion changed event");
+        await refreshAssignmentsTable();
+        await refreshAssignmentCharts();
+        await refreshAssignmentDeadlines();
     });
-
-    // AJAX for add assignment form
-    const addAssignmentForm = document.querySelector('form[action="/assignment"]');
-    if (addAssignmentForm) {
-        addAssignmentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const response = await fetch(addAssignmentForm.action, {
-                method: 'POST',
-                body: new FormData(addAssignmentForm),
-                headers: { 'Accept': 'application/json' }
-            });
-            if (response.ok) {
-                const result = await response.json();
-                addAssignmentForm.reset();
-                document.dispatchEvent(new CustomEvent("assignment:changed"));
-            } else {
-                const err = await response.json();
-                // Handle error
-            }
-        });
-    }
 });
-window.addEventListener("beforeunload", saveUpcomingDeadlinesIfDirty("assignments"));
 
+window.addEventListener("beforeunload", () => {
+    saveUpcomingDeadlinesIfDirty("assignments");
+    cleanup();
+});
 
 function initSortCategory() {
     const radios = document.querySelectorAll("input[name='sortCategory']");

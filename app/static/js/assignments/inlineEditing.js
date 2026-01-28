@@ -1,4 +1,3 @@
-// static/js/assignments/inlineEditing.js
 import { showModal, closeModal, getPendingNavigation } from './modals.js';
 import { validateInlineGrades, clearInvalidGradeHighlights, collectInlineGradedAssignments } from './utils.js';
 
@@ -31,8 +30,18 @@ export function initInlineEditing() {
 
         if (!editInlineBtn) return;
 
+        // Remove old listeners by cloning
+        const newEditInlineBtn = editInlineBtn.cloneNode(true);
+        editInlineBtn.parentNode.replaceChild(newEditInlineBtn, editInlineBtn);
+        
+        const newSaveBtn = saveBtn.cloneNode(true);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+        
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
         // Edit inline button
-        editInlineBtn.addEventListener("click", () => {
+        newEditInlineBtn.addEventListener("click", () => {
             exitDeleteMode(card);
             card.dataset.editing = "false";
             editBtn?.classList.remove("active");
@@ -40,12 +49,12 @@ export function initInlineEditing() {
 
             card.dataset.inlineEditing = "true";
 
-            editInlineBtn.classList.add("hidden");
+            newEditInlineBtn.classList.add("hidden");
             editBtn.classList.add("hidden");
             deleteBtn.classList.add("hidden");
 
-            saveBtn.classList.remove("hidden");
-            cancelBtn.classList.remove("hidden");
+            newSaveBtn.classList.remove("hidden");
+            newCancelBtn.classList.remove("hidden");
 
             rows.forEach(row => {
                 const isGraded = String(row.dataset.graded).toLowerCase() === "true";
@@ -61,6 +70,7 @@ export function initInlineEditing() {
                             class="inline-grade-input"
                             min="0"
                             max="100"
+                            step="0.1"
                             value="${currentGrade !== "—" ? currentGrade : ""}"
                         >
                     `;
@@ -75,16 +85,16 @@ export function initInlineEditing() {
         });
 
         // Cancel button
-        cancelBtn.addEventListener("click", () => {
+        newCancelBtn.addEventListener("click", () => {
             exitDeleteMode(card);
             card.dataset.inlineEditing = "false";
 
-            editInlineBtn.classList.remove("hidden");
+            newEditInlineBtn.classList.remove("hidden");
             editBtn.classList.remove("hidden");
             deleteBtn.classList.remove("hidden");
 
-            saveBtn.classList.add("hidden");
-            cancelBtn.classList.add("hidden");
+            newSaveBtn.classList.add("hidden");
+            newCancelBtn.classList.add("hidden");
 
             rows.forEach(row => {
                 row.classList.remove("inline-graded", "inline-not-graded");
@@ -96,30 +106,43 @@ export function initInlineEditing() {
             hasUnsavedInlineChanges = false;
         });
 
-        // Save button
-        saveBtn.addEventListener("click", () => {
-            clearInvalidGradeHighlights(card);
-
-            const isValid = validateInlineGrades(card);
-
-            if (!isValid) {
-                showModal("invalidGradeModal");
+        // Save button - FIX: Prevent multiple clicks
+        newSaveBtn.addEventListener("click", async () => {
+            if (isSavingInlineChanges) {
+                console.log("Already saving, ignoring click");
                 return;
             }
+            
+            isSavingInlineChanges = true;
+            newSaveBtn.disabled = true;
 
-            const assignments = collectInlineGradedAssignments(card);
-            const missingFinishDates = assignments.filter(a => !a.finished_at);
+            try {
+                clearInvalidGradeHighlights(card);
 
-            if (missingFinishDates.length === 0) {
-                saveInlineGrades(assignments);
-            } else {
-                openInlineFinishDatesModal(missingFinishDates);
+                const isValid = validateInlineGrades(card);
+
+                if (!isValid) {
+                    showModal("invalidGradeModal");
+                    return;
+                }
+
+                const assignments = collectInlineGradedAssignments(card);
+                const missingFinishDates = assignments.filter(a => !a.finished_at);
+
+                if (missingFinishDates.length === 0) {
+                    await saveInlineGrades(assignments);
+                } else {
+                    openInlineFinishDatesModal(missingFinishDates);
+                }
+            } finally {
+                isSavingInlineChanges = false;
+                newSaveBtn.disabled = false;
             }
         });
 
         // Delete mode (delegated to deleteAssignment.js, but keep UI toggle here)
         card.dataset.deleteMode = "false";
-        deleteBtn.addEventListener("click", () => {
+        deleteBtn?.addEventListener("click", () => {
             const enabled = card.dataset.deleteMode === "true";
 
             card.dataset.editing = "false";
@@ -170,7 +193,6 @@ function exitDeleteMode(card) {
 }
 
 export async function saveInlineGrades(assignments, navUrl = null) {
-    isSavingInlineChanges = true;
     const csrf = document.querySelector("meta[name='csrf-token']").content;
     const now = new Date();
 
@@ -178,14 +200,14 @@ export async function saveInlineGrades(assignments, navUrl = null) {
         if (!a.finished_at) continue;
 
         if (new Date(a.finished_at) > now) {
-            isSavingInlineChanges = false;
             showModal("futureFinishDateModal");
             return;
         }
 
         const payload = {
             grade: a.grade,
-            finished_at: a.finished_at
+            finished_at: a.finished_at,
+            is_graded: true
         };
 
         const res = await fetch(`/assignments/${a.id}/update`, {
@@ -198,17 +220,15 @@ export async function saveInlineGrades(assignments, navUrl = null) {
         });
 
         if (!res.ok) {
-            isSavingInlineChanges = false;
             alert("Failed to save grades");
             return;
         }
     }
 
     hasUnsavedInlineChanges = false;
-    isSavingInlineChanges = false;
 
-    // Emit refresh event instead of reloading
-    document.dispatchEvent(new CustomEvent("assignment:changed"));
+    // Emit refresh event
+    document.dispatchEvent(new CustomEvent("assignment:grade:changed"));
 
     const pendingUrl = navUrl || getPendingNavigation();
     if (pendingUrl) {
@@ -217,7 +237,7 @@ export async function saveInlineGrades(assignments, navUrl = null) {
 }
 
 export function saveAllInlineGrades(assignments, navUrl = null) {
-    saveInlineGrades(assignments, navUrl);
+    return saveInlineGrades(assignments, navUrl);
 }
 
 export function openInlineFinishDatesModal(assignments, navUrl = null) {
@@ -247,7 +267,7 @@ export function openInlineFinishDatesModal(assignments, navUrl = null) {
 
         <fieldset class="radio-group">
             <label>
-            <input type="radio" name="finish_${a.id}" value="now">
+            <input type="radio" name="finish_${a.id}" value="now" checked>
             Now
             </label>
 
@@ -330,49 +350,51 @@ function initFinishDatesModalListeners(navUrl) {
         pickInput.classList.toggle("hidden", e.target.value !== "pick");
     });
 
-    document
-        .getElementById("confirmInlineFinishDates")
-        .addEventListener("click", () => {
-            const now = new Date();
-            const assignments = [];
+    const confirmBtn = document.getElementById("confirmInlineFinishDates");
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    newConfirmBtn.addEventListener("click", async () => {
+        const now = new Date();
+        const assignments = [];
 
-            document
-                .querySelectorAll(".finish-assignment-section")
-                .forEach(section => {
-                    const id = section.dataset.assignmentId;
-                    const mode = section.querySelector("input[type='radio']:checked")?.value;
-                    let finishedAt = null;
+        document
+            .querySelectorAll(".finish-assignment-section")
+            .forEach(section => {
+                const id = section.dataset.assignmentId;
+                const mode = section.querySelector("input[type='radio']:checked")?.value;
+                let finishedAt = null;
 
-                    if (mode === "now") {
-                        finishedAt = now.toISOString();
+                if (mode === "now") {
+                    finishedAt = now.toISOString();
+                }
+
+                if (mode === "pick") {
+                    const val = section.querySelector(".assignment-picked-date").value;
+                    if (!val || new Date(val) > now) {
+                        showModal("futureFinishDateModal");
+                        return;
                     }
+                    finishedAt = val;
+                }
 
-                    if (mode === "pick") {
-                        const val = section.querySelector(".assignment-picked-date").value;
-                        if (!val || new Date(val) > now) {
-                            showModal("futureFinishDateModal");
-                            return;
-                        }
-                        finishedAt = val;
-                    }
+                if (mode === "due") {
+                    finishedAt = finishModalState.assignments
+                        .find(a => a.id == id).due_at;
+                }
 
-                    if (mode === "due") {
-                        finishedAt = finishModalState.assignments
-                            .find(a => a.id == id).due_at;
-                    }
-
-                    assignments.push({
-                        id,
-                        finished_at: finishedAt
-                    });
+                assignments.push({
+                    id,
+                    finished_at: finishedAt
                 });
-
-            finishModalState.assignments.forEach(a => {
-                const found = assignments.find(x => x.id == a.id);
-                a.finished_at = found.finished_at;
             });
 
-            closeModal("inlineFinishDatesModal");
-            saveInlineGrades(finishModalState.assignments, navUrl);
+        finishModalState.assignments.forEach(a => {
+            const found = assignments.find(x => x.id == a.id);
+            a.finished_at = found.finished_at;
         });
+
+        closeModal("inlineFinishDatesModal");
+        await saveInlineGrades(finishModalState.assignments, navUrl);
+    });
 }
