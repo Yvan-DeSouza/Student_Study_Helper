@@ -197,14 +197,23 @@ function applyPerClassOrdering(container, allItems, data) {
         visibleCardIds.add(classId);
         orderedVisibleCards.push(card);
         
-        // Clear and rebuild tbody with ordered rows
-        tbody.innerHTML = '';
+        // Build a set of visible rows for this class
+        const visibleRowSet = new Set(orderedRows);
+
+        // Animate rows in/out (DO NOT destroy them)
+        [...tbody.querySelectorAll('tr')].forEach(row => {
+            if (visibleRowSet.has(row)) {
+                showWithAnimation(row);
+            } else {
+                hideWithAnimation(row);
+            }
+        });
+
+        // Reorder visible rows ONLY (DOM-safe)
         orderedRows.forEach(row => {
-            row.classList.remove('hidden');
-            row.style.opacity = '';
-            row.style.transform = '';
             tbody.appendChild(row);
         });
+
         
         // Show the card
         showWithAnimation(card);
