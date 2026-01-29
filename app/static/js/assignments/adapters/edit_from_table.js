@@ -6,6 +6,7 @@ export function initEditFromTable() {
 
     rows.forEach(row => {
       row.addEventListener("click", e => {
+        console.log(row.dataset.graded);
         if (card.dataset.editing !== "true") return;
         if (e.target.closest("input, select, button, label")) return;
 
@@ -16,7 +17,7 @@ export function initEditFromTable() {
           assignment_type: row.dataset.assignmentType,
           due_at: row.dataset.dueAt !== "null" ? row.dataset.dueAt : null,
           finished_at: row.dataset.finishedAt || null,
-          is_graded: row.dataset.graded === "true",
+          is_graded: row.dataset.graded,
           expected_grade: row.dataset.expectedGrade,
           pass_grade: row.dataset.passGrade,
           ponderation: row.dataset.ponderation,

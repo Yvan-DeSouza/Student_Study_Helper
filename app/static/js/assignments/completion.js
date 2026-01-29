@@ -114,7 +114,8 @@ async function handleComplete() {
 
 async function sendCompletionUpdate(isCompleted, finishedAt) {
     const id = pendingRow.dataset.assignmentId;
-
+    console.log("hello")
+    console.log(pendingRow.dataset.graded)
     const res = await fetch(`/assignments/${id}/update`, {
         method: "PATCH",
         headers: {
@@ -122,7 +123,7 @@ async function sendCompletionUpdate(isCompleted, finishedAt) {
             "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content
         },
         body: JSON.stringify({
-            is_graded: pendingRow.dataset.graded === "true",
+            is_graded: pendingRow.dataset.graded,
             finished_at: isCompleted ? finishedAt : null
         })
     });

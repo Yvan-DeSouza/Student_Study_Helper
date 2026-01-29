@@ -158,6 +158,8 @@ def update_assignment(assignment_id):
     # --- Only update grading info if provided ---
     if "is_graded" in data:
         assignment.is_graded = bool(data.get("is_graded"))
+    print("hello")
+    print(assignment.is_graded)
 
     if assignment.is_graded:
         if "ponderation" in data:

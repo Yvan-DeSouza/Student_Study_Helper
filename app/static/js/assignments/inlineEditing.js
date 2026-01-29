@@ -201,7 +201,8 @@ function exitDeleteMode(card) {
 export async function saveInlineGrades(assignments, navUrl = null) {
     const csrf = document.querySelector("meta[name='csrf-token']").content;
     const now = new Date();
-
+    console.log("Saving inline grades for class");
+    console.log(assignments.class_id);
     for (const a of assignments) {
         if (!a.finished_at) continue;
 
@@ -230,11 +231,31 @@ export async function saveInlineGrades(assignments, navUrl = null) {
             return;
         }
 
-        // Emit granular refresh for each assignment
-        document.dispatchEvent(new CustomEvent("assignment:grade:changed", {
-            detail: { assignment_id: a.id }
-        }));
+
     }
+    // ================= SINGLE REFRESH EMIT =================
+
+    // Detect table layout
+    const isPerClassMode = document.querySelector(
+        '.assignments-table-card[data-table-mode="per_class"], .per-class-wrapper:not(.hidden)'
+    );
+    // Determine class_id if applicable
+    const classId =
+        assignments.length > 0
+            ? assignments[0].class_id || assignments[0].classId
+            : null;
+
+    if (isPerClassMode && classId) {
+        // Refresh only the affected class table
+        document.dispatchEvent(new CustomEvent("assignment:grade:changed", {
+            detail: { class_id: classId }
+        }));
+    } else {
+        // Refresh entire table (single-table mode)
+        document.dispatchEvent(new CustomEvent("assignment:grade:changed"));
+    }
+
+
 
     hasUnsavedInlineChanges = false;
 

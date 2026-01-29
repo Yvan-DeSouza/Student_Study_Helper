@@ -15,7 +15,7 @@ export function openEditAssignmentModal(assignment) {
   document.getElementById("edit-finished-at").value = assignment.finished_at || "";
 
   const gradedCheckbox = document.getElementById("edit-is-graded");
-  const graded = assignment.is_graded === true;
+  const graded = assignment.is_graded;
 
   gradedCheckbox.checked = graded;
   toggleGradedFields(graded);
