@@ -165,33 +165,10 @@ class AssignmentViewPreferences(db.Model):
         unique=True
     )
 
-    due_status_filter = db.Column(
-        db.Text,
-        nullable=False,
-        default="all",
-        server_default="all"
-    )
-
-    completion_filter = db.Column(
-        db.Text,
-        nullable=False,
-        default="all",
-        server_default="all"
-    )
-
-    graded_filter = db.Column(
-        db.Text,
-        nullable=False,
-        default="all",
-        server_default="all"
-    )
-
-    created_filter = db.Column(
-        db.Text,
-        nullable=False,
-        default="all",
-        server_default="all"
-    )
+    due_status_filter = db.Column(db.Text, nullable=False, default="all", server_default="all")
+    completion_filter = db.Column(db.Text, nullable=False, default="all", server_default="all")
+    graded_filter = db.Column(db.Text, nullable=False, default="all", server_default="all")
+    created_filter = db.Column(db.Text, nullable=False, default="all", server_default="all")
 
     filter_assignment_types = db.Column(
         db.JSON,
@@ -200,6 +177,7 @@ class AssignmentViewPreferences(db.Model):
         server_default="{}"
     )
 
+    # registry-controlled, validated in services
     sort_by = db.Column(
         db.Text,
         nullable=False,
@@ -214,15 +192,68 @@ class AssignmentViewPreferences(db.Model):
         server_default="per_class"
     )
 
+    # ---- risk filtering (behavioral) ----
+    risk_filter_mode = db.Column(
+        db.Text,
+        nullable=False,
+        default="none",
+        server_default="none"
+    )
+
+    risk_threshold = db.Column(db.Numeric(3, 2), nullable=True)
+
     updated_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,
         server_default=func.now()
     )
 
-    user = db.relationship("User", backref=db.backref(
-        "assignment_view_preferences",
-        uselist=False,
-        cascade="all, delete-orphan"
-    ))
+    user = db.relationship(
+        "User",
+        backref=db.backref(
+            "assignment_view_preferences",
+            uselist=False,
+            cascade="all, delete-orphan"
+        )
+    )
+
+
+
+class ShownAssignmentColumn(db.Model):
+    __tablename__ = "shown_assignment_columns"
+
+    assignment_column_id = db.Column(db.Integer, primary_key=True)
+
+    page_name = db.Column(
+        db.Text,
+        nullable=False
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.user_id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    column_key = db.Column(db.Text, nullable=False)
+
+    is_shown = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true")
+    )
+
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "column_key", "page_name"),
+    )
+
+    user = db.relationship("User", backref="shown_assignment_columns")
+
 

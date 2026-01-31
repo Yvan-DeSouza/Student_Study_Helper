@@ -32,6 +32,8 @@ CREATE TABLE classes (
     ), 
     class_code TEXT NOT NULL,
 	UNIQUE(user_id, class_code),
+	UNIQUE(user_id, class_name),
+
 	
     color TEXT NOT NULL,
 	
@@ -53,6 +55,8 @@ CREATE TABLE classes (
 		   (is_finished = FALSE AND finished_at IS NULL)
 		OR (is_finished = TRUE AND finished_at IS NOT NULL)
 	)
+
+
 );
 
 -- ASSIGNMENTS
@@ -304,28 +308,15 @@ CREATE TABLE assignment_view_preferences (
 
     filter_assignment_types JSONB NOT NULL DEFAULT '{}'::jsonb,
 
-    sort_by TEXT NOT NULL DEFAULT 'name_asc' CHECK (
-        sort_by IN (
-            'name_asc',
-            'name_desc',
-            'difficulty_high_low',
-            'difficulty_low_high',
-            'grade_high_low',
-            'grade_low_high',
-            'due_date_soonest',
-            'due_date_latest',
-            'created_newest',
-            'created_oldest',
-            'ponderation_high_low',
-            'ponderation_low_high',
-            'estimated_minutes_high_low',
-            'estimated_minutes_low_high'
-        )
-    ),
+    sort_by TEXT NOT NULL DEFAULT 'name_asc',
 
     table_layout TEXT NOT NULL DEFAULT 'per_class' CHECK (
         table_layout IN ('single', 'per_class')
     ),
+    risk_filter_mode TEXT NOT NULL DEFAULT 'none' CHECK (
+		risk_filter_mode IN ('none', 'under', 'over')
+	),
+    risk_threshold NUMERIC(3,2),
 
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -335,6 +326,48 @@ CREATE TABLE assignment_view_preferences (
         REFERENCES users(user_id)
         ON DELETE CASCADE
 );
+
+
+CREATE TABLE shown_assignment_columns (
+    assignment_column_id SERIAL PRIMARY KEY,
+
+    user_id INT NOT NULL,
+    page_name TEXT NOT NULL,
+
+    -- stable registry key (e.g. risk_score)
+    column_key TEXT NOT NULL,
+
+    -- preference only, not permission
+    is_shown BOOLEAN NOT NULL DEFAULT true,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    UNIQUE (user_id, page_name, column_key),
+
+    FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

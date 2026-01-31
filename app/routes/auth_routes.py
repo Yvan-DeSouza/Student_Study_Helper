@@ -8,7 +8,8 @@ from app.models.user import (
     UserClassTypeColor,
     UserAssignmentTypeColor,
     ClassViewPreferences,
-    AssignmentViewPreferences
+    AssignmentViewPreferences,
+    ShownAssignmentColumn
 )
 
 auth = Blueprint('auth', __name__)
@@ -40,6 +41,21 @@ DEFAULT_ASSIGNMENT_COLORS = {
     "other": "#7c800a"
 }
 
+DEFAULT_ASSIGNMENT_COLUMNS = [
+    "name",
+    "class",
+    "type",
+    "due_date",
+    "completed",
+    "grade",
+    "graded",
+    "ponderation",
+    "pass_grade",
+    "finished_at",
+    "difficulty",
+    "expected_grade"
+]
+
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
@@ -56,7 +72,19 @@ def register():
         )
         new_user.set_password(form.password.data)
         db.session.add(new_user)
-        db.session.flush()  # 👈 ensures user_id exists
+        db.session.flush()  # ensures user_id exists
+
+
+        for column in DEFAULT_ASSIGNMENT_COLUMNS:
+            db.session.add(
+                ShownAssignmentColumn(
+                    user_id=new_user.user_id,
+                    column_key=column,
+                    is_shown=True,
+                    page_name="assignments"
+                )
+            )
+
 
         # ---------------- USER PREFERENCES ----------------
         db.session.add(UserPreferences(user_id=new_user.user_id))
@@ -72,7 +100,7 @@ def register():
                 sort_by="name_asc",
                 status_filter="all",
 
-                # IMPORTANT: JSONB arrays, not booleans
+                # IMPORTANT: JSONB arrays
                 filter_importance=ALL_IMPORTANCE_VALUES,
                 filter_class_types=ALL_CLASS_TYPES
             ))
