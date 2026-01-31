@@ -1,43 +1,56 @@
 from dataclasses import dataclass
 from datetime import datetime
-
 from ..base import EligibilityResult, eligible_result, blocked_result
 from ..user_stats import UserStats
 
 
 @dataclass(frozen=True)
 class DeadlineSensitivityReq:
-    min_incomplete_assignments_with_due_date: int = 3
+    min_assignments_with_due_date: int = 3
     min_graded_assignments: int = 5
     min_days_span: int = 14
+    max_days_until_due: int = 21
 
 
 def check_deadline_sensitivity_user_eligibility(
     stats: UserStats,
+    req: DeadlineSensitivityReq = DeadlineSensitivityReq(),
 ) -> EligibilityResult:
     missing = []
     reasons = []
 
-    if stats.assignments_with_due_date < 3:
+    if stats.assignments_with_due_date < req.min_assignments_with_due_date:
         missing.append("due_dates")
-        reasons.append("Deadline sensitivity requires assignments with due dates.")
+        reasons.append({
+            "metric": "assignments_with_due_date",
+            "current": stats.assignments_with_due_date,
+            "required": req.min_assignments_with_due_date,
+        })
 
-    if stats.graded_assignments < 5:
+    if stats.graded_assignments < req.min_graded_assignments:
         missing.append("graded_assignments")
-        reasons.append("At least 5 graded assignments are required.")
+        reasons.append({
+            "metric": "graded_assignments",
+            "current": stats.graded_assignments,
+            "required": req.min_graded_assignments,
+        })
 
     if (
         stats.days_since_earliest_graded is None
-        or stats.days_since_earliest_graded < 14
+        or stats.days_since_earliest_graded < req.min_days_span
     ):
         missing.append("time_span")
-        reasons.append("At least 14 days of history are required.")
+        reasons.append({
+            "metric": "days_since_earliest_graded",
+            "current": stats.days_since_earliest_graded,
+            "required": req.min_days_span,
+        })
 
     if missing:
         return blocked_result(
             missing_requirements=missing,
             blocking_reasons=reasons,
-            unlock_hint="Complete more graded assignments with deadlines.",
+            unlock_hint="Accumulate graded assignments with deadlines over time.",
         )
 
     return eligible_result()
@@ -46,10 +59,10 @@ def check_deadline_sensitivity_user_eligibility(
 def check_deadline_sensitivity_assignment_eligibility(
     assignment: dict,
     now: datetime,
+    req: DeadlineSensitivityReq = DeadlineSensitivityReq(),
 ) -> bool:
     due = assignment.get("due_at")
     if due is None:
         return False
 
-    days_until_due = (due - now).days
-    return days_until_due <= 21
+    return (due - now).days <= req.max_days_until_due

@@ -1,10 +1,8 @@
 from app.services.analytics.computation.expected import composite_assignment_similarity
+from app.services.analytics.config.sensitivity import SENSITIVITY_CONFIG
+
 
 def rank_values(values):
-    """
-    Assigns ranks to values (average rank for ties).
-    Returns list of floats.
-    """
     sorted_pairs = sorted((v, i) for i, v in enumerate(values))
     ranks = [0] * len(values)
 
@@ -14,10 +12,10 @@ def rank_values(values):
         while j < len(sorted_pairs) and sorted_pairs[j][0] == sorted_pairs[i][0]:
             j += 1
 
-        avg_rank = (i + j - 1) / 2 + 1  # ranks start at 1
+        avg_rank = (i + j - 1) / 2 + 1
         for k in range(i, j):
-            _, original_index = sorted_pairs[k]
-            ranks[original_index] = avg_rank
+            _, idx = sorted_pairs[k]
+            ranks[idx] = avg_rank
 
         i = j
 
@@ -25,9 +23,6 @@ def rank_values(values):
 
 
 def pearson_correlation(x, y):
-    """
-    Computes Pearson correlation coefficient.
-    """
     n = len(x)
     if n == 0:
         return None
@@ -46,12 +41,7 @@ def pearson_correlation(x, y):
 
 
 def spearman_correlation(x, y):
-    """
-    Pure Python Spearman correlation.
-    """
-    rx = rank_values(x)
-    ry = rank_values(y)
-    return pearson_correlation(rx, ry)
+    return pearson_correlation(rank_values(x), rank_values(y))
 
 
 def compute_deadline_sensitivity(
@@ -59,26 +49,15 @@ def compute_deadline_sensitivity(
     target_assignment_type,
     target_class_id,
     past_assignments,
-    similarity_threshold=0.3,
 ):
-    """
-    Computes deadline sensitivity |ρ| using Spearman correlation.
-
-    past_assignments must contain:
-    - grade
-    - due_at
-    - started_at OR expected_started_at
-    """
-
-    delays = []
-    grades = []
+    delays, grades = [], []
 
     for p in past_assignments:
         grade = p.get("grade")
         due_at = p.get("due_at")
         started_at = p.get("started_at") or p.get("expected_started_at")
 
-        if grade is None or due_at is None or started_at is None:
+        if None in (grade, due_at, started_at):
             continue
 
         similarity = composite_assignment_similarity(
@@ -90,12 +69,10 @@ def compute_deadline_sensitivity(
             p["class_id"],
         )
 
-        if similarity < similarity_threshold:
+        if similarity < SENSITIVITY_CONFIG.SIMILARITY_THRESHOLD:
             continue
 
-        delay_days = (due_at - started_at).days
-
-        delays.append(delay_days)
+        delays.append((due_at - started_at).days)
         grades.append(float(grade))
 
     if len(delays) < 2:
@@ -105,16 +82,18 @@ def compute_deadline_sensitivity(
     if rho is None:
         return None
 
-
     sensitivity = abs(rho)
+
+    if sensitivity > SENSITIVITY_CONFIG.HIGH:
+        bucket = "High"
+    elif sensitivity >= SENSITIVITY_CONFIG.MEDIUM:
+        bucket = "Medium"
+    else:
+        bucket = "Low"
 
     return {
         "sensitivity": round(sensitivity, 3),
         "rho": round(rho, 3),
         "samples": len(delays),
-        "bucket": (
-            "High" if sensitivity > 0.5 else
-            "Medium" if sensitivity >= 0.2 else
-            "Low"
-        ),
+        "bucket": bucket,
     }

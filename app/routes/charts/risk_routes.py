@@ -9,6 +9,7 @@ from sqlalchemy import func
 import pandas as pd
 import numpy as np
 from datetime import datetime, timezone, timedelta
+from app.services.analytics.config.risk import RISK_CONFIG
 
 
 from app.services.analytics.computation.risk import (
@@ -134,13 +135,9 @@ def deadline_proximity_distribution():
         Assignment.due_at.isnot(None)
     ).all()
 
-    buckets = {
-        "Overdue": {"count": 0, "minutes": 0},
-        "0-2 days": {"count": 0, "minutes": 0},
-        "3-5 days": {"count": 0, "minutes": 0},
-        "6-10 days": {"count": 0, "minutes": 0},
-        "10+ days": {"count": 0, "minutes": 0}
-    }
+    buckets = {label: {"count": 0, "minutes": 0} for label in RISK_CONFIG.BUCKETS.keys()}
+    bucket_order = list(RISK_CONFIG.BUCKETS.keys())
+
 
     past_assignments = build_past_assignments(current_user.user_id)
 

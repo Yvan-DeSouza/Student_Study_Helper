@@ -2,6 +2,8 @@ from app.services.analytics.computation.expected import composite_assignment_sim
 from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
+from app.services.analytics.config.risk import RISK_CONFIG
+
 
 
 # =================== TIME & URGENCY ===================
@@ -45,16 +47,10 @@ def deadline_proximity_bucket(days_until_due):
     if days_until_due is None:
         return None
     
-    if days_until_due < 0:
-        return "Overdue"
-    elif days_until_due <= 2:
-        return "0-2 days"
-    elif days_until_due <= 5:
-        return "3-5 days"
-    elif days_until_due <= 10:
-        return "6-10 days"
-    else:
-        return "10+ days"
+    for label, (low, high) in RISK_CONFIG.BUCKETS.items():
+        if low < days_until_due <= high:
+            return label
+    return "10+ days"
 
 
 # =================== NORMALIZATION ===================
@@ -186,13 +182,8 @@ def compute_assignment_risk(components, weights=None):
     """
 
     if weights is None:
-        weights = {
-            "time_pressure": 0.30,
-            "deadline_proximity": 0.20,
-            "difficulty": 0.20,
-            "history": 0.20,
-            "overlap": 0.10
-        }
+        weights = RISK_CONFIG.COMPONENT_WEIGHTS
+
 
     risk_breakdown = {}
     total_risk = 0.0
