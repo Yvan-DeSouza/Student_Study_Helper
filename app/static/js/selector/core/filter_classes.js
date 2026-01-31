@@ -27,5 +27,6 @@ export async function fetchFilteredClassIds(state, page = "classes") {
     }
 
     const data = await res.json();
+    console.log("Filtered class IDs:", data.classes.map(c => String(c.class_id)));
     return data.classes.map(c => String(c.class_id));
 }

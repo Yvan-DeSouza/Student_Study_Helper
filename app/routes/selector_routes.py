@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from sqlalchemy import and_, or_, func, false
+from sqlalchemy import and_, or_, func, false, case
 from datetime import datetime, timedelta, timezone
 
 from app.extensions import db
@@ -63,11 +63,19 @@ def select_classes():
     # -------------------------
     # SORTING
     # -------------------------
+
+    importance_order = case(
+        (Class.importance == "high", 3),
+        (Class.importance == "medium", 2),
+        (Class.importance == "low", 1),
+        else_=None
+    )
+
     sort_map = {
         "name_asc": Class.class_name.asc(),
         "name_desc": Class.class_name.desc(),
-        "importance_high_low": Class.importance.desc().nullslast(),
-        "importance_low_high": Class.importance.asc().nullslast(),
+        "importance_high_low": importance_order.desc().nullslast(),
+        "importance_low_high": importance_order.asc().nullslast(),
         "difficulty_high_low": Class.difficulty.desc().nullslast(),
         "difficulty_low_high": Class.difficulty.asc().nullslast(),
         "grade_high_low": Class.grade.desc().nullslast(),
@@ -225,10 +233,16 @@ def select_assignments():
             "difficulty": a.difficulty
         })
 
+    classes = sorted(
+        classes_map.values(),
+        key=lambda c: c["class_id"]
+    )
+
     return jsonify({
         "layout": "per_class",
-        "classes": list(classes_map.values())
+        "classes": classes
     }), 200
+
 
 
 

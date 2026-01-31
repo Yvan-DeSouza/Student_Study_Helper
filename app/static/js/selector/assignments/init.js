@@ -160,9 +160,9 @@ export async function initAssignmentSelector() {
         if (assignmentState.tableLayout === 'per_class') {
             const filteredData = {
                 layout: 'per_class',
-                classes: data.classes.filter(cls =>
-                    filteredClassIds.includes(String(cls.class_id))
-                )
+                classes: filteredClassIds
+                    .map(id => data.classes.find(cls => String(cls.class_id) === id))
+                    .filter(Boolean)
             };
             
             applyAssignmentOrdering(container, allItems, filteredData, assignmentState.tableLayout);
