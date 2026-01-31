@@ -149,18 +149,17 @@ def update_assignment(assignment_id):
     def parse_float(val): return float(val) if val not in (None, "", "null") else None
     def parse_date(val): return parser.isoparse(val) if val not in (None, "", "null") else None
 
-    assignment.difficulty = parse_int(data.get("difficulty"))
-    assignment.estimated_minutes = parse_int(data.get("estimated_minutes"))
-    assignment.due_at = parse_date(data.get("due_at"))
-    assignment.is_completed = parse_date(data.get("finished_at")) is not None
-    assignment.finished_at = parse_date(data.get("finished_at"))
+    if "difficulty" in data:
+        assignment.difficulty = parse_int(data.get("difficulty"))
+    if "estimated_minutes" in data:
+        assignment.estimated_minutes = parse_int(data.get("estimated_minutes"))
+    if "due_at" in data:
+        assignment.due_at = parse_date(data.get("due_at"))
+
 
     # --- Only update grading info if provided ---
     if "is_graded" in data:
         assignment.is_graded = bool(data.get("is_graded"))
-    print("hello")
-    print(assignment.is_graded)
-
     if assignment.is_graded:
         if "ponderation" in data:
             assignment.ponderation = parse_int(data.get("ponderation"))
@@ -174,6 +173,15 @@ def update_assignment(assignment_id):
         # Only reset if explicitly ungrading
         if "is_graded" in data and not assignment.is_graded:
             assignment.ponderation = assignment.pass_grade = assignment.expected_grade = assignment.grade = None
+
+    if parse_date(data.get("finished_at")):
+        assignment.is_completed = True
+    else:
+        assignment.is_completed = False
+        assignment.grade = None
+
+        
+    assignment.finished_at = parse_date(data.get("finished_at"))
     # --- Expected grade history ---
     if assignment.expected_grade != prev_expected and assignment.expected_grade is not None:
         db.session.add(AssignmentExpectedGrade(

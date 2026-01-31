@@ -201,8 +201,6 @@ function exitDeleteMode(card) {
 export async function saveInlineGrades(assignments, navUrl = null) {
     const csrf = document.querySelector("meta[name='csrf-token']").content;
     const now = new Date();
-    console.log("Saving inline grades for class");
-    console.log(assignments.class_id);
     for (const a of assignments) {
         if (!a.finished_at) continue;
 
@@ -216,7 +214,7 @@ export async function saveInlineGrades(assignments, navUrl = null) {
             finished_at: a.finished_at,
             is_graded: true
         };
-
+        console.log(payload)
         const res = await fetch(`/assignments/${a.id}/update`, {
             method: "PATCH",
             headers: {

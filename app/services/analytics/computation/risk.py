@@ -1,4 +1,4 @@
-from app.services.expected_utils import composite_assignment_similarity
+from app.services.analytics.computation.expected import composite_assignment_similarity
 from datetime import datetime, timezone
 import numpy as np
 import pandas as pd

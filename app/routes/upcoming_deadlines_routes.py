@@ -5,7 +5,7 @@ from app.extensions import db
 from app.models.assignment import Assignment
 from app.models.course import Class
 from app.models.user import UserPreferences, UserAssignmentTypeColor
-from app.services.expected_utils import estimate_expected_minutes
+from app.services.analytics.computation.expected import estimate_expected_minutes
 from datetime import datetime, timezone
 from sqlalchemy import func, case
 

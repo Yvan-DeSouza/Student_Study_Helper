@@ -11,7 +11,7 @@ import numpy as np
 from datetime import datetime, timezone, timedelta
 
 
-from app.services.risk_utils import (
+from app.services.analytics.computation.risk import (
     compute_days_until_due,
     urgency_score,
     deadline_proximity_bucket,
@@ -22,7 +22,7 @@ from app.services.risk_utils import (
     aggregate_weekly_risk_components,
     normalize_1_to_10
 )
-from app.services.expected_utils import (
+from app.services.analytics.computation.expected import (
     estimate_expected_minutes,
     estimate_expected_difficulty
 )

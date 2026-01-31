@@ -80,8 +80,6 @@ class Assignment(db.Model):
         if value is not None:
             if not self.is_graded:
                 raise ValueError("Cannot set grade if assignment is not marked as graded")
-            if not self.finished_at:
-                raise ValueError("Cannot set grade without a finished_at date")
             if value < 0 or value > 100:
                 raise ValueError("Grade must be between 0 and 100")
         return value

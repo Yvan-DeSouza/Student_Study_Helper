@@ -6,10 +6,10 @@ from app.models.study_session import StudySession
 from app.models.assignment import Assignment
 from app.extensions import db
 
-from app.services.expected_utils import (
+from app.services.analytics.computation.expected import (
     estimate_expected_minutes
 )
-from app.services.effort_utils import (
+from app.services.analytics.computation.effort import (
     cumulative_effort_outcome,
     smooth_marginal_returns,
     effort_allocation_by_class,

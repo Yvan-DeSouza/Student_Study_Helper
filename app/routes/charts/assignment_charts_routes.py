@@ -8,8 +8,8 @@ from app.models.user import UserAssignmentTypeColor
 from app.extensions import db
 from sqlalchemy import func
 from datetime import datetime, timezone, timedelta
-from app.services.expected_utils import estimate_expected_minutes
-from app.services.risk_utils import compute_days_until_due
+from app.services.analytics.computation.expected import estimate_expected_minutes
+from app.services.analytics.computation.risk import compute_days_until_due
 from app.services.analytics.chart_eligibility.assignments.assignments_eligibility import (
     get_assignment_due_timeline_eligibility,
     get_assignment_type_load_eligibility,
