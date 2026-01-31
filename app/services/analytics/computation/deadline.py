@@ -1,5 +1,3 @@
-# app/services/analytics/computation/deadline.py
-
 from app.services.analytics.computation.expected import composite_assignment_similarity
 
 def rank_values(values):

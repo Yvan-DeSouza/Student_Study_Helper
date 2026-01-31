@@ -1,5 +1,3 @@
-# app/services/analytics/computation/volatility.py
-
 from math import exp
 from datetime import datetime, timezone
 from app.services.analytics.computation.expected import composite_assignment_similarity
