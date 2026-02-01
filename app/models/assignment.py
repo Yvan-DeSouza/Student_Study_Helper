@@ -71,6 +71,40 @@ class Assignment(db.Model):
             .where(StudySession.assignment_id == cls.assignment_id)
             .scalar_subquery()
         )
+    def to_analytics_dict(self) -> dict:
+        """
+        Canonical normalization for analytics layer.
+        No ORM objects should escape past this boundary.
+        """
+
+        return {
+            "assignment_id": self.assignment_id,
+            "class_id": self.class_id,
+            "class_type": self.class_.class_type if self.class_ else None,
+            "assignment_type": self.assignment_type,
+
+            "title": self.title,
+
+            "due_at": self.due_at,
+            "finished_at": self.finished_at,
+
+            "is_completed": self.is_completed,
+            "is_graded": self.is_graded,
+            "grade": float(self.grade) if self.grade is not None else None,
+
+            "ponderation": self.ponderation,
+            "pass_grade": float(self.pass_grade) if self.pass_grade is not None else None,
+            "difficulty": self.difficulty,
+            "expected_grade": float(self.expected_grade) if self.expected_grade is not None else None,
+
+            "estimated_minutes": self.estimated_minutes,
+
+            # Computed / hybrid fields
+            "study_minutes": self.study_minutes,
+            "study_session_count": self.study_session_count,
+        }
+
+    
 
 
 
