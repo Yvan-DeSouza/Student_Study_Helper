@@ -265,6 +265,9 @@
                     <input type="radio" name="sortCategory" value="academic"> Academic
                 </label>
                 <label class="selector-check">
+                    <input type="radio" name="sortCategory" value="advanced"> Advanced
+                </label>
+                <label class="selector-check">
                     <input type="radio" name="sortCategory" value="dates"> Dates
                 </label>
                 <label class="selector-check">
@@ -299,6 +302,27 @@
                 <option value="study_minutes_low_high" data-cat="time">Time (Low → High)</option>
             </select>
         </div>
+        <div class="selector-group">
+            <label class="selector-label">Risk filter</label>
+            <select class="selector-select" id="riskFilterMode">
+                <option value="none">Disabled</option>
+                <option value="under">Under</option>
+                <option value="over">Over</option>
+            </select>
+        </div>
+
+        <div class="selector-group">
+            <label class="selector-label">Risk threshold</label>
+            <input
+                type="number"
+                id="riskThreshold"
+                min="1"
+                max="100"
+                step="1"
+                class="selector-select"
+            />
+        </div>
+
 
         <!-- Actions (STACKED) -->
         <div class="selector-actions stacked">
@@ -312,6 +336,133 @@
         </div>
 
     </section>
+    <!-- ================= COLUMN VISIBILITY ================= -->
+    <section class="selector-bar">
+
+        <div class="selector-group wide">
+            <span class="selector-label">Visible columns</span>
+
+            <!-- CORE -->
+            <div class="selector-subgroup">
+                <span class="selector-sublabel">Core</span>
+                <div class="selector-checks grid">
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="title" checked>
+                        Title
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="assignment_type" checked>
+                        Type
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="class" checked>
+                        Class
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="due_at" checked>
+                        Due Date
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="is_completed" checked>
+                        Completed
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="grade" checked>
+                        Grade
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="is_graded" checked>
+                        Graded
+                    </label>
+                </div>
+            </div>
+
+            <!-- SIMPLE -->
+            <div class="selector-subgroup">
+                <span class="selector-sublabel">Details</span>
+                <div class="selector-checks grid">
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="ponderation">
+                        Weight
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="pass_grade">
+                        Passing Grade
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="difficulty">
+                        Difficulty
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="expected_grade">
+                        Expected Grade
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="finished_at">
+                        Finished At
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="estimated_minutes">
+                        Estimated Time
+                    </label>
+                </div>
+            </div>
+
+            <!-- COMPUTED -->
+            <div class="selector-subgroup">
+                <span class="selector-sublabel">Computed</span>
+                <div class="selector-checks grid">
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="study_minutes">
+                        Study Minutes
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="study_session_count">
+                        Study Sessions
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="days_until_due">
+                        Days Until Due
+                    </label>
+                </div>
+            </div>
+
+            <!-- ADVANCED -->
+            <div class="selector-subgroup">
+                <span class="selector-sublabel">Advanced analytics</span>
+                <div class="selector-checks grid">
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="risk_score">
+                        Risk Score
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="effort_efficiency">
+                        Effort Efficiency
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="volatility">
+                        Volatility
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="deadline_sensitivity">
+                        Deadline Sensitivity
+                    </label>
+                    <label class="selector-check">
+                        <input type="checkbox" name="column_visibility" value="predictability_confidence">
+                        Predictability
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="selector-actions stacked">
+            <button class="full-btn" type="button">
+                Apply column visibility
+            </button>
+        </div>
+
+    </section>
+
 
 
 

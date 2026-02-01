@@ -28,6 +28,10 @@ export function getAssignmentSelectorState(root = document) {
     // ------------------------- SORT BY -------------------------
     const sortBy = root.querySelector('#assignmentSortBy')?.value ?? "name_asc";
 
+    // ------------------------- RISK FILTER -------------------------
+    const riskFilterMode = root.querySelector('#riskFilterMode')?.value ?? "none";
+    const riskThreshold = root.querySelector('#riskThreshold')?.value ?? null;
+
     return {
         tableLayout,
         dueStatus,
@@ -36,6 +40,9 @@ export function getAssignmentSelectorState(root = document) {
         created,
         assignmentTypes: finalAssignmentTypes,
         sortCategory,
-        sortBy
+        sortBy,
+        riskFilterMode,
+        riskThreshold
     };
+
 }

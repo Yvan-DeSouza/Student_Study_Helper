@@ -2,6 +2,10 @@ from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
 from app.extensions import db
 from app.forms import RegisterForm, LoginForm
+from app.services.columns.registry import COLUMN_REGISTRY
+from app.services.defaults.classes import CLASS_TYPE_COLORS, CLASS_TYPES, IMPORTANCE_LEVELS
+from app.services.defaults.assignments import ASSIGNMENT_TYPE_COLORS, ASSIGNMENT_TYPES
+
 from app.models.user import (
     User,
     UserPreferences,
@@ -16,45 +20,8 @@ auth = Blueprint('auth', __name__)
 
 
 
-DEFAULT_CLASS_COLORS = {
-    "math": "#F50000",
-    "science": "#16a34a",
-    "language": "#FF7B00",
-    "social_science": "#db2777",
-    "art": "#9333ea",
-    "engineering": "#0011FF",
-    "technology": "#00BFFF",
-    "finance": "#D2B604",
-    "other": "#6D6D69"
-}
 
-DEFAULT_ASSIGNMENT_COLORS = {
-    "homework": "#2421eb",
-    "quiz": "#22f50b",
-    "project": "#0975f0",
-    "writing": "#365a04",
-    "test": "#ef8644",
-    "exam": "#ef4444",
-    "lab_report": "#00ffe1",
-    "presentation": "#630101",
-    "reading": "#ffff00",
-    "other": "#7c800a"
-}
 
-DEFAULT_ASSIGNMENT_COLUMNS = [
-    "name",
-    "class",
-    "type",
-    "due_date",
-    "completed",
-    "grade",
-    "graded",
-    "ponderation",
-    "pass_grade",
-    "finished_at",
-    "difficulty",
-    "expected_grade"
-]
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -75,23 +42,22 @@ def register():
         db.session.flush()  # ensures user_id exists
 
 
-        for column in DEFAULT_ASSIGNMENT_COLUMNS:
+        for col in COLUMN_REGISTRY.values():
             db.session.add(
                 ShownAssignmentColumn(
                     user_id=new_user.user_id,
-                    column_key=column,
-                    is_shown=True,
-                    page_name="assignments"
+                    page_name="assignments",
+                    column_key=col.key,
+                    is_shown=col.default_shown
                 )
             )
+
 
 
         # ---------------- USER PREFERENCES ----------------
         db.session.add(UserPreferences(user_id=new_user.user_id))
 
         # ---------------- CLASS VIEW PREFERENCES ----------------
-        ALL_IMPORTANCE_VALUES = ["high", "medium", "low", "none"]
-        ALL_CLASS_TYPES = list(DEFAULT_CLASS_COLORS.keys())
 
         for page in ("classes", "assignments"):
             db.session.add(ClassViewPreferences(
@@ -101,8 +67,8 @@ def register():
                 status_filter="all",
 
                 # IMPORTANT: JSONB arrays
-                filter_importance=ALL_IMPORTANCE_VALUES,
-                filter_class_types=ALL_CLASS_TYPES
+                filter_importance=IMPORTANCE_LEVELS,
+                filter_class_types=CLASS_TYPES
             ))
 
 
@@ -110,24 +76,26 @@ def register():
         # ---------------- ASSIGNMENT VIEW PREFERENCES ----------------
         db.session.add(AssignmentViewPreferences(
             user_id=new_user.user_id,
-            filter_assignment_types={k: True for k in DEFAULT_ASSIGNMENT_COLORS}
+            filter_assignment_types=ASSIGNMENT_TYPES     
         ))
 
         # ---------------- CLASS TYPE COLORS ----------------
-        for class_type, color in DEFAULT_CLASS_COLORS.items():
+        for class_type, color in CLASS_TYPE_COLORS.items():
             db.session.add(UserClassTypeColor(
                 user_id=new_user.user_id,
                 class_type=class_type,
                 color=color
             ))
+        # ---------------- Assignment TYPE COLORS ----------------
 
-        # ---------------- ASSIGNMENT TYPE COLORS ----------------
-        for assignment_type, color in DEFAULT_ASSIGNMENT_COLORS.items():
+
+        for assignment_type, color in ASSIGNMENT_TYPE_COLORS.items():
             db.session.add(UserAssignmentTypeColor(
                 user_id=new_user.user_id,
                 assignment_type=assignment_type,
                 color=color
             ))
+
 
         db.session.commit()
         login_user(new_user)
