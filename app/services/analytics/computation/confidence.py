@@ -36,3 +36,27 @@ def compute_predictability_confidence(
             "Low"
         ),
     }
+
+
+# =================== COLUMN ADAPTER ===================
+
+def compute_predictability_confidence_column(
+    *,
+    target_assignment: dict,
+    past_assignments: list[dict],
+    now=None,
+):
+    """
+    Confidence is derived from analytics outputs.
+    For now: return None if insufficient data.
+    """
+
+    sample_count = len([p for p in past_assignments if p.get("grade") is not None])
+    if sample_count < 3:
+        return None
+
+    # Placeholder until pipeline aggregation exists
+    return {
+        "confidence": 0.5,
+        "bucket": "Medium",
+    }

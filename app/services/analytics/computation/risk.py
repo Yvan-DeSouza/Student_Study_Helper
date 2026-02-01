@@ -234,3 +234,41 @@ def aggregate_weekly_risk_components(df, week_col='week'):
     
     weekly = df.groupby(week_col)[existing_cols].mean().reset_index()
     return weekly
+
+# =================== COLUMN ADAPTER ===================
+
+def compute_assignment_risk_column(
+    *,
+    target_assignment: dict,
+    past_assignments: list[dict],
+    now=None,
+):
+    """
+    Adapter for column system.
+    Builds components, then calls compute_assignment_risk.
+    """
+
+    if now is None:
+        now = datetime.now(timezone.utc)
+
+    days_until_due = compute_days_until_due(
+        target_assignment.get("due_at"),
+        now,
+    )
+
+    components = {
+        "time_pressure": time_pressure_score(days_until_due),
+        "difficulty": normalize_1_to_10(
+            pd.Series([target_assignment.get("difficulty")])
+        ).iloc[0]
+        if target_assignment.get("difficulty") is not None else 0.0,
+        "history": historical_risk_from_history(
+            target_assignment["class_type"],
+            target_assignment["assignment_type"],
+            target_assignment["class_id"],
+            past_assignments,
+        ),
+        "overlap": 0.0,  # placeholder (future workload logic)
+    }
+
+    return compute_assignment_risk(components)

@@ -97,3 +97,18 @@ def compute_deadline_sensitivity(
         "samples": len(delays),
         "bucket": bucket,
     }
+
+# =================== COLUMN ADAPTER ===================
+
+def compute_deadline_sensitivity_column(
+    *,
+    target_assignment: dict,
+    past_assignments: list[dict],
+    now=None,
+):
+    return compute_deadline_sensitivity(
+        target_assignment["class_type"],
+        target_assignment["assignment_type"],
+        target_assignment["class_id"],
+        past_assignments,
+    )

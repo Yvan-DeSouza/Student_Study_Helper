@@ -76,3 +76,20 @@ def compute_volatility(
         "samples": len(weights),
         "total_weight": round(total_weight, 3),
     }
+
+
+# =================== COLUMN ADAPTER ===================
+
+def compute_volatility_column(
+    *,
+    target_assignment: dict,
+    past_assignments: list[dict],
+    now=None,
+):
+    return compute_volatility(
+        target_assignment["class_type"],
+        target_assignment["assignment_type"],
+        target_assignment["class_id"],
+        past_assignments,
+        now=now,
+    )

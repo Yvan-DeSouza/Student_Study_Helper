@@ -137,3 +137,20 @@ def outcome_contribution_by_class(assignments):
         k: round(v / total_grade, 3)
         for k, v in totals.items()
     }
+
+# =================== COLUMN ADAPTER ===================
+
+def compute_effort_efficiency(
+    *,
+    target_assignment: dict,
+    past_assignments: list[dict],
+    now=None,
+):
+    """
+    Column adapter for effort efficiency.
+    """
+
+    actual = target_assignment.get("actual_minutes")
+    expected = target_assignment.get("expected_minutes")
+
+    return effort_ratio(actual, expected)
