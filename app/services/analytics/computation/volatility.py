@@ -1,6 +1,7 @@
 from math import exp
 from datetime import datetime, timezone
 from app.services.analytics.computation.expected import composite_assignment_similarity
+from app.services.analytics.computation.result import ComputationResult
 
 
 def compute_volatility(
@@ -69,13 +70,16 @@ def compute_volatility(
 
     volatility = min(1.0, variance / 400)
 
-    return {
-        "volatility": round(volatility, 3),
-        "variance": round(variance, 2),
-        "mean_grade": round(mean, 2),
-        "samples": len(weights),
-        "total_weight": round(total_weight, 3),
-    }
+    return ComputationResult(
+        value=round(volatility, 3),
+        diagnostics={
+            "variance": round(variance, 2),
+            "mean_grade": round(mean, 2),
+            "samples": len(weights),
+            "total_weight": round(total_weight, 3),
+        },
+    )
+
 
 
 # =================== COLUMN ADAPTER ===================

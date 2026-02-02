@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
-
+from app.services.columns.display import ColumnDisplayMode
 from app.services.columns import COLUMN_REGISTRY
 from app.services.columns.categories import NON_HIDEABLE_CATEGORIES
 from app.services.analytics.column_eligibility.base import EligibilityResult
@@ -23,6 +23,7 @@ class ColumnState:
     sortable: bool
     filterable: bool
     selectable: bool
+    display_mode: ColumnDisplayMode
 
     # diagnostics
     lock_reason: Optional[EligibilityResult] = None
@@ -85,6 +86,13 @@ def resolve_column_states(
         filterable = col.capabilities.filterable and not locked
         selectable = col.capabilities.selectable
 
+        if not visible:
+            display_mode = ColumnDisplayMode.HIDDEN
+        elif locked:
+            display_mode = ColumnDisplayMode.LOCKED
+        else:
+            display_mode = ColumnDisplayMode.NORMAL
+
         resolved[key] = ColumnState(
             key=key,
             label=col.label,
@@ -93,7 +101,9 @@ def resolve_column_states(
             sortable=sortable,
             filterable=filterable,
             selectable=selectable,
+            display_mode=display_mode,
             lock_reason=lock_reason,
         )
+
 
     return resolved

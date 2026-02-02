@@ -1,5 +1,6 @@
 from app.services.analytics.computation.expected import composite_assignment_similarity
 from app.services.analytics.config.sensitivity import SENSITIVITY_CONFIG
+from app.services.analytics.computation.result import ComputationResult
 
 
 def rank_values(values):

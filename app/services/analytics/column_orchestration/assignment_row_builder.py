@@ -5,6 +5,11 @@ from app.services.columns import COLUMN_REGISTRY
 from app.services.analytics.column_orchestration.column_state_resolver import ColumnState
 from app.services.analytics.column_eligibility.base import EligibilityResult
 
+from app.services.analytics.computation.result import ComputationResult
+from app.services.analytics.column_eligibility.assignment_registry import (
+    ASSIGNMENT_ELIGIBILITY_CHECKS,
+)
+
 # Computation imports
 from app.services.analytics.computation.risk import compute_assignment_risk_column
 from app.services.analytics.computation.effort import compute_effort_efficiency
@@ -88,38 +93,47 @@ def build_assignment_row(
         # Computed / Advanced columns
         # -------------------------
         compute_fn = COMPUTATION_MAP.get(key)
-
         if compute_fn is None:
-            row[key] = {
-                "value": NOT_APPLICABLE,
-                "locked": False,
-            }
             continue
 
+        assignment_check = ASSIGNMENT_ELIGIBILITY_CHECKS.get(key)
+        if assignment_check:
+            allowed = assignment_check(
+                assignment=assignment,
+                same_type_history_count=assignment.get("same_type_history_count", 0),
+            )
+            if not allowed:
+                row[key] = {
+                    "value": None,
+                    "locked": False,
+                }
+                continue
+
         try:
-            value = compute_fn(
+            result = compute_fn(
                 target_assignment=assignment,
                 past_assignments=all_assignments,
                 now=now,
             )
 
-            if value is None:
-                row[key] = {
-                    "value": NOT_APPLICABLE,
-                    "locked": False,
-                }
-            else:
-                row[key] = {
-                    "value": value,
-                    "locked": False,
-                }
+            if result is None:
+                row[key] = {"value": None, "locked": False}
+                continue
 
-        except Exception as e:
-            # Hard fail safety: computation should never crash table
+            if not isinstance(result, ComputationResult):
+                raise ValueError(f"{key} did not return ComputationResult")
+
             row[key] = {
-                "value": NOT_APPLICABLE,
+                "value": result.value,
+                "meta": result.diagnostics,
                 "locked": False,
-                "error": str(e),
             }
+
+        except Exception:
+            row[key] = {
+                "value": None,
+                "locked": False,
+            }
+
 
     return row

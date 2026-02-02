@@ -119,6 +119,7 @@ def build_assignment_columns():
             "label": state.label,
             "visible": state.visible,
             "locked": state.locked,
+            "display_mode": state.display_mode.value,
             "sortable": state.sortable,
             "filterable": state.filterable,
             "selectable": state.selectable,
@@ -130,6 +131,8 @@ def build_assignment_columns():
         for state in column_states.values()
         if state.visible
     ]
+
+
 
     return jsonify({
         "columns": columns,

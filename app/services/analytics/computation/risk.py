@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 from app.services.analytics.config.risk import RISK_CONFIG
+from app.services.analytics.computation.result import ComputationResult
 
 
 
@@ -270,5 +271,9 @@ def compute_assignment_risk_column(
         ),
         "overlap": 0.0,  # placeholder (future workload logic)
     }
+    risk = compute_assignment_risk(components)
+    return ComputationResult(
+        value=risk["total_risk"],
+        diagnostics=risk["breakdown"],
+    )
 
-    return compute_assignment_risk(components)

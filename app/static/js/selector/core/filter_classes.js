@@ -13,7 +13,7 @@ export async function fetchFilteredClassIds(state, page = "classes") {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    const res = await fetch("/api/select/classes", {
+    const res = await fetch("/api/select/classes2", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -27,6 +27,5 @@ export async function fetchFilteredClassIds(state, page = "classes") {
     }
 
     const data = await res.json();
-    console.log("Filtered class IDs:", data.classes.map(c => String(c.class_id)));
-    return data.classes.map(c => String(c.class_id));
+    return data
 }

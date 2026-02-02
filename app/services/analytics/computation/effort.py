@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from app.services.analytics.computation.result import ComputationResult
+
 
 # =================== EFFORT RATIO ===================
 
@@ -153,4 +155,12 @@ def compute_effort_efficiency(
     actual = target_assignment.get("actual_minutes")
     expected = target_assignment.get("expected_minutes")
 
-    return effort_ratio(actual, expected)
+    return ComputationResult(
+        value=compute_effort_score(actual, expected),
+        diagnostics={
+            "ratio": effort_ratio(actual, expected)
+        },
+    )
+
+
+

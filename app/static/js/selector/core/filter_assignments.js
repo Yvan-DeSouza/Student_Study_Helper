@@ -14,7 +14,7 @@ export async function fetchFilteredAssignments(state, page = "assignments") {
     console.log(payload)
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-    const res = await fetch("/api/select/assignments", {
+    const res = await fetch("/api/select/assignments2", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

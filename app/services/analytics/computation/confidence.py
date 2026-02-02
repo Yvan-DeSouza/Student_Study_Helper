@@ -1,5 +1,6 @@
 from math import exp
 from app.services.analytics.config.confidence import CONFIDENCE_CONFIG
+from app.services.analytics.computation.result import ComputationResult
 
 
 def compute_predictability_confidence(

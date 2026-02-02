@@ -347,31 +347,31 @@
                 <span class="selector-sublabel">Core</span>
                 <div class="selector-checks grid">
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="title" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="title" checked>
                         Title
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="assignment_type" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="assignment_type" checked>
                         Type
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="class" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="class" checked>
                         Class
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="due_at" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="due_at" checked>
                         Due Date
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="is_completed" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="is_completed" checked>
                         Completed
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="grade" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="grade" checked>
                         Grade
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="is_graded" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="is_graded" checked>
                         Graded
                     </label>
                 </div>
@@ -382,27 +382,27 @@
                 <span class="selector-sublabel">Details</span>
                 <div class="selector-checks grid">
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="ponderation">
+                        <input type="checkbox" name="column_visibility" data-column-key="ponderation">
                         Weight
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="pass_grade">
+                        <input type="checkbox" name="column_visibility" data-column-key="pass_grade">
                         Passing Grade
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="difficulty">
+                        <input type="checkbox" name="column_visibility" data-column-key="difficulty">
                         Difficulty
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="expected_grade">
+                        <input type="checkbox" name="column_visibility" data-column-key="expected_grade">
                         Expected Grade
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="finished_at">
+                        <input type="checkbox" name="column_visibility" data-column-key="finished_at">
                         Finished At
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="estimated_minutes">
+                        <input type="checkbox" name="column_visibility" data-column-key="estimated_minutes">
                         Estimated Time
                     </label>
                 </div>
@@ -413,15 +413,15 @@
                 <span class="selector-sublabel">Computed</span>
                 <div class="selector-checks grid">
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="study_minutes">
+                        <input type="checkbox" name="column_visibility" data-column-key="study_minutes">
                         Study Minutes
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="study_session_count">
+                        <input type="checkbox" name="column_visibility" data-column-key="study_session_count">
                         Study Sessions
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="days_until_due">
+                        <input type="checkbox" name="column_visibility" data-column-key="days_until_due">
                         Days Until Due
                     </label>
                 </div>
@@ -432,23 +432,23 @@
                 <span class="selector-sublabel">Advanced analytics</span>
                 <div class="selector-checks grid">
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="risk_score">
+                        <input type="checkbox" name="column_visibility" data-column-key="risk_score">
                         Risk Score
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="effort_efficiency">
+                        <input type="checkbox" name="column_visibility" data-column-key="effort_efficiency">
                         Effort Efficiency
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="volatility">
+                        <input type="checkbox" name="column_visibility" data-column-key="volatility">
                         Volatility
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="deadline_sensitivity">
+                        <input type="checkbox" name="column_visibility" data-column-key="deadline_sensitivity">
                         Deadline Sensitivity
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" value="predictability_confidence">
+                        <input type="checkbox" name="column_visibility" data-column-key="predictability_confidence">
                         Predictability
                     </label>
                 </div>
@@ -480,7 +480,7 @@
 
 
     <!-- ===== SINGLE TABLE MODE ===== -->
-    <div class="card assignments-table-card" data-table-mode="single">
+    <div class="card assignments-table-card" data-table-mode="single"  data-column-table="assignments">
         <div class="assignments-table-scroll">
             <!-- TABLE HEADER BAR -->
             <div class="table-header-bar">
@@ -498,14 +498,14 @@
 
             {% set rows = assignments %}
             {% set show_class_column = true %}
-            {% include "partials/assignments_table.html" %}
+            <div class="assignments-table-mount"></div>
         </div>
     </div>
 
 
 
         <!-- ===== PER CLASS MODE ===== -->
-        <div class="per-class-wrapper hidden" data-table-mode="per_class">
+        <div class="per-class-wrapper hidden" data-table-mode="per_class" data-column-table="assignments">
             {% for class_name, rows in assignments_by_class.items() %}
                 {% set class_id = rows[0].class_id if rows else None %}
                 <div class="card assignments-table-card per-class-card" {% if class_id %}data-class-id="{{ class_id }}"{% endif %}>
@@ -526,7 +526,8 @@
 
                         {% set rows = rows %}
                         {% set show_class_column = false %}
-                        {% include "partials/assignments_table.html" %}
+                        <div class="assignments-table-mount"></div>
+
                     </div>
                 </div>
 
