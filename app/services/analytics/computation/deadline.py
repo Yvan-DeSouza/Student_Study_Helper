@@ -1,3 +1,4 @@
+
 from app.services.analytics.computation.expected import composite_assignment_similarity
 from app.services.analytics.config.sensitivity import SENSITIVITY_CONFIG
 from app.services.analytics.computation.result import ComputationResult
@@ -99,7 +100,9 @@ def compute_deadline_sensitivity(
         "bucket": bucket,
     }
 
+
 # =================== COLUMN ADAPTER ===================
+
 
 def compute_deadline_sensitivity_column(
     *,
@@ -111,13 +114,19 @@ def compute_deadline_sensitivity_column(
         target_assignment["class_type"],
         target_assignment["assignment_type"],
         target_assignment["class_id"],
-        past_assignments
+        past_assignments,
     )
+
+    # Guard: compute_deadline_sensitivity returns None when insufficient data
+    # (< 2 comparable past assignments). Row builder handles None correctly.
+    if sensitivity is None:
+        return None
+
     return ComputationResult(
-        value=sensitivity['sensitivity'] if sensitivity else None,
-            diagnostics = {
-                "rho": sensitivity["rho"],
-                "samples": sensitivity["samples"],
-                "bucket": sensitivity["bucket"],
-            }
+        value=sensitivity["sensitivity"],
+        diagnostics={
+            "rho": sensitivity["rho"],
+            "samples": sensitivity["samples"],
+            "bucket": sensitivity["bucket"],
+        },
     )

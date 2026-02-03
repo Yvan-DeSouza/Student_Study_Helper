@@ -71,11 +71,28 @@ class Assignment(db.Model):
             .where(StudySession.assignment_id == cls.assignment_id)
             .scalar_subquery()
         )
-    def to_analytics_dict(self) -> dict:
+    def to_analytics_dict(self, now: datetime = None) -> dict:
         """
         Canonical normalization for analytics layer.
         No ORM objects should escape past this boundary.
+
+        Args:
+            now: current timestamp for computing time-relative fields.
+                 Defaults to current UTC time if not provided.
         """
+
+        if now is None:
+            now = datetime.now(timezone.utc)
+
+        # -------------------------
+        # days_until_due: integer days until due_at, or None if no due date.
+        # Negative = overdue.
+        # -------------------------
+        days_until_due = (
+            (self.due_at - now).days
+            if self.due_at is not None
+            else None
+        )
 
         return {
             "assignment_id": self.assignment_id,
@@ -102,6 +119,9 @@ class Assignment(db.Model):
             # Computed / hybrid fields
             "study_minutes": self.study_minutes,
             "study_session_count": self.study_session_count,
+
+            # Time-relative computed field
+            "days_until_due": days_until_due,
         }
 
     

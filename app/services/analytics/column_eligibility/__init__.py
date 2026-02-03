@@ -1,43 +1,41 @@
-# app/services/analytics/column_eligibility/__init__.py
+"""
 
-from datetime import datetime
+Orchestrates USER-LEVEL eligibility for all advanced columns.
+This is the only entry point the route needs.
+
+Rules:
+  - Computes UserStats exactly once.
+  - Calls each advanced column's user eligibility check.
+  - Returns Dict[column_key, EligibilityResult].
+  - Does NOT run assignment-level checks (that's the row builder's job).
+"""
+
 from typing import Dict, List
+from datetime import datetime
 
-from app.services.columns import COLUMN_REGISTRY
-from app.services.analytics.column_eligibility.base import EligibilityResult, eligible_result
-from app.services.analytics.column_eligibility.user_stats import compute_user_stats
+from app.services.analytics.column_eligibility.base import EligibilityResult
+from app.services.analytics.column_eligibility.user_stats import (
+    UserStats,
+    compute_user_stats,
+)
 
-# Import per-column eligibility checks
-from app.services.analytics.column_eligibility.assignment.deadline_sensitivity import (
-    check_deadline_sensitivity_user_eligibility,
+# Each advanced column's USER eligibility check
+from app.services.analytics.column_eligibility.assignment.risk_score import (
+    check_risk_score_user_eligibility,
 )
 from app.services.analytics.column_eligibility.assignment.effort_efficiency import (
     check_effort_efficiency_user_eligibility,
 )
-from app.services.analytics.column_eligibility.assignment.risk_score import (
-    check_risk_score_user_eligibility,
-)
 from app.services.analytics.column_eligibility.assignment.volatility import (
     check_volatility_user_eligibility,
 )
-# predictability_confidence can be added later
+from app.services.analytics.column_eligibility.assignment.deadline_sensitivity import (
+    check_deadline_sensitivity_user_eligibility,
+)
+from app.services.analytics.column_eligibility.assignment.predictability_confidence import (
+    check_predictability_confidence_user_eligibility,
+)
 
-
-# -------------------------
-# User-level eligibility map
-# -------------------------
-
-USER_ELIGIBILITY_CHECKS = {
-    "deadline_sensitivity": check_deadline_sensitivity_user_eligibility,
-    "effort_efficiency": check_effort_efficiency_user_eligibility,
-    "risk_score": check_risk_score_user_eligibility,
-    "volatility": check_volatility_user_eligibility,
-}
-
-
-# -------------------------
-# Orchestrator
-# -------------------------
 
 def compute_all_eligibility(
     *,
@@ -45,38 +43,52 @@ def compute_all_eligibility(
     now: datetime,
 ) -> Dict[str, EligibilityResult]:
     """
-    Computes USER-LEVEL eligibility for all columns that require it.
+    Runs user-level eligibility for every advanced column.
 
-    Returns:
-        Dict[column_key -> EligibilityResult]
+    Input:
+        assignments — the full list of assignment dicts for this user
+                      (already normalized via to_analytics_dict)
+        now         — current timestamp
+
+    Output:
+        { column_key: EligibilityResult }
+
+    Only advanced columns that require_eligibility appear here.
+    Simple / core / computed columns are never checked.
     """
 
+    # -------------------------
+    # Step 1: aggregate stats once
+    # -------------------------
+    stats: UserStats = compute_user_stats(assignments, now)
+
+    # -------------------------
+    # Step 2: run each user check
+    # -------------------------
     results: Dict[str, EligibilityResult] = {}
 
-    # Compute user stats ONCE
-    stats = compute_user_stats(assignments, now)
+    # --- risk_score ---
+    # signature: (stats, req=default)
+    results["risk_score"] = check_risk_score_user_eligibility(stats)
 
-    for key, col in COLUMN_REGISTRY.items():
-        if not col.requires_eligibility:
-            continue
+    # --- effort_efficiency ---
+    # signature: (stats, assignments, req=default)
+    # This one is special — it needs the raw assignment list to count
+    # assignments_with_expected_minutes (not a UserStats field).
+    results["effort_efficiency"] = check_effort_efficiency_user_eligibility(
+        stats, assignments
+    )
 
-        check_fn = USER_ELIGIBILITY_CHECKS.get(key)
+    # --- volatility ---
+    # signature: (stats, req=default)
+    results["volatility"] = check_volatility_user_eligibility(stats)
 
-        if check_fn is None:
-            # Fail-safe: column exists but no rule yet
-            results[key] = eligible_result()
-            continue
+    # --- deadline_sensitivity ---
+    # signature: (stats, req=default)
+    results["deadline_sensitivity"] = check_deadline_sensitivity_user_eligibility(stats)
 
-        # Some checks need assignments, others don't
-        try:
-            if key == "effort_efficiency":
-                result = check_fn(stats, assignments)
-            else:
-                result = check_fn(stats)
-        except Exception:
-            # Eligibility must NEVER crash the system
-            result = eligible_result()
-
-        results[key] = result
+    # --- predictability_confidence ---
+    # signature: (stats, req=default)
+    results["predictability_confidence"] = check_predictability_confidence_user_eligibility(stats)
 
     return results

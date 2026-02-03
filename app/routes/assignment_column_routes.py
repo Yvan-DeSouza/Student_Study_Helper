@@ -1,3 +1,19 @@
+"""
+
+Single route: POST /api/assignments/columns
+
+Responsibilities:
+    - Auth + input validation
+    - Fetch + normalize assignments
+    - Orchestrate eligibility → column states → row building
+    - Serialize to JSON
+
+Does NOT:
+    - Contain analytics logic
+    - Decide eligibility rules
+    - Know about computation internals
+"""
+
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, timezone
@@ -15,6 +31,7 @@ from app.models.user import ShownAssignmentColumn
 
 
 assignment_columns = Blueprint("assignment_columns", __name__)
+
 
 @assignment_columns.route("/api/assignments/columns", methods=["POST"])
 @login_required
@@ -35,7 +52,7 @@ def build_assignment_columns():
     )
 
     # -------------------------
-    # Fetch assignments (preserve order)
+    # Fetch assignments (preserve order from selector)
     # -------------------------
     assignments = (
         Assignment.query
@@ -55,14 +72,15 @@ def build_assignment_columns():
 
     # -------------------------
     # Normalize assignment dicts
+    # Pass `now` so that time-relative fields (days_until_due) are computed.
     # -------------------------
     assignment_dicts = [
-        a.to_analytics_dict()
+        a.to_analytics_dict(now=now)
         for a in ordered_assignments
     ]
 
     # -------------------------
-    # Eligibility (USER + ASSIGNMENT)
+    # User-level eligibility (runs once, gates advanced columns)
     # -------------------------
     eligibility_results = compute_all_eligibility(
         assignments=assignment_dicts,
@@ -70,22 +88,20 @@ def build_assignment_columns():
     )
 
     # -------------------------
-    # User column preferences
+    # User column preferences (what the user has toggled on/off)
     # -------------------------
-
-    rows = ShownAssignmentColumn.query.filter_by(
+    pref_rows = ShownAssignmentColumn.query.filter_by(
         user_id=current_user.user_id,
         page_name=page,
     ).all()
 
     user_column_prefs = {
         r.column_key: r.is_shown
-        for r in rows
+        for r in pref_rows
     }
 
-
     # -------------------------
-    # Resolve column states
+    # Resolve column states (visible / locked / hidden)
     # -------------------------
     column_states = resolve_column_states(
         page_name=page,
@@ -94,7 +110,7 @@ def build_assignment_columns():
     )
 
     # -------------------------
-    # Build rows
+    # Build rows (assignment-level eligibility + computation live here)
     # -------------------------
     rows = [
         {
@@ -111,7 +127,7 @@ def build_assignment_columns():
     ]
 
     # -------------------------
-    # Column metadata
+    # Column metadata for the frontend
     # -------------------------
     columns = [
         {
@@ -131,8 +147,6 @@ def build_assignment_columns():
         for state in column_states.values()
         if state.visible
     ]
-
-
 
     return jsonify({
         "columns": columns,
