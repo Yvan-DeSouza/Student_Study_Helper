@@ -107,9 +107,17 @@ def compute_deadline_sensitivity_column(
     past_assignments: list[dict],
     now=None,
 ):
-    return compute_deadline_sensitivity(
+    sensitivity = compute_deadline_sensitivity(
         target_assignment["class_type"],
         target_assignment["assignment_type"],
         target_assignment["class_id"],
-        past_assignments,
+        past_assignments
+    )
+    return ComputationResult(
+        value=sensitivity['sensitivity'] if sensitivity else None,
+            diagnostics = {
+                "rho": sensitivity["rho"],
+                "samples": sensitivity["samples"],
+                "bucket": sensitivity["bucket"],
+            }
     )

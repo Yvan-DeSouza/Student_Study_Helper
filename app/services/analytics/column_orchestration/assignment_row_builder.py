@@ -100,14 +100,13 @@ def build_assignment_row(
         if assignment_check:
             allowed = assignment_check(
                 assignment=assignment,
-                same_type_history_count=assignment.get("same_type_history_count", 0),
+                now=now,
             )
             if not allowed:
-                row[key] = {
-                    "value": None,
-                    "locked": False,
-                }
+                row[key] = {"value": None, "locked": False}
                 continue
+
+
 
         try:
             result = compute_fn(

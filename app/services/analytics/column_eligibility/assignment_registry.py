@@ -10,6 +10,10 @@ from app.services.analytics.column_eligibility.assignment.effort_efficiency impo
 from app.services.analytics.column_eligibility.assignment.risk_score import (
     check_risk_score_assignment_eligibility,
 )
+from app.services.analytics.column_eligibility.assignment.risk_score import (
+    check_predictabilty_confidence_user_eligibility,
+)
+
 
 
 ASSIGNMENT_ELIGIBILITY_CHECKS = {
@@ -17,4 +21,5 @@ ASSIGNMENT_ELIGIBILITY_CHECKS = {
     "deadline_sensitivity": check_deadline_sensitivity_assignment_eligibility,
     "effort_efficiency": check_effort_efficiency_assignment_eligibility,
     "risk_score": check_risk_score_assignment_eligibility,
+    'predictability_confidence': check_predictabilty_confidence_user_eligibility
 }

@@ -1,5 +1,7 @@
 # services/analytics/config/confidence.py
 from dataclasses import dataclass
+from math import exp
+from app.services.analytics.computation.result import ComputationResult
 
 @dataclass(frozen=True)
 class ConfidenceConfig:

@@ -274,6 +274,8 @@ def compute_assignment_risk_column(
     risk = compute_assignment_risk(components)
     return ComputationResult(
         value=risk["total_risk"],
-        diagnostics=risk["breakdown"],
+        diagnostics={
+            'breakdown':risk["breakdown"]
+        }
     )
 

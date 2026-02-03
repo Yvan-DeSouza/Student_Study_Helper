@@ -57,7 +57,11 @@ def compute_predictability_confidence_column(
         return None
 
     # Placeholder until pipeline aggregation exists
-    return {
-        "confidence": 0.5,
-        "bucket": "Medium",
-    }
+    return (
+        ComputationResult(
+            value = 0.5,
+            diagnostics={
+                "sample_count": sample_count
+            }
+        )
+    )
