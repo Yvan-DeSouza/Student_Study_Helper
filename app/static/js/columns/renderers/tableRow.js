@@ -19,7 +19,7 @@ export function renderTableRow({
         });
         tr.appendChild(td);
     }
-
+    console.log("Rendered row:", tr);
     adapter?.afterRowRender(tr, rowData);
 
     return tr;

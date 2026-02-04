@@ -15,6 +15,9 @@ export async function refreshAssignmentsTable() {
     // Fetch filtered class IDs
     const classData = await fetchFilteredClassIds(classState, 'assignments');
     const eligibleClassIds = classData.class_ids || [];
+    console.log("eligibleClassIds")
+
+    console.log(eligibleClassIds)
 
     // Fetch filtered assignments
     const assignmentData = await fetchFilteredAssignments(assignmentState);
@@ -41,17 +44,19 @@ export async function refreshAssignmentsTable() {
         if (perClassWrapper) perClassWrapper.innerHTML = "";
         return;
     }
-
+   
     // Fetch column data
     const { columns, rows } = await fetchAssignmentColumns({
         assignmentIds,
         page: "assignments",
     });
 
+
     // Filter rows to only include those from eligible classes
     const filteredRows = rows.filter(row => 
-        eligibleClassIds.includes(String(row.class_id))
+        eligibleClassIds.includes(parseInt(row.class_id))
     );
+    console.log(`[Assignments] Building table with  rows`);
 
     if (assignmentState.tableLayout === "per_class") {
         // Per-class mode: dynamically create cards

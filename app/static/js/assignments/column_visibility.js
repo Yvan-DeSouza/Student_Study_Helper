@@ -3,8 +3,10 @@ import { emitRefresh } from '../core/refreshBus.js';
 
 export function initColumnVisibility() {
     loadColumnPreferences();
+    console.log("[Column Visibility] Initialized");
     
     const applyBtn = document.getElementById("applyColumnVisibility");
+    
     if (applyBtn) {
         applyBtn.addEventListener("click", handleApplyColumnVisibility);
     }

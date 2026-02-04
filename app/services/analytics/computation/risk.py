@@ -1,4 +1,4 @@
-from app.services.analytics.computation.expected import composite_assignment_similarity
+from app.services.analytics.computation.expected import composite_assignment_similarity, estimate_expected_difficulty
 from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
@@ -181,6 +181,7 @@ def compute_assignment_risk(components, weights=None):
         "breakdown": dict of weighted contributions
     }
     """
+    print(components)
 
     if weights is None:
         weights = RISK_CONFIG.COMPONENT_WEIGHTS
@@ -262,7 +263,7 @@ def compute_assignment_risk_column(
         "difficulty": normalize_1_to_10(
             pd.Series([target_assignment.get("difficulty")])
         ).iloc[0]
-        if target_assignment.get("difficulty") is not None else 0.0,
+        if target_assignment.get("difficulty") is not None else estimate_expected_difficulty(target_assignment["class_type"], target_assignment["assignment_type"], target_assignment["class_id"], past_assignments),
         "history": historical_risk_from_history(
             target_assignment["class_type"],
             target_assignment["assignment_type"],
