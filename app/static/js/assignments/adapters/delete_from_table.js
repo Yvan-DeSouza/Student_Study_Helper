@@ -1,25 +1,25 @@
-// Attach click listeners to table rows in delete mode
+
 import { openDeleteAssignmentModal } from "../modals/delete_assignment.js";
 
 export function initDeleteFromTable() {
-    document.querySelectorAll(".assignments-table-card").forEach(card => {
-        const rows = card.querySelectorAll("tbody tr");
+    // EVENT DELEGATION: Listen on document for dynamically created rows
+    document.addEventListener("click", handleRowClick);
+}
 
-        rows.forEach(row => {
-            row.addEventListener("click", async e => {
-                if (card.dataset.deleteMode !== "true") return;
+async function handleRowClick(e) {
+    const row = e.target.closest("tr[data-assignment-id]");
+    if (!row) return;
 
-                e.stopPropagation();
-                e.preventDefault();
+    const card = row.closest(".assignments-table-card");
+    if (!card || card.dataset.deleteMode !== "true") return;
 
-                const data = {
-                    id: row.dataset.assignmentId,
-                    title: row.dataset.title,
-                };
+    e.stopPropagation();
+    e.preventDefault();
 
-                // Await the modal opening (which now fetches summary internally)
-                await openDeleteAssignmentModal(data);
-            });
-        });
-    });
+    const data = {
+        id: row.dataset.assignmentId,
+        title: row.dataset.title,
+    };
+
+    await openDeleteAssignmentModal(data);
 }

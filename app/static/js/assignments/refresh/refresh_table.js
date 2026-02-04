@@ -1,79 +1,127 @@
 import { getAssignmentSelectorState } from '../../selector/core/state_assignments.js';
+import { getClassSelectorState } from '../../selector/core/state_classes.js';
 import { fetchFilteredAssignments } from '../../selector/core/filter_assignments.js';
+import { fetchFilteredClassIds } from '../../selector/core/filter_classes.js';
 import { fetchAssignmentColumns } from '../../columns/api/fetchColumns.js';
 import { buildAssignmentTable } from '../../columns/builders/buildTable.js';
 
 export async function refreshAssignmentsTable() {
-    console.log("[Assignments] Refreshing table (API)");
+    console.log("[Assignments] Refreshing table");
 
+    // Get current filter states
     const assignmentState = getAssignmentSelectorState();
-    const data = await fetchFilteredAssignments(assignmentState);
+    const classState = getClassSelectorState();
+
+    // Fetch filtered class IDs
+    const classData = await fetchFilteredClassIds(classState, 'assignments');
+    const eligibleClassIds = classData.class_ids || [];
+
+    // Fetch filtered assignments
+    const assignmentData = await fetchFilteredAssignments(assignmentState);
 
     let assignmentIds = [];
 
-    if (data.layout === "single") {
-        assignmentIds = data.assignment_ids;
+    if (assignmentState.tableLayout === "single") {
+        // Filter assignments by eligible classes
+        assignmentIds = (assignmentData.assignment_ids || []).filter(id => {
+            // We need to check if assignment belongs to eligible class
+            // This will be filtered properly by the backend based on class_id
+            return true; // Backend already filtered, but we'll cross-reference in rows
+        });
     } else {
-        assignmentIds = data.classes.flatMap(c => c.assignment_ids);
+        // Per-class mode: get all assignment IDs from all classes
+        assignmentIds = (assignmentData.classes || []).flatMap(c => c.assignment_ids);
     }
 
-    if (!assignmentIds.length) return;
+    if (!assignmentIds.length) {
+        // Clear tables if no assignments
+        const singleMount = document.querySelector('.assignments-table-wrapper [data-table-mode="single"] .assignments-table-mount');
+        const perClassWrapper = document.querySelector('.assignments-table-wrapper [data-table-mode="per_class"]');
+        if (singleMount) singleMount.innerHTML = "";
+        if (perClassWrapper) perClassWrapper.innerHTML = "";
+        return;
+    }
 
-
-
+    // Fetch column data
     const { columns, rows } = await fetchAssignmentColumns({
         assignmentIds,
         page: "assignments",
     });
-    if (data.layout === "per_class") {
-        const wrapper = document.querySelector(
-            ".assignments-table-wrapper [data-table-mode='per_class']"
-        );
+
+    // Filter rows to only include those from eligible classes
+    const filteredRows = rows.filter(row => 
+        eligibleClassIds.includes(String(row.class_id))
+    );
+
+    if (assignmentState.tableLayout === "per_class") {
+        // Per-class mode: dynamically create cards
+        const wrapper = document.querySelector('.assignments-table-wrapper [data-table-mode="per_class"]');
+        if (!wrapper) return;
 
         wrapper.innerHTML = "";
 
-        for (const cls of data.classes) {
-            const card = document.querySelector(
-                `.per-class-card[data-class-id="${cls.class_id}"]`
-            );
+        // Group rows by class
+        const rowsByClass = {};
+        filteredRows.forEach(row => {
+            const classId = row.class_id;
+            if (!rowsByClass[classId]) {
+                rowsByClass[classId] = [];
+            }
+            rowsByClass[classId].push(row);
+        });
 
-            if (!card) continue;
+        // Create a card for each class (in order of eligible classes)
+        for (const classId of eligibleClassIds) {
+            const classRows = rowsByClass[classId];
+            if (!classRows || classRows.length === 0) continue;
 
-            const mount = card.querySelector(".assignments-table-mount");
+            // Extract class name from first row's metadata
+            const className = classRows[0]._meta?.class || "Unknown Class";
 
-            const rowsForClass = rows.filter(r =>
-                cls.assignment_ids.includes(r.assignment_id)
-            );
+            // Create card
+            const card = document.createElement("div");
+            card.className = "card assignments-table-card per-class-card";
+            card.dataset.classId = classId;
 
+            card.innerHTML = `
+                <div class="assignments-table-scroll">
+                    <div class="table-header-bar">
+                        <h3 class="table-title">${className}</h3>
+                        <div class="table-actions">
+                            <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
+                            <button class="btn-tiny table-edit-btn">✏ Edit</button>
+                            <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
+                            <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
+                            <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
+                        </div>
+                    </div>
+                    <div class="assignments-table-mount"></div>
+                </div>
+            `;
+
+            wrapper.appendChild(card);
+
+            // Build table for this class
+            const mount = card.querySelector('.assignments-table-mount');
             buildAssignmentTable({
                 container: mount,
                 columns,
-                rows: rowsForClass
+                rows: classRows
             });
         }
+    } else {
+        // Single table mode
+        const container = document.querySelector('.assignments-table-wrapper [data-table-mode="single"] .assignments-table-mount');
+        if (!container) return;
 
-        return;
+        buildAssignmentTable({
+            container,
+            columns,
+            rows: filteredRows,
+        });
     }
 
-
-
-    const container = document.querySelector(
-        assignmentState.tableLayout === "single"
-            ? ".assignments-table-wrapper [data-table-mode='single'] .assignments-table-mount"
-            : ".assignments-table-wrapper [data-table-mode='per_class']"
-    );
-
-
-    if (!container) return;
-
-
-    buildAssignmentTable({
-        container,
-        columns,
-        rows,
-    });
-
-    // re-init interactive behavior
+    // Re-init interactive behaviors
     const [
         { initInlineEditing },
         { initCompletion },

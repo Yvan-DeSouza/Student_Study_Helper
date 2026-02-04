@@ -347,31 +347,31 @@
                 <span class="selector-sublabel">Core</span>
                 <div class="selector-checks grid">
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" data-column-key="title" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="title" checked disabled>
                         Title
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" data-column-key="assignment_type" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="assignment_type" checked disabled>
                         Type
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" data-column-key="class" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="class" checked disabled>
                         Class
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" data-column-key="due_at" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="due_at" checked disabled>
                         Due Date
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" data-column-key="is_completed" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="is_completed" checked disabled>
                         Completed
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" data-column-key="grade" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="grade" checked disabled>
                         Grade
                     </label>
                     <label class="selector-check">
-                        <input type="checkbox" name="column_visibility" data-column-key="is_graded" checked>
+                        <input type="checkbox" name="column_visibility" data-column-key="is_graded" checked disabled>
                         Graded
                     </label>
                 </div>
@@ -456,86 +456,41 @@
         </div>
 
         <div class="selector-actions stacked">
-            <button class="full-btn" type="button">
+            <button class="full-btn" id="applyColumnVisibility" type="button">
                 Apply column visibility
             </button>
         </div>
 
     </section>
 
-
-
-
-
-
     <!-- ================= Table ================= -->
-    {% set assignments_by_class = {} %}
-    {% for a in assignments %}
-        {% if a.class_name not in assignments_by_class %}
-            {% set _ = assignments_by_class.update({a.class_name: []}) %}
-        {% endif %}
-        {% set _ = assignments_by_class[a.class_name].append(a) %}
-    {% endfor %}
     <section class="assignments-table-wrapper">
 
+        <!-- ===== SINGLE TABLE MODE ===== -->
+        <div class="card assignments-table-card" data-table-mode="single" data-column-table="assignments">
+            <div class="assignments-table-scroll">
+                <!-- TABLE HEADER BAR -->
+                <div class="table-header-bar">
+                    <h3 class="table-title">All Classes</h3>
 
-    <!-- ===== SINGLE TABLE MODE ===== -->
-    <div class="card assignments-table-card" data-table-mode="single"  data-column-table="assignments">
-        <div class="assignments-table-scroll">
-            <!-- TABLE HEADER BAR -->
-            <div class="table-header-bar">
-                <h3 class="table-title">All Classes</h3>
+                    <div class="table-actions">
+                        <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
+                        <button class="btn-tiny table-edit-btn">✏ Edit</button>
+                        <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
 
-                <div class="table-actions">
-                    <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
-                    <button class="btn-tiny table-edit-btn">✏ Edit</button>
-                    <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
-
-                    <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
-                    <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
-                </div>
-            </div>
-
-            {% set rows = assignments %}
-            {% set show_class_column = true %}
-            <div class="assignments-table-mount"></div>
-        </div>
-    </div>
-
-
-
-        <!-- ===== PER CLASS MODE ===== -->
-        <div class="per-class-wrapper hidden" data-table-mode="per_class" data-column-table="assignments">
-            {% for class_name, rows in assignments_by_class.items() %}
-                {% set class_id = rows[0].class_id if rows else None %}
-                <div class="card assignments-table-card per-class-card" {% if class_id %}data-class-id="{{ class_id }}"{% endif %}>
-                    <div class="assignments-table-scroll">
-
-                        <div class="table-header-bar">
-                            <h3 class="table-title">{{ class_name }}</h3>
-
-                            <div class="table-actions">
-                                <button class="btn-tiny table-edit-inline-btn">✏ Edit Inline</button>
-                                <button class="btn-tiny table-edit-btn">✏ Edit</button>
-                                <button class="btn-tiny danger table-delete-btn">🗑 Delete</button>
-
-                                <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
-                                <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
-                            </div>
-                        </div>
-
-                        {% set rows = rows %}
-                        {% set show_class_column = false %}
-                        <div class="assignments-table-mount"></div>
-
+                        <button class="btn-tiny hidden table-save-inline-btn">💾 Save</button>
+                        <button class="btn-tiny hidden table-cancel-inline-btn">✖ Cancel</button>
                     </div>
                 </div>
 
-            {% endfor %}
+                <div class="assignments-table-mount"></div>
+            </div>
         </div>
 
-
-
+        <!-- ===== PER CLASS MODE ===== -->
+        <div class="per-class-wrapper hidden" data-table-mode="per_class" data-column-table="assignments">
+            <!-- Cards will be dynamically created by JS -->
+        </div>
 
     </section>
 

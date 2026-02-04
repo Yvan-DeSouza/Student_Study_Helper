@@ -7,6 +7,7 @@ import { initDeleteFromTable } from './adapters/delete_from_table.js';
 import { initDeleteAssignmentModal } from './modals/delete_assignment.js';
 import { initEditFromTable } from './adapters/edit_from_table.js';
 import { initModals, initUnsavedChangesModal } from './modals.js';
+import { initColumnVisibility } from './column_visibility.js';
 import { refreshAssignmentsTable } from "./refresh/refresh_table.js";
 import { refreshAssignmentCharts } from "./refresh/refresh_charts.js";
 import { refreshAssignmentDeadlines } from "./refresh/refresh_deadlines.js";
@@ -23,13 +24,10 @@ function registerAssignmentListeners() {
     registerRefresh("assignments:charts", refreshAssignmentCharts);
     registerRefresh("assignments:deadlines", refreshAssignmentDeadlines);
     registerRefresh("assignments:row", refreshAssignmentRow);
-    // alias for refreshing all tables (useful when many per-class cards exist)
     registerRefresh("assignments:tables", async (payload) => {
-        // If single layout, behave like table; otherwise refresh whole table area
         await refreshAssignmentsTable(payload || {});
     });
     
-    // Combined refresh for full assignment changes
     registerRefresh("assignments:changed", async () => {
         await refreshAssignmentsTable();
         await refreshAssignmentCharts();
@@ -47,15 +45,6 @@ function cleanup() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Normalize completed attributes
-    document.querySelectorAll("tr[data-completed]").forEach(row => {
-        const raw = row.dataset.completed;
-        row.dataset.completed =
-            raw === "true" || raw === "True" || raw === "1"
-                ? "true"
-                : "false";
-    });
-
     // Initialize modal system
     initModals();
     
@@ -70,8 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initDeleteFromTable();
     initEditFromTable();
     initUnsavedChangesModal();
+    initColumnVisibility();
 
-    // Initialize selector system
+    // Initialize selector system (this will trigger initial table load)
     initAssignmentSelector();
     
     // Initialize sort category
@@ -83,7 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Listen for assignment events and translate into semantic refresh events
     document.addEventListener("assignment:changed", async (e) => {
         const detail = e?.detail || {};
-        // If caller provided an assignmentId, refresh just that row
         if (detail.assignment_id) {
             await emitRefresh({ key: "assignments:row", payload: { assignmentId: detail.assignment_id } });
         } else if (detail.class_id) {
@@ -92,7 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
             await emitRefresh("assignments:changed");
         }
 
-        // Always refresh charts + deadlines as separate semantic events
         await emitRefresh("assignments:charts");
         await emitRefresh("assignments:deadlines");
     });

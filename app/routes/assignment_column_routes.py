@@ -1,5 +1,4 @@
 """
-
 Single route: POST /api/assignments/columns
 
 Responsibilities:
@@ -112,19 +111,39 @@ def build_assignment_columns():
     # -------------------------
     # Build rows (assignment-level eligibility + computation live here)
     # -------------------------
-    rows = [
-        {
-            "assignment_id": a["assignment_id"],
+    rows = []
+    for a_obj, a_dict in zip(ordered_assignments, assignment_dicts):
+        row = {
+            "assignment_id": a_dict["assignment_id"],
+            "class_id": a_obj.class_id,  # Add class_id to row
             **build_assignment_row(
-                assignment=a,
+                assignment=a_dict,
                 all_assignments=assignment_dicts,
                 column_states=column_states,
                 eligibility_results=eligibility_results,
                 now=now,
             ),
         }
-        for a in assignment_dicts
-    ]
+        
+        # Add _meta object with complete assignment data for modals/interactions
+        row["_meta"] = {
+            "title": a_obj.title,
+            "assignment_type": a_obj.assignment_type,
+            "class": a_obj.class_.class_name if a_obj.class_ else "",
+            "class_id": a_obj.class_id,
+            "due_at": a_obj.due_at.isoformat() if a_obj.due_at else None,
+            "finished_at": a_obj.finished_at.isoformat() if a_obj.finished_at else None,
+            "is_completed": a_obj.is_completed,
+            "is_graded": a_obj.is_graded,
+            "grade": float(a_obj.grade) if a_obj.grade is not None else None,
+            "ponderation": a_obj.ponderation,
+            "pass_grade": float(a_obj.pass_grade) if a_obj.pass_grade is not None else None,
+            "expected_grade": float(a_obj.expected_grade) if a_obj.expected_grade is not None else None,
+            "difficulty": a_obj.difficulty,
+            "estimated_minutes": a_obj.estimated_minutes,
+        }
+        
+        rows.append(row)
 
     # -------------------------
     # Column metadata for the frontend

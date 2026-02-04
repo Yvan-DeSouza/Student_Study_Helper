@@ -1,5 +1,6 @@
 import { showModal, closeModal, getPendingNavigation } from './modals.js';
 import { validateInlineGrades, clearInvalidGradeHighlights, collectInlineGradedAssignments } from './utils.js';
+import { emitRefresh } from '../core/refreshBus.js';
 
 let hasUnsavedInlineChanges = false;
 let isSavingInlineChanges = false;
@@ -26,8 +27,6 @@ export function initInlineEditing() {
         const saveBtn = card.querySelector(".table-save-inline-btn");
         const cancelBtn = card.querySelector(".table-cancel-inline-btn");
 
-        const rows = card.querySelectorAll(".assignments-table tbody tr");
-
         if (!editInlineBtn) return;
 
         // Remove old listeners by cloning
@@ -45,7 +44,6 @@ export function initInlineEditing() {
             exitDeleteMode(card);
             card.dataset.editing = "false";
             editBtn?.classList.remove("active");
-            rows.forEach(r => r.classList.remove("editable"));
 
             card.dataset.inlineEditing = "true";
 
@@ -56,17 +54,20 @@ export function initInlineEditing() {
             newSaveBtn.classList.remove("hidden");
             newCancelBtn.classList.remove("hidden");
 
+            // Query rows FRESH at click time
+            const rows = card.querySelectorAll(".assignments-table tbody tr");
+
             rows.forEach(row => {
                 const isGraded = String(row.dataset.graded).toLowerCase() === "true";
-                const gradeCell = row.children[5];
+                const gradeCell = row.querySelector('[data-column-key="grade"]');
+
+                if (!gradeCell) return;
 
                 row.classList.add(isGraded ? "inline-graded" : "inline-not-graded");
 
                 if (isGraded) {
                     let currentGrade = gradeCell.innerText.trim();
-                    // Sanitize: remove non-numeric characters except decimal point and minus sign
                     currentGrade = currentGrade.replace(/[^0-9.\-]/g, '').trim();
-                    // Only use value if it's a valid number, otherwise leave empty
                     const gradeValue = (currentGrade && currentGrade !== "—") ? parseFloat(currentGrade) : "";
                     const gradeValueStr = (gradeValue === "" || isNaN(gradeValue)) ? "" : String(gradeValue);
                     
@@ -102,20 +103,22 @@ export function initInlineEditing() {
             newSaveBtn.classList.add("hidden");
             newCancelBtn.classList.add("hidden");
 
+            const rows = card.querySelectorAll(".assignments-table tbody tr");
             rows.forEach(row => {
                 row.classList.remove("inline-graded", "inline-not-graded");
 
-                const gradeCell = row.children[5];
-                const original = row.dataset.grade || "—";
-                gradeCell.innerText = original;
+                const gradeCell = row.querySelector('[data-column-key="grade"]');
+                if (gradeCell) {
+                    const original = row.dataset.grade || "—";
+                    gradeCell.innerText = original;
+                }
             });
             hasUnsavedInlineChanges = false;
         });
 
-        // Save button - FIX: Prevent multiple clicks
+        // Save button
         newSaveBtn.addEventListener("click", async () => {
             if (isSavingInlineChanges) {
-                console.log("Already saving, ignoring click");
                 return;
             }
             
@@ -146,7 +149,7 @@ export function initInlineEditing() {
             }
         });
 
-        // Delete mode (delegated to deleteAssignment.js, but keep UI toggle here)
+        // Delete mode
         card.dataset.deleteMode = "false";
         deleteBtn?.addEventListener("click", () => {
             const enabled = card.dataset.deleteMode === "true";
@@ -155,24 +158,9 @@ export function initInlineEditing() {
             card.dataset.inlineEditing = "false";
 
             editBtn?.classList.remove("active");
-            rows.forEach(r => {
-                r.classList.remove("editable", "inline-graded", "inline-not-graded");
-            });
 
             card.dataset.deleteMode = (!enabled).toString();
             deleteBtn.classList.toggle("active", !enabled);
-
-            rows.forEach(row => {
-                row.addEventListener("mouseenter", () => {
-                    if (card.dataset.deleteMode === "true") {
-                        row.classList.add("delete-hover");
-                    }
-                });
-
-                row.addEventListener("mouseleave", () => {
-                    row.classList.remove("delete-hover");
-                });
-            });
         });
 
         // Regular edit mode
@@ -184,6 +172,7 @@ export function initInlineEditing() {
             card.dataset.editing = (!enabled).toString();
             editBtn.classList.toggle("active", !enabled);
 
+            const rows = card.querySelectorAll(".assignments-table tbody tr");
             rows.forEach(row => {
                 row.classList.toggle("editable", !enabled);
             });
@@ -195,12 +184,12 @@ function exitDeleteMode(card) {
     card.dataset.deleteMode = "false";
     const deleteBtn = card.querySelector(".table-delete-btn");
     deleteBtn?.classList.remove("active");
-    card.querySelectorAll("tr").forEach(r => r.classList.remove("delete-hover"));
 }
 
 export async function saveInlineGrades(assignments, navUrl = null) {
     const csrf = document.querySelector("meta[name='csrf-token']").content;
     const now = new Date();
+    
     for (const a of assignments) {
         if (!a.finished_at) continue;
 
@@ -214,7 +203,7 @@ export async function saveInlineGrades(assignments, navUrl = null) {
             finished_at: a.finished_at,
             is_graded: true
         };
-        console.log(payload)
+        
         const res = await fetch(`/assignments/${a.id}/update`, {
             method: "PATCH",
             headers: {
@@ -228,41 +217,19 @@ export async function saveInlineGrades(assignments, navUrl = null) {
             alert("Failed to save grades");
             return;
         }
-
-
     }
-    // ================= SINGLE REFRESH EMIT =================
-
-    // Detect table layout
-    const isPerClassMode = document.querySelector(
-        '.assignments-table-card[data-table-mode="per_class"], .per-class-wrapper:not(.hidden)'
-    );
-    // Determine class_id if applicable
-    const classId =
-        assignments.length > 0
-            ? assignments[0].class_id || assignments[0].classId
-            : null;
-
-    if (isPerClassMode && classId) {
-        // Refresh only the affected class table
-        document.dispatchEvent(new CustomEvent("assignment:grade:changed", {
-            detail: { class_id: classId }
-        }));
-    } else {
-        // Refresh entire table (single-table mode)
-        document.dispatchEvent(new CustomEvent("assignment:grade:changed"));
-    }
-
-
 
     hasUnsavedInlineChanges = false;
+
+    // Emit refresh event
+    await emitRefresh("assignments:table");
+    await emitRefresh("assignments:charts");
 
     const pendingUrl = navUrl || getPendingNavigation();
     if (pendingUrl) {
         window.location.href = pendingUrl;
     }
 }
-
 
 export function saveAllInlineGrades(assignments, navUrl = null) {
     return saveInlineGrades(assignments, navUrl);
@@ -330,7 +297,6 @@ export function openInlineFinishDatesModal(assignments, navUrl = null) {
 }
 
 function initFinishDatesModalListeners(navUrl) {
-    // Select all logic
     document.querySelectorAll("input[name='finish_all']").forEach(radio => {
         radio.addEventListener("change", e => {
             const mode = e.target.value;

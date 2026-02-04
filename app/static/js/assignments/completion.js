@@ -1,33 +1,13 @@
-// static/js/assignments/completion.js
+
 import { showModal, closeModal } from './modals.js';
+import { emitRefresh } from '../core/refreshBus.js';
 
 let pendingRow = null;
 let pendingCheckbox = null;
 
 export function initCompletion() {
-    document.querySelectorAll(".completion-checkbox").forEach(cb => {
-        cb.addEventListener("change", e => {
-            e.stopPropagation();
-            e.preventDefault();
-
-            pendingCheckbox = cb;
-            pendingRow = cb.closest("tr");
-
-            const title = pendingRow.dataset.title;
-            const dueAt = pendingRow.dataset.dueAt;
-
-            const wasCompleted = pendingRow.dataset.completed === "true";
-            const wantsCompleted = cb.checked;
-
-            cb.checked = wasCompleted;
-
-            if (wantsCompleted && !wasCompleted) {
-                openCompleteModal(title, dueAt);
-            } else if (!wantsCompleted && wasCompleted) {
-                openUncompleteModal(title);
-            }
-        });
-    });
+    // EVENT DELEGATION: Listen on document for dynamically created checkboxes
+    document.addEventListener("change", handleCheckboxChange);
 
     document.querySelectorAll("input[name='completion_time']").forEach(radio => {
         radio.addEventListener("change", e => {
@@ -37,8 +17,47 @@ export function initCompletion() {
         });
     });
 
-    document.getElementById("confirmUncomplete").addEventListener("click", handleUncomplete);
-    document.getElementById("confirmComplete").addEventListener("click", handleComplete);
+    // Remove old listeners if they exist
+    const uncompleteBtn = document.getElementById("confirmUncomplete");
+    const completeBtn = document.getElementById("confirmComplete");
+    
+    if (uncompleteBtn) {
+        const newUncompleteBtn = uncompleteBtn.cloneNode(true);
+        uncompleteBtn.parentNode.replaceChild(newUncompleteBtn, uncompleteBtn);
+        newUncompleteBtn.addEventListener("click", handleUncomplete);
+    }
+    
+    if (completeBtn) {
+        const newCompleteBtn = completeBtn.cloneNode(true);
+        completeBtn.parentNode.replaceChild(newCompleteBtn, completeBtn);
+        newCompleteBtn.addEventListener("click", handleComplete);
+    }
+}
+
+function handleCheckboxChange(e) {
+    if (!e.target.matches(".completion-checkbox")) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    pendingCheckbox = e.target;
+    pendingRow = e.target.closest("tr");
+
+    if (!pendingRow) return;
+
+    const title = pendingRow.dataset.title;
+    const dueAt = pendingRow.dataset.dueAt;
+
+    const wasCompleted = pendingRow.dataset.completed === "true";
+    const wantsCompleted = e.target.checked;
+
+    e.target.checked = wasCompleted;
+
+    if (wantsCompleted && !wasCompleted) {
+        openCompleteModal(title, dueAt);
+    } else if (!wantsCompleted && wasCompleted) {
+        openUncompleteModal(title);
+    }
 }
 
 function openUncompleteModal(title) {
@@ -64,15 +83,11 @@ async function handleUncomplete() {
     const assignmentId = pendingRow.dataset.assignmentId;
     await sendCompletionUpdate(false, null);
 
-    pendingCheckbox.checked = false;
-    pendingRow.dataset.completed = "false";
-
-    // Emit granular refresh event
-    document.dispatchEvent(new CustomEvent("assignment:completion:changed", {
-        detail: { assignment_id: parseInt(assignmentId) }
-    }));
-
     closeModal("uncompleteConfirmModal");
+    
+    // Emit refresh event
+    await emitRefresh({ key: "assignments:row", payload: { assignmentId: parseInt(assignmentId) } });
+    
     pendingRow = null;
     pendingCheckbox = null;
 }
@@ -102,20 +117,18 @@ async function handleComplete() {
     const assignmentId = pendingRow.dataset.assignmentId;
     await sendCompletionUpdate(true, finishedAt);
     
-    // Emit granular refresh event
-    document.dispatchEvent(new CustomEvent("assignment:completion:changed", {
-        detail: { assignment_id: parseInt(assignmentId) }
-    }));
-    
     closeModal("completeAssignmentModal");
+    
+    // Emit refresh event
+    await emitRefresh({ key: "assignments:row", payload: { assignmentId: parseInt(assignmentId) } });
+    
     pendingRow = null;
     pendingCheckbox = null;
 }
 
 async function sendCompletionUpdate(isCompleted, finishedAt) {
     const id = pendingRow.dataset.assignmentId;
-    console.log("hello")
-    console.log(pendingRow.dataset.graded)
+    
     const res = await fetch(`/assignments/${id}/update`, {
         method: "PATCH",
         headers: {
@@ -123,23 +136,12 @@ async function sendCompletionUpdate(isCompleted, finishedAt) {
             "X-CSRFToken": document.querySelector("meta[name='csrf-token']").content
         },
         body: JSON.stringify({
-            is_graded: pendingRow.dataset.graded,
+            is_graded: pendingRow.dataset.graded === "true",
             finished_at: isCompleted ? finishedAt : null
         })
     });
 
     if (!res.ok) {
         alert("Failed to update completion status");
-        return;
     }
-
-    pendingRow.dataset.completed = isCompleted.toString();
-    pendingCheckbox.checked = isCompleted;
-
-    pendingRow.dataset.finishedAt = finishedAt || "";
-
-    const finishedAtCell = pendingRow.children[9];
-    finishedAtCell.innerText = finishedAt
-        ? new Date(finishedAt).toISOString().split("T")[0]
-        : "—";
 }

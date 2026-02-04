@@ -1,5 +1,3 @@
-// static/js/assignments/utils.js
-
 export function validateInlineGrades(card) {
     let hasInvalid = false;
 
@@ -42,7 +40,8 @@ export function collectInlineGradedAssignments(card) {
         assignments.push({
             id: row.dataset.assignmentId,
             title: row.dataset.title,
-            due_at: row.dataset.dueAt !== "null" ? row.dataset.dueAt : null,
+            class_id: row.dataset.classId,
+            due_at: row.dataset.dueAt || null,
             grade: Number(value),
             finished_at: row.dataset.finishedAt || null
         });
@@ -65,7 +64,8 @@ export function collectAllInlineAssignments() {
             assignments.push({
                 id: row.dataset.assignmentId,
                 title: row.dataset.title,
-                due_at: row.dataset.dueAt !== "null" ? row.dataset.dueAt : null,
+                class_id: row.dataset.classId,
+                due_at: row.dataset.dueAt || null,
                 grade: Number(value),
                 finished_at: row.dataset.finishedAt || null
             });

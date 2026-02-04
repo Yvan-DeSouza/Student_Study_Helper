@@ -1,10 +1,7 @@
-
-
 import { getAssignmentSelectorState } from "../core/state_assignments.js";
 import { getClassSelectorState } from "../core/state_classes.js";
-import { fetchFilteredAssignments } from "../core/filter_assignments.js";
 import { fetchFilteredClassIds } from "../core/filter_classes.js";
-import { applyAssignmentOrdering } from "./apply.js";
+import { refreshAssignmentsTable } from "../../assignments/refresh/refresh_table.js";
 
 const SORT_VALUE_TO_CATEGORY = {
     name_asc: 'name', name_desc: 'name',
@@ -25,22 +22,11 @@ export async function initAssignmentSelector() {
     const container = document.querySelector(".assignments-table-wrapper");
     if (!container) return;
 
-    let allItems = [];
     let currentLayout = "single";
     let pendingLayout = "single";
     let personalPrefs = null;
 
-    // Get all items based on current layout
-    function updateAllItems() {
-        if (currentLayout === "single") {
-            const tbody = container.querySelector('[data-table-mode="single"] tbody');
-            allItems = tbody ? [...tbody.querySelectorAll("tr")] : [];
-        } else {
-            allItems = [...container.querySelectorAll(".per-class-card")];
-        }
-    }
-
-    // Helper function to switch layout display (called during init and apply)
+    // Helper function to switch layout display
     function handleLayoutChange(newLayout) {
         const singleCard = container.querySelector('[data-table-mode="single"]');
         const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
@@ -54,21 +40,15 @@ export async function initAssignmentSelector() {
         }
         
         currentLayout = newLayout;
-        updateAllItems();
     }
 
     // ------------------------- TABLE LAYOUT CHANGE -------------------------
-    // NOTE: Layout change does NOT auto-apply. Must click Apply Filters.
-    // We store the desired layout value but don't switch the display until apply() is called
-
     const layoutSelect = document.getElementById("tableLayout");
     if (layoutSelect) {
         layoutSelect.addEventListener("change", (e) => {
             pendingLayout = e.target.value;
-            // Don't auto-apply - just store the value until user clicks Apply
         });
     }
-
 
     // ------------------------- APPLY PREFS → UI -------------------------
     function applyPreferencesToUI(classPrefs, assignmentPrefs) {
@@ -133,49 +113,13 @@ export async function initAssignmentSelector() {
 
     // ------------------------- APPLY FILTERS -------------------------
     async function apply() {
-        // FIRST: Apply the layout change if it differs from current
+        // Apply layout change if different
         if (pendingLayout !== currentLayout) {
-            const singleCard = container.querySelector('[data-table-mode="single"]');
-            const perClassWrapper = container.querySelector('[data-table-mode="per_class"]');
-            
-            if (pendingLayout === 'single') {
-                singleCard?.classList.remove('hidden');
-                perClassWrapper?.classList.add('hidden');
-            } else {
-                singleCard?.classList.add('hidden');
-                perClassWrapper?.classList.remove('hidden');
-            }
-            
-            currentLayout = pendingLayout;
-            updateAllItems();
+            handleLayoutChange(pendingLayout);
         }
 
-        // THEN: Apply filters with the potentially new layout
-        const assignmentState = getAssignmentSelectorState();
-        const classState = getClassSelectorState();
-
-        const filteredClassIds = await fetchFilteredClassIds(classState, 'assignments');
-        const data = await fetchFilteredAssignments(assignmentState);
-
-        if (assignmentState.tableLayout === 'per_class') {
-            const filteredData = {
-                layout: 'per_class',
-                classes: filteredClassIds
-                    .map(id => data.classes.find(cls => String(cls.class_id) === id))
-                    .filter(Boolean)
-            };
-            
-            applyAssignmentOrdering(container, allItems, filteredData, assignmentState.tableLayout);
-        } else {
-            const filteredData = {
-                layout: 'single',
-                assignments: data.assignments.filter(a =>
-                    filteredClassIds.includes(String(a.class_id))
-                )
-            };
-            
-            applyAssignmentOrdering(container, allItems, filteredData, assignmentState.tableLayout);
-        }
+        // Trigger table refresh (will fetch data and rebuild)
+        await refreshAssignmentsTable();
     }
 
     // ------------------------- SAVE PREFS -------------------------
@@ -232,6 +176,13 @@ export async function initAssignmentSelector() {
 
         personalPrefs = { classPrefs, assignmentPrefs };
         applyPreferencesToUI(classPrefs, assignmentPrefs);
+        
+        // Set initial layout
+        const initialLayout = assignmentPrefs?.table_layout ?? "single";
+        pendingLayout = initialLayout;
+        handleLayoutChange(initialLayout);
+        
+        // Initial table load
         await apply();
     }
 
@@ -262,7 +213,6 @@ export async function initAssignmentSelector() {
         if (personalPrefs?.classPrefs) {
             applyPreferencesToUI(personalPrefs.classPrefs, personalPrefs.assignmentPrefs);
             await apply();
-            await savePrefs();
         }
     });
 
@@ -285,12 +235,10 @@ export async function initAssignmentSelector() {
         if (personalPrefs?.assignmentPrefs) {
             applyPreferencesToUI(personalPrefs.classPrefs, personalPrefs.assignmentPrefs);
             await apply();
-            await savePrefs();
         }
     });
 
     // ------------------------- SORT CATEGORY CHANGE -------------------------
-    // REMOVED: Auto-apply - only updates UI
     document.querySelectorAll("input[name='sortCategory']").forEach(radio => {
         radio.addEventListener("change", () => {
             const category = radio.value;
@@ -303,29 +251,9 @@ export async function initAssignmentSelector() {
             if (firstVisible) {
                 document.querySelector("#assignmentSortBy").value = firstVisible.value;
             }
-            // Don't auto-apply - wait for button click
         });
     });
 
-    // ------------------------- LIVE REFRESH (from events only) -------------------------
-    // NOTE: do not auto-apply filters when these events occur. Filters are
-    // applied only when the user clicks the Apply buttons. We still update
-    // the cached item list so refresh handlers can reapply ordering/state.
-    document.addEventListener("assignment:changed", () => {
-        updateAllItems();
-    });
-
-    document.addEventListener("assignment:grade:changed", () => {
-        updateAllItems();
-    });
-
-    document.addEventListener("assignment:completion:changed", () => {
-        updateAllItems();
-    });
-
     // ------------------------- INIT -------------------------
-    const initialLayout = document.querySelector("#tableLayout")?.value ?? "single";
-    pendingLayout = initialLayout;
-    handleLayoutChange(initialLayout);
     await loadPersonalPrefs();
 }
