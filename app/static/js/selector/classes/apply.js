@@ -104,12 +104,24 @@ function applyVisibilityAndOrder(container, allItems, orderedVisibleItems, curre
 }
 
 export function applyClassOrdering(container, allItems, orderedIds, sortBy) {
+    // -------------------------------------------------
+    // Normalize orderedIds without touching selector
+    // Accepts:
+    //   - [1, 2, 3]
+    //   - { class_ids: [1, 2, 3] }
+    // -------------------------------------------------
+    const ids = Array.isArray(orderedIds)
+        ? orderedIds
+        : Array.isArray(orderedIds?.class_ids)
+            ? orderedIds.class_ids
+            : [];
+
     const map = new Map(
         allItems.map(el => [el.dataset.classId, el])
     );
 
-    const orderedVisibleItems = orderedIds
-        .map(id => map.get(id))
+    const orderedVisibleItems = ids
+        .map(id => map.get(String(id)))
         .filter(Boolean);
 
     applyVisibilityAndOrder(
@@ -119,3 +131,4 @@ export function applyClassOrdering(container, allItems, orderedIds, sortBy) {
         sortBy
     );
 }
+

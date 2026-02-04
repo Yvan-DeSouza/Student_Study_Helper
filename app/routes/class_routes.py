@@ -189,7 +189,7 @@ def update_class(class_id):
 
     if not cls.is_finished:
         grade_raw = request.form.get("grade")
-        cls.grade = float(grade_raw) if grade_raw else None
+        cls.grade = float(grade_raw) if grade_raw else cls.grade
 
     db.session.commit()
     return jsonify({"success": True}), 200
