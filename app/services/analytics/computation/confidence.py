@@ -1,6 +1,10 @@
 from math import exp
 from app.services.analytics.config.confidence import CONFIDENCE_CONFIG
 from app.services.analytics.computation.result import ComputationResult
+from app.services.analytics.computation.aggregates import (
+    aggregate_similarity_and_recency
+)
+from app.services.analytics.computation.volatility import compute_volatility_column
 
 
 def compute_predictability_confidence(
@@ -40,7 +44,6 @@ def compute_predictability_confidence(
 
 
 # =================== COLUMN ADAPTER ===================
-
 def compute_predictability_confidence_column(
     *,
     target_assignment: dict,
@@ -49,19 +52,57 @@ def compute_predictability_confidence_column(
 ):
     """
     Confidence is derived from analytics outputs.
-    For now: return None if insufficient data.
     """
 
-    sample_count = len([p for p in past_assignments if p.get("grade") is not None])
+    # ----------------------------
+    # Aggregate shared signals
+    # ----------------------------
+    aggregates = aggregate_similarity_and_recency(
+        target_assignment=target_assignment,
+        past_assignments=past_assignments,
+        now=now,
+    )
+
+    if not aggregates:
+        return None
+
+    sample_count = aggregates["sample_count"]
+
+    # Minimum sample rule (same spirit as other analytics)
     if sample_count < 3:
         return None
 
-    # Placeholder until pipeline aggregation exists
-    return (
-        ComputationResult(
-            value = 0.5,
-            diagnostics={
-                "sample_count": sample_count
-            }
-        )
+    avg_similarity = aggregates["avg_similarity"]
+    avg_age_days = aggregates["avg_age_days"]
+
+    # ----------------------------
+    # Volatility (reuse existing computation)
+    # ----------------------------
+    volatility_result = compute_volatility_column(
+        target_assignment=target_assignment,
+        past_assignments=past_assignments,
+        now=now,
+    )
+
+    volatility = (
+        volatility_result.value
+        if volatility_result is not None
+        else 1.0
+    )
+
+    # ----------------------------
+    # Final confidence score
+    # ----------------------------
+    result = compute_predictability_confidence(
+        sample_count=sample_count,
+        avg_similarity=avg_similarity,
+        volatility=volatility,
+        avg_age_days=avg_age_days,
+    )
+
+    return ComputationResult(
+        value=result["confidence"],
+        diagnostics={
+            "bucket": result["bucket"]
+        }
     )

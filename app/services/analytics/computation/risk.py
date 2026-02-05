@@ -263,7 +263,9 @@ def compute_assignment_risk_column(
         "difficulty": normalize_1_to_10(
             pd.Series([target_assignment.get("difficulty")])
         ).iloc[0]
-        if target_assignment.get("difficulty") is not None else estimate_expected_difficulty(target_assignment["class_type"], target_assignment["assignment_type"], target_assignment["class_id"], past_assignments),
+        if target_assignment.get("difficulty") is not None else normalize_1_to_10(
+            pd.Series([estimate_expected_difficulty(target_assignment["class_type"], target_assignment["assignment_type"], target_assignment["class_id"], past_assignments)])
+        ).iloc[0],
         "history": historical_risk_from_history(
             target_assignment["class_type"],
             target_assignment["assignment_type"],
