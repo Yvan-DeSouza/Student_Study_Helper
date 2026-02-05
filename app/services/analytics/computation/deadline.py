@@ -107,6 +107,7 @@ def compute_deadline_sensitivity_column(
     target_assignment: dict,
     past_assignments: list[dict],
     now=None,
+    context: dict = None,
 ):
     sensitivity = compute_deadline_sensitivity(
         target_assignment["class_type"],

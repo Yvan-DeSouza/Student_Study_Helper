@@ -89,6 +89,8 @@ def compute_volatility_column(
     target_assignment: dict,
     past_assignments: list[dict],
     now=None,
+    context: dict = None,
+
 ):
     return compute_volatility(
         target_assignment["class_type"],

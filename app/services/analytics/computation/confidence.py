@@ -49,6 +49,7 @@ def compute_predictability_confidence_column(
     target_assignment: dict,
     past_assignments: list[dict],
     now=None,
+    context: dict = None,
 ):
     """
     Confidence is derived from analytics outputs.

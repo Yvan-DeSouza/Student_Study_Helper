@@ -73,16 +73,30 @@ def build_assignment_columns():
     # Normalize assignment dicts
     # Pass `now` so that time-relative fields (days_until_due) are computed.
     # -------------------------
-    assignment_dicts = [
+    visible_assignment_dicts = [
         a.to_analytics_dict(now=now)
         for a in ordered_assignments
     ]
+    # -------------------------
+    # Fetch ALL assignments for eligibility (GLOBAL)
+    # -------------------------
+    all_assignments = (
+        Assignment.query
+        .filter(Assignment.user_id == current_user.user_id)
+        .all()
+    )
+
+    all_assignment_dicts = [
+        a.to_analytics_dict(now=now)
+        for a in all_assignments
+    ]
+
 
     # -------------------------
     # User-level eligibility (runs once, gates advanced columns)
     # -------------------------
     eligibility_results = compute_all_eligibility(
-        assignments=assignment_dicts,
+        assignments=all_assignment_dicts,
         now=now,
     )
 
@@ -112,13 +126,13 @@ def build_assignment_columns():
     # Build rows (assignment-level eligibility + computation live here)
     # -------------------------
     rows = []
-    for a_obj, a_dict in zip(ordered_assignments, assignment_dicts):
+    for a_obj, a_dict in zip(ordered_assignments, visible_assignment_dicts):
         row = {
             "assignment_id": a_dict["assignment_id"],
             "class_id": a_obj.class_id,  # Add class_id to row
             **build_assignment_row(
                 assignment=a_dict,
-                all_assignments=assignment_dicts,
+                all_assignments=visible_assignment_dicts,
                 column_states=column_states,
                 eligibility_results=eligibility_results,
                 now=now,

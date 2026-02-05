@@ -153,6 +153,8 @@ def compute_effort_efficiency(
     target_assignment: dict,
     past_assignments: list[dict],
     now=None,
+    context: dict = None,
+
 ):
     """
     Column adapter for effort efficiency.

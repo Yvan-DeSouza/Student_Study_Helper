@@ -62,6 +62,9 @@ class Assignment(db.Model):
     def started_at(self):
         if not self.study_sessions:
             return None
+        has_started = any(s.started_at is not None for s in self.study_sessions)
+        if not has_started:
+            return None
         return min(s.started_at for s in self.study_sessions if s.started_at is not None)
     
     @started_at.expression
