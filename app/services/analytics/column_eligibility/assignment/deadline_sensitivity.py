@@ -45,7 +45,6 @@ def check_deadline_sensitivity_user_eligibility(
             "current": stats.days_since_earliest_graded,
             "required": req.min_days_span,
         })
-
     if missing:
         return blocked_result(
             missing_requirements=missing,
@@ -62,7 +61,10 @@ def check_deadline_sensitivity_assignment_eligibility(
     req: DeadlineSensitivityReq = DeadlineSensitivityReq(),
 ) -> bool:
     due = assignment.get("due_at")
+
     if due is None:
         return False
+
+
 
     return (due - now).days <= req.max_days_until_due

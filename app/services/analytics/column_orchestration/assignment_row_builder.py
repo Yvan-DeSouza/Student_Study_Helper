@@ -145,6 +145,7 @@ def build_assignment_row(
     column_states: Dict[str, ColumnState],
     eligibility_results: Dict[str, EligibilityResult],
     now: Optional[datetime] = None,
+    context: dict = {}
 ) -> Dict[str, Any]:
     """
     Builds a single assignment row.
@@ -230,6 +231,7 @@ def build_assignment_row(
                 target_assignment=assignment,
                 past_assignments=all_assignments,
                 now=now,
+                context=context
             )
 
             if result is None:

@@ -53,12 +53,10 @@ def compute_deadline_sensitivity(
     past_assignments,
 ):
     delays, grades = [], []
-
     for p in past_assignments:
         grade = p.get("grade")
         due_at = p.get("due_at")
         started_at = p.get("started_at") or p.get("expected_started_at")
-
         if None in (grade, due_at, started_at):
             continue
 

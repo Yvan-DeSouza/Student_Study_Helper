@@ -58,6 +58,19 @@ class Assignment(db.Model):
             .where(StudySession.assignment_id == cls.assignment_id)
             .scalar_subquery()
         )
+    @hybrid_property
+    def started_at(self):
+        if not self.study_sessions:
+            return None
+        return min(s.started_at for s in self.study_sessions if s.started_at is not None)
+    
+    @started_at.expression
+    def started_at(assignment):
+        return (
+            select(func.min(StudySession.started_at))
+            .where(StudySession.assignment_id == assignment.assignment_id)
+            .scalar_subquery()
+        )
 
 
     @hybrid_property
@@ -119,6 +132,14 @@ class Assignment(db.Model):
             # Computed / hybrid fields
             "study_minutes": self.study_minutes,
             "study_session_count": self.study_session_count,
+            "started_at": self.started_at,
+            "expected_started_at": (
+                min(
+                    (s.expected_started_at for s in self.study_sessions if s.expected_started_at),
+                    default=None
+                )
+            ),
+
 
             # Time-relative computed field
             "days_until_due": days_until_due,

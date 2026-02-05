@@ -4,6 +4,12 @@ import numpy as np
 import pandas as pd
 from app.services.analytics.config.risk import RISK_CONFIG
 from app.services.analytics.computation.result import ComputationResult
+from app.services.analytics.computation.global_workload import (
+    ensure_global_workload_stats,
+)
+from app.services.analytics.computation.workload import (
+    compute_assignment_overlap_global,
+)
 
 
 
@@ -96,7 +102,7 @@ def time_pressure_score(days_until_due, tau=7):
 
 def compute_workload_overlap(active_assignments_per_day, max_seen):
     """
-    Normalized workload pressure ∈ [0,1]
+    Normalized workload pressure between [0,1]
     """
     if max_seen == 0:
         return 0.0
@@ -106,7 +112,7 @@ def compute_workload_overlap(active_assignments_per_day, max_seen):
 
 def grade_to_risk(grade, min_grade=50, max_grade=100):
     """
-    Convert a numeric grade into a normalized risk score ∈ [0,1].
+    Convert a numeric grade into a normalized risk score between [0,1].
     """
     if grade is None or pd.isna(grade):
         return 0.0
@@ -168,11 +174,11 @@ def compute_assignment_risk(components, weights=None):
     Computes explainable risk score.
 
     components = {
-        "time_pressure": float ∈ [0,1],
-        "deadline_proximity": float ∈ [0,1],
-        "difficulty": float ∈ [0,1],
-        "history": float ∈ [0,1],
-        "overlap": float ∈ [0,1]
+        "time_pressure": float between [0,1],
+        "deadline_proximity": float between [0,1],
+        "difficulty": float between [0,1],
+        "history": float between [0,1],
+        "overlap": float between [0,1]
     }
 
     Returns:
@@ -244,6 +250,7 @@ def compute_assignment_risk_column(
     target_assignment: dict,
     past_assignments: list[dict],
     now=None,
+    context: dict | None = None,
 ):
     """
     Adapter for column system.
@@ -258,27 +265,57 @@ def compute_assignment_risk_column(
         now,
     )
 
+    # ALL assignments that could overlap
+
+    all_assignments = [target_assignment] + past_assignments
+
+    ensure_global_workload_stats(
+        context=context,
+        all_assignments=all_assignments,
+        now=now,
+    )
+
+    overlap = compute_assignment_overlap_global(
+        target_assignment=target_assignment,
+        all_assignments=all_assignments,
+        context=context,
+        now=now,
+    )
+
+
     components = {
         "time_pressure": time_pressure_score(days_until_due),
+
         "difficulty": normalize_1_to_10(
-            pd.Series([target_assignment.get("difficulty")])
+            pd.Series([target_assignment['difficulty']])
         ).iloc[0]
-        if target_assignment.get("difficulty") is not None else normalize_1_to_10(
-            pd.Series([estimate_expected_difficulty(target_assignment["class_type"], target_assignment["assignment_type"], target_assignment["class_id"], past_assignments)])
+        if target_assignment['difficulty'] is not None
+        else normalize_1_to_10(
+            pd.Series([
+                estimate_expected_difficulty(
+                    target_assignment["class_type"],
+                    target_assignment["assignment_type"],
+                    target_assignment["class_id"],
+                    past_assignments,
+                )
+            ])
         ).iloc[0],
+
         "history": historical_risk_from_history(
             target_assignment["class_type"],
             target_assignment["assignment_type"],
             target_assignment["class_id"],
             past_assignments,
         ),
-        "overlap": 0.0,  # placeholder (future workload logic)
+
+        "overlap": overlap,
     }
     risk = compute_assignment_risk(components)
+
     return ComputationResult(
         value=risk["total_risk"],
         diagnostics={
-            'breakdown':risk["breakdown"]
+            "breakdown": risk["breakdown"]
         }
     )
 
