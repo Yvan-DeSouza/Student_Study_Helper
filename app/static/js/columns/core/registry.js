@@ -1,3 +1,4 @@
+
 export const COLUMN_RENDER_REGISTRY = {
     title: { align: "left", width: "2fr", format: "text" },
     assignment_type: { align: "center", width: "1fr", format: "badge" },

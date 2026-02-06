@@ -1,3 +1,4 @@
+
 export async function fetchFilteredClassIds(state, page = "classes") {
     const payload = {
         page,
@@ -8,8 +9,6 @@ export async function fetchFilteredClassIds(state, page = "classes") {
             class_types: state.classTypes
         }
     };
-
-
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -27,6 +26,5 @@ export async function fetchFilteredClassIds(state, page = "classes") {
     }
 
     const data = await res.json();
-    console.log(data)
-    return data
+    return data;
 }

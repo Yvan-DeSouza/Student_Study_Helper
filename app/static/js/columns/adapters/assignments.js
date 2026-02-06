@@ -1,25 +1,24 @@
-// static/js/columns/adapters/assignments.js
 
 export const assignmentAdapter = {
     applyRowDataset(tr, rowData) {
         tr.dataset.assignmentId = rowData.assignment_id;
-        
+       
         if (rowData.class_id) {
             tr.dataset.classId = rowData.class_id;
         }
 
         // Extract ALL metadata for modals and interactions
         const meta = rowData._meta || {};
-        
+       
         tr.dataset.title = meta.title || "";
         tr.dataset.assignmentType = meta.assignment_type || "";
         tr.dataset.dueAt = meta.due_at || "";
         tr.dataset.finishedAt = meta.finished_at || "";
-        
+       
         // Convert booleans to strings
         tr.dataset.completed = meta.is_completed ? "true" : "false";
         tr.dataset.graded = meta.is_graded ? "true" : "false";
-        
+       
         // Numeric fields (use empty string for null)
         tr.dataset.grade = meta.grade !== null && meta.grade !== undefined ? String(meta.grade) : "";
         tr.dataset.ponderation = meta.ponderation !== null && meta.ponderation !== undefined ? String(meta.ponderation) : "";

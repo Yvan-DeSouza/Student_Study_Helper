@@ -40,6 +40,10 @@ def compute_predictability_confidence(
             "Medium" if confidence >= 0.4 else
             "Low"
         ),
+        'sample_score': sample_score,
+        'similarity_score': similarity_score,
+        'stability_score': stability_score,
+        'recency_score': recency_score,
     }
 
 
@@ -104,6 +108,10 @@ def compute_predictability_confidence_column(
     return ComputationResult(
         value=result["confidence"],
         diagnostics={
-            "bucket": result["bucket"]
+            "bucket": result["bucket"],
+            "sample_score": round(result["sample_score"], 3),
+            "similarity_score": round(result["similarity_score"], 3),
+            "stability_score": round(result["stability_score"], 3),
+            "recency_score": round(result["recency_score"], 3),
         }
     )

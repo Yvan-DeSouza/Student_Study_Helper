@@ -1,3 +1,4 @@
+
 export async function fetchFilteredAssignments(state, page = "assignments") {
     const payload = {
         page,
@@ -11,7 +12,7 @@ export async function fetchFilteredAssignments(state, page = "assignments") {
             assignment_types: state.assignmentTypes
         }
     };
-    console.log(payload)
+    
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
     const res = await fetch("/api/select/assignments2", {

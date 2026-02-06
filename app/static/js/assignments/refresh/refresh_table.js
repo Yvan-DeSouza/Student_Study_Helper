@@ -1,9 +1,77 @@
+
 import { getAssignmentSelectorState } from '../../selector/core/state_assignments.js';
 import { getClassSelectorState } from '../../selector/core/state_classes.js';
 import { fetchFilteredAssignments } from '../../selector/core/filter_assignments.js';
 import { fetchFilteredClassIds } from '../../selector/core/filter_classes.js';
 import { fetchAssignmentColumns } from '../../columns/api/fetchColumns.js';
 import { buildAssignmentTable } from '../../columns/builders/buildTable.js';
+
+/**
+ * Render empty state message
+ */
+function renderEmptyState(container, isFiltered) {
+    container.innerHTML = "";
+    
+    const emptyDiv = document.createElement("div");
+    emptyDiv.className = "no-assignments-message";
+    
+    const cardBody = document.createElement("div");
+    cardBody.className = "card-body";
+    
+    if (isFiltered) {
+        // Filters removed all assignments
+        const title = document.createElement("p");
+        title.textContent = "No assignments match your filters";
+        
+        const hint = document.createElement("p");
+        hint.textContent = "Try adjusting your filters to see more assignments";
+        
+        cardBody.appendChild(title);
+        cardBody.appendChild(hint);
+    } else {
+        // No assignments at all
+        const title = document.createElement("p");
+        title.textContent = "You don't have any assignments yet";
+        
+        const hint = document.createElement("p");
+        hint.textContent = "Click the '+ Add Assignment' button to create your first assignment";
+        
+        cardBody.appendChild(title);
+        cardBody.appendChild(hint);
+    }
+    
+    emptyDiv.appendChild(cardBody);
+    container.appendChild(emptyDiv);
+}
+
+/**
+ * Apply risk threshold filter to rows
+ */
+function filterRowsByRisk(rows, riskFilterMode, riskThreshold) {
+    if (riskFilterMode === "none" || !riskThreshold) {
+        return rows;
+    }
+    
+    const threshold = parseFloat(riskThreshold);
+    
+    return rows.filter(row => {
+        const riskValue = row.risk_score?.value;
+        
+        // If no risk score, exclude when filter is active
+        if (riskValue === null || riskValue === undefined) {
+            return false;
+        }
+        
+        // Apply threshold
+        if (riskFilterMode === "under") {
+            return riskValue <= threshold;
+        } else if (riskFilterMode === "over") {
+            return riskValue >= threshold;
+        }
+        
+        return true;
+    });
+}
 
 export async function refreshAssignmentsTable() {
     console.log("[Assignments] Refreshing table");
@@ -15,9 +83,7 @@ export async function refreshAssignmentsTable() {
     // Fetch filtered class IDs
     const classData = await fetchFilteredClassIds(classState, 'assignments');
     const eligibleClassIds = classData.class_ids || [];
-    console.log("eligibleClassIds")
-
-    console.log(eligibleClassIds)
+    console.log("eligibleClassIds:", eligibleClassIds);
 
     // Fetch filtered assignments
     const assignmentData = await fetchFilteredAssignments(assignmentState);
@@ -26,21 +92,21 @@ export async function refreshAssignmentsTable() {
 
     if (assignmentState.tableLayout === "single") {
         // Filter assignments by eligible classes
-        assignmentIds = (assignmentData.assignment_ids || []).filter(id => {
-            // We need to check if assignment belongs to eligible class
-            // This will be filtered properly by the backend based on class_id
-            return true; // Backend already filtered, but we'll cross-reference in rows
-        });
+        assignmentIds = (assignmentData.assignment_ids || []);
     } else {
         // Per-class mode: get all assignment IDs from all classes
         assignmentIds = (assignmentData.classes || []).flatMap(c => c.assignment_ids);
     }
 
-    if (!assignmentIds.length) {
-        // Clear tables if no assignments
+    // Check if we have any assignments at all (before column API)
+    const hasAnyAssignments = assignmentIds.length > 0;
+
+    if (!hasAnyAssignments) {
+        // No assignments match the filters
         const singleMount = document.querySelector('.assignments-table-wrapper [data-table-mode="single"] .assignments-table-mount');
         const perClassWrapper = document.querySelector('.assignments-table-wrapper [data-table-mode="per_class"]');
-        if (singleMount) singleMount.innerHTML = "";
+        
+        if (singleMount) renderEmptyState(singleMount, true); // Filtered out
         if (perClassWrapper) perClassWrapper.innerHTML = "";
         return;
     }
@@ -51,12 +117,25 @@ export async function refreshAssignmentsTable() {
         page: "assignments",
     });
 
-
     // Filter rows to only include those from eligible classes
-    const filteredRows = rows.filter(row => 
+    let filteredRows = rows.filter(row =>
         eligibleClassIds.includes(parseInt(row.class_id))
     );
-    console.log(`[Assignments] Building table with  rows`);
+    
+    // Apply risk threshold filter (client-side)
+    filteredRows = filterRowsByRisk(filteredRows, assignmentState.riskFilterMode, assignmentState.riskThreshold);
+    
+    console.log(`[Assignments] Building table with ${filteredRows.length} rows`);
+
+    // Check if filters removed everything
+    if (filteredRows.length === 0) {
+        const singleMount = document.querySelector('.assignments-table-wrapper [data-table-mode="single"] .assignments-table-mount');
+        const perClassWrapper = document.querySelector('.assignments-table-wrapper [data-table-mode="per_class"]');
+        
+        if (singleMount) renderEmptyState(singleMount, true); // Filtered out
+        if (perClassWrapper) perClassWrapper.innerHTML = "";
+        return;
+    }
 
     if (assignmentState.tableLayout === "per_class") {
         // Per-class mode: dynamically create cards

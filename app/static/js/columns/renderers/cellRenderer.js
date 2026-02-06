@@ -1,6 +1,7 @@
 
 import { renderLockedCell } from "./lockedCell.js";
 import { getRenderHints } from "../core/registry.js";
+import { buildDiagnosticsHint } from "../core/columnPolicy.js";
 
 export function renderCell({ columnState, cellData }) {
     if (cellData?.locked) {
@@ -11,7 +12,7 @@ export function renderCell({ columnState, cellData }) {
     const { format, align } = getRenderHints(columnState.key);
 
     td.classList.add(`align-${align}`);
-    
+   
     // Add data-column-key attribute for dynamic selection
     td.dataset.columnKey = columnState.key;
 
@@ -68,6 +69,7 @@ export function renderCell({ columnState, cellData }) {
         return td;
     }
 
+    // Render the value
     switch (format) {
         case "number":
             td.textContent = value;
@@ -80,6 +82,20 @@ export function renderCell({ columnState, cellData }) {
 
         default:
             td.textContent = value;
+    }
+
+    // Add hint icon for advanced columns with diagnostics
+    const advancedColumns = ["risk_score", "effort_efficiency", "volatility", "deadline_sensitivity", "predictability_confidence"];
+    if (advancedColumns.includes(columnState.key) && cellData?.meta) {
+        const hintIcon = document.createElement("span");
+        hintIcon.className = "hint-icon";
+        hintIcon.textContent = "?";
+        
+        const hintText = buildDiagnosticsHint(columnState.key, cellData.meta);
+        if (hintText) {
+            hintIcon.dataset.hint = hintText;
+            td.appendChild(hintIcon);
+        }
     }
 
     return td;

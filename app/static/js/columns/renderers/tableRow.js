@@ -1,4 +1,3 @@
-// static/js/columns/renderers/tableRow.js
 
 import { renderCell } from "./cellRenderer.js";
 
@@ -19,7 +18,7 @@ export function renderTableRow({
         });
         tr.appendChild(td);
     }
-    console.log("Rendered row:", tr);
+    
     adapter?.afterRowRender(tr, rowData);
 
     return tr;

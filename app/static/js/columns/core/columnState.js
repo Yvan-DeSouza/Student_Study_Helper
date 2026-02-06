@@ -1,4 +1,3 @@
-// static/js/columns/core/columnState.js
 
 export function normalizeColumnState(raw) {
     return {

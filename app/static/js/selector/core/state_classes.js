@@ -1,3 +1,4 @@
+
 export function getClassSelectorState(root = document) {
     // -------------------------
     // SORT & STATUS
@@ -37,13 +38,6 @@ export function getClassSelectorState(root = document) {
             ? []
             : checkedTypes;
 
-
-    console.log({
-        sortBy,
-        status,
-        importance: finalImportance,
-        classTypes
-    })
     return {
         sortBy,
         status,

@@ -187,7 +187,6 @@ def compute_assignment_risk(components, weights=None):
         "breakdown": dict of weighted contributions
     }
     """
-    print(components)
 
     if weights is None:
         weights = RISK_CONFIG.COMPONENT_WEIGHTS

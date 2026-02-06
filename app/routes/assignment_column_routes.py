@@ -185,3 +185,73 @@ def build_assignment_columns():
         "columns": columns,
         "rows": rows,
     }), 200
+
+
+@assignment_columns.route("/api/assignments/columns/eligibility", methods=["GET"])
+@login_required
+def get_column_eligibility():
+    """
+    Returns column eligibility information without requiring assignment IDs.
+    Used by frontend to check if advanced columns are unlocked.
+    """
+    page = request.args.get("page", "assignments")
+    now = datetime.now(timezone.utc)
+    
+    # Fetch ALL assignments for eligibility computation
+    all_assignments = (
+        Assignment.query
+        .filter(Assignment.user_id == current_user.user_id)
+        .all()
+    )
+    
+    all_assignment_dicts = [
+        a.to_analytics_dict(now=now)
+        for a in all_assignments
+    ]
+    
+    # Compute user-level eligibility
+    eligibility_results = compute_all_eligibility(
+        assignments=all_assignment_dicts,
+        now=now,
+    )
+    
+    # Get user column preferences
+    pref_rows = ShownAssignmentColumn.query.filter_by(
+        user_id=current_user.user_id,
+        page_name=page,
+    ).all()
+    
+    user_column_prefs = {
+        r.column_key: r.is_shown
+        for r in pref_rows
+    }
+    
+    # Resolve column states
+    column_states = resolve_column_states(
+        page_name=page,
+        user_column_prefs=user_column_prefs,
+        eligibility_results=eligibility_results,
+    )
+    
+    # Return column metadata (just the states, no rows)
+    columns = [
+        {
+            "key": state.key,
+            "label": state.label,
+            "visible": state.visible,
+            "locked": state.locked,
+            "display_mode": state.display_mode.value,
+            "sortable": state.sortable,
+            "filterable": state.filterable,
+            "selectable": state.selectable,
+            "lock_reason": (
+                state.lock_reason.__dict__
+                if state.lock_reason else None
+            ),
+        }
+        for state in column_states.values()
+    ]
+    
+    return jsonify({
+        "columns": columns
+    }), 200
