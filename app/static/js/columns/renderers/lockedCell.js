@@ -1,7 +1,8 @@
+// static/js/columns/renderers/lockedCell.js
 
-import { getLockedTooltip, buildRequirementExplanation } from "../core/columnPolicy.js";
+import { buildRequirementExplanation } from "../core/columnPolicy.js";
 
-export function renderLockedCell(lockReason) {
+export function renderLockedCell(lockReasonOrData) {
     const td = document.createElement("td");
     td.classList.add("locked-cell");
 
@@ -16,15 +17,42 @@ export function renderLockedCell(lockReason) {
     hintIcon.className = "hint-icon";
     hintIcon.textContent = "?";
     
-    let hintText = "This column is locked because requirements aren't met.";
+    // Handle both user-level and assignment-level lock reasons
+    let hintText = "This cell is locked because requirements aren't met.";
     
-    if (lockReason) {
-        if (lockReason.unlock_hint) {
-            hintText = lockReason.unlock_hint;
+    if (lockReasonOrData) {
+        // Assignment-level lock reason (from cellData.lock_reason)
+        if (lockReasonOrData.message) {
+            hintText = lockReasonOrData.message;
+            
+            if (lockReasonOrData.blocking_reasons && lockReasonOrData.blocking_reasons.length > 0) {
+                hintText += "\n\nRequirements:\n";
+                for (const reason of lockReasonOrData.blocking_reasons) {
+                    const metric = reason.metric || "unknown";
+                    const current = reason.current ?? "N/A";
+                    const required = reason.required ?? "N/A";
+                    
+                    const metricNames = {
+                        "due_date": "Due date",
+                        "completion_status": "Completion status",
+                        "study_minutes": "Study time",
+                        "estimated_minutes": "Time estimate",
+                        "same_type_graded_assignments": "Similar graded assignments",
+                        "days_until_due": "Days until due"
+                    };
+                    
+                    const displayName = metricNames[metric] || metric;
+                    hintText += `\n${displayName}: ${current} / ${required}`;
+                }
+            }
         }
-        
-        if (lockReason.blocking_reasons && lockReason.blocking_reasons.length > 0) {
-            hintText += "\n\nRequirements:\n" + buildRequirementExplanation(lockReason);
+        // User-level lock reason (from columnState.lockReason)
+        else if (lockReasonOrData.unlock_hint) {
+            hintText = lockReasonOrData.unlock_hint;
+            
+            if (lockReasonOrData.blocking_reasons && lockReasonOrData.blocking_reasons.length > 0) {
+                hintText += "\n\nRequirements:\n" + buildRequirementExplanation(lockReasonOrData);
+            }
         }
     }
     

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Tuple, Optional
 from ..base import EligibilityResult, eligible_result, blocked_result
 from ..user_stats import UserStats
 
@@ -45,8 +46,29 @@ def check_risk_score_user_eligibility(
     return eligible_result()
 
 
-def check_risk_score_assignment_eligibility(assignment: dict) -> bool:
-    return (
-        assignment.get("due_at") is not None
-        and not assignment.get("is_completed", False)
-    )
+def check_risk_score_assignment_eligibility(assignment: dict) -> Tuple[bool, Optional[dict]]:
+    """
+    Returns (eligible, reason_dict)
+    If not eligible, reason_dict contains explanation
+    """
+    if assignment.get("due_at") is None:
+        return False, {
+            "message": "Risk score requires a due date",
+            "blocking_reasons": [{
+                "metric": "due_date",
+                "current": "None",
+                "required": "Set"
+            }]
+        }
+    
+    if assignment.get("is_completed", False):
+        return False, {
+            "message": "Risk score only applies to uncompleted assignments",
+            "blocking_reasons": [{
+                "metric": "completion_status",
+                "current": "Completed",
+                "required": "Uncompleted"
+            }]
+        }
+    
+    return True, None

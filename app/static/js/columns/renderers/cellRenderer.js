@@ -1,11 +1,13 @@
+// static/js/columns/renderers/cellRenderer.js
 
 import { renderLockedCell } from "./lockedCell.js";
 import { getRenderHints } from "../core/registry.js";
 import { buildDiagnosticsHint } from "../core/columnPolicy.js";
 
 export function renderCell({ columnState, cellData }) {
+    // Check if cell is locked (assignment-level lock)
     if (cellData?.locked) {
-        return renderLockedCell(columnState.lockReason);
+        return renderLockedCell(cellData.lock_reason);
     }
 
     const td = document.createElement("td");

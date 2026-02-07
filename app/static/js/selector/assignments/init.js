@@ -1,6 +1,5 @@
 import { getAssignmentSelectorState } from "../core/state_assignments.js";
 import { getClassSelectorState } from "../core/state_classes.js";
-import { fetchFilteredClassIds } from "../core/filter_classes.js";
 import { refreshAssignmentsTable } from "../../assignments/refresh/refresh_table.js";
 
 const SORT_VALUE_TO_CATEGORY = {
@@ -108,6 +107,19 @@ export async function initAssignmentSelector() {
                 
                 document.querySelector("#assignmentSortBy").value = sortBy;
             }
+            if (assignmentPrefs.risk_filter_mode) {
+                const riskModeSelect = document.querySelector("#riskFilterMode");
+                if (riskModeSelect) {
+                    riskModeSelect.value = assignmentPrefs.risk_filter_mode;
+                }
+            }
+            
+            if (assignmentPrefs.risk_threshold !== null && assignmentPrefs.risk_threshold !== undefined) {
+                const riskThresholdInput = document.querySelector("#riskThreshold");
+                if (riskThresholdInput) {
+                    riskThresholdInput.value = assignmentPrefs.risk_threshold;
+                }
+            }
         }
     }
 
@@ -123,9 +135,14 @@ export async function initAssignmentSelector() {
     }
 
     // ------------------------- SAVE PREFS -------------------------
+
+
     async function savePrefs() {
         const assignmentState = getAssignmentSelectorState();
         const classState = getClassSelectorState();
+        if (assignmentState.riskThreshold == ''){
+            assignmentState.riskThreshold = null;
+        }
 
         await fetch("/api/preferences/classes?page=assignments", {
             method: "PUT",
@@ -142,6 +159,7 @@ export async function initAssignmentSelector() {
             })
         });
 
+
         await fetch("/api/preferences/assignments", {
             method: "PUT",
             headers: {
@@ -155,10 +173,13 @@ export async function initAssignmentSelector() {
                 graded_filter: assignmentState.graded,
                 created_filter: assignmentState.created,
                 filter_assignment_types: assignmentState.assignmentTypes,
-                sort_by: assignmentState.sortBy
+                sort_by: assignmentState.sortBy,
+                risk_filter_mode: assignmentState.riskFilterMode,
+                risk_threshold: assignmentState.riskThreshold
             })
         });
     }
+    
 
     // ------------------------- LOAD PREFS -------------------------
     async function loadPersonalPrefs() {

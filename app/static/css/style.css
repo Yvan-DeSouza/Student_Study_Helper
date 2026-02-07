@@ -308,6 +308,8 @@ a {
     color: white;
     font-size: 0.75rem;
     line-height: 1.4;
+    white-space: pre-wrap; /* ADDED: Allow text wrapping */
+    word-wrap: break-word; /* ADDED: Break long words */
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;

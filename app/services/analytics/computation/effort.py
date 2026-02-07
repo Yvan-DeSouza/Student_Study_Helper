@@ -2,6 +2,7 @@
 import pandas as pd
 import numpy as np
 from app.services.analytics.computation.result import ComputationResult
+from app.services.analytics.computation.expected import estimate_expected_minutes
 
 
 # =================== EFFORT RATIO ===================
@@ -164,11 +165,24 @@ def compute_effort_efficiency(
     """
 
     actual = target_assignment.get("study_minutes")
-    expected = target_assignment.get("estimated_minutes")
+    if target_assignment.get("estimated_minutes"):
+        expected = target_assignment.get("estimated_minutes")
+        guess = False
+    else:
+        expected = estimate_expected_minutes(
+            target_assignment.get("class_type"),   
+            target_assignment.get("assignment_type"),
+            target_assignment.get("class_id"),  
+            past_assignments,
+        )
+        guess = True
 
     return ComputationResult(
         value=compute_effort_score(actual, expected),
         diagnostics={
-            "ratio": effort_ratio(actual, expected)
+            "ratio": effort_ratio(actual, expected),
+            'actual': actual,
+            'expected': expected,
+            'is_guess': guess,
         },
     )

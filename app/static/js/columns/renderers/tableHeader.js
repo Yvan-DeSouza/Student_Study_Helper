@@ -1,5 +1,6 @@
+// static/js/columns/renderers/tableHeader.js
 
-import { getColumnDescription, buildRequirementExplanation } from "../core/columnPolicy.js";
+import { getColumnDescription, buildRequirementExplanation, shouldShowHintIcon } from "../core/columnPolicy.js";
 
 export function renderTableHeader(columnStates) {
     const thead = document.createElement("thead");
@@ -22,23 +23,25 @@ export function renderTableHeader(columnStates) {
             th.appendChild(lockIcon);
         }
 
-        // Hint icon for all columns
-        const hintIcon = document.createElement("span");
-        hintIcon.className = "hint-icon";
-        hintIcon.textContent = "?";
-        
-        // Build hint content
-        let hintText = getColumnDescription(col.key);
-        
-        if (col.locked && col.lockReason) {
-            hintText += "\n\n🔒 Locked - Requirements not met:\n" + buildRequirementExplanation(col.lockReason);
-            if (col.lockReason.unlock_hint) {
-                hintText += "\n\n💡 " + col.lockReason.unlock_hint;
+        // Hint icon (only for non-self-explanatory columns)
+        if (shouldShowHintIcon(col.key)) {
+            const hintIcon = document.createElement("span");
+            hintIcon.className = "hint-icon";
+            hintIcon.textContent = "?";
+            
+            // Build hint content
+            let hintText = getColumnDescription(col.key);
+            
+            if (col.locked && col.lockReason) {
+                hintText += "\n\n🔒 Locked - Requirements not met:\n" + buildRequirementExplanation(col.lockReason);
+                if (col.lockReason.unlock_hint) {
+                    hintText += "\n\n💡 " + col.lockReason.unlock_hint;
+                }
             }
+            
+            hintIcon.dataset.hint = hintText;
+            th.appendChild(hintIcon);
         }
-        
-        hintIcon.dataset.hint = hintText;
-        th.appendChild(hintIcon);
 
         if (col.sortable) {
             th.classList.add("sortable");

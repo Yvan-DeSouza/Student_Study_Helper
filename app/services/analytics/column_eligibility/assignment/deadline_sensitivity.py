@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Tuple, Optional
 from ..base import EligibilityResult, eligible_result, blocked_result
 from ..user_stats import UserStats
 
@@ -59,12 +60,31 @@ def check_deadline_sensitivity_assignment_eligibility(
     assignment: dict,
     now: datetime,
     req: DeadlineSensitivityReq = DeadlineSensitivityReq(),
-) -> bool:
+) -> Tuple[bool, Optional[dict]]:
+    """
+    Returns (eligible, reason_dict)
+    """
     due = assignment.get("due_at")
 
     if due is None:
-        return False
+        return False, {
+            "message": "Deadline sensitivity requires a due date",
+            "blocking_reasons": [{
+                "metric": "due_date",
+                "current": "None",
+                "required": "Set"
+            }]
+        }
 
+    days_until = (due - now).days
+    if days_until > req.max_days_until_due:
+        return False, {
+            "message": f"Deadline sensitivity only applies within {req.max_days_until_due} days of deadline",
+            "blocking_reasons": [{
+                "metric": "days_until_due",
+                "current": days_until,
+                "required": f"≤ {req.max_days_until_due}"
+            }]
+        }
 
-
-    return (due - now).days <= req.max_days_until_due
+    return True, None

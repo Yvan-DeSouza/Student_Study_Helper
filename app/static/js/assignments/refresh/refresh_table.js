@@ -187,20 +187,23 @@ export async function refreshAssignmentsTable() {
 
             // Build table for this class
             const mount = card.querySelector('.assignments-table-mount');
+            const filteredColumns = filterColumnsByLayout(columns, assignmentState.tableLayout);
             buildAssignmentTable({
                 container: mount,
-                columns,
+                columns: filteredColumns,
                 rows: classRows
             });
         }
     } else {
         // Single table mode
         const container = document.querySelector('.assignments-table-wrapper [data-table-mode="single"] .assignments-table-mount');
+        const filteredColumns = filterColumnsByLayout(columns, assignmentState.tableLayout);
+
         if (!container) return;
 
         buildAssignmentTable({
             container,
-            columns,
+            columns: filteredColumns,
             rows: filteredRows,
         });
     }
@@ -222,4 +225,15 @@ export async function refreshAssignmentsTable() {
     initCompletion();
     initDeleteFromTable();
     initEditFromTable();
+}
+
+/**
+ * Filter columns based on table layout
+ */
+function filterColumnsByLayout(columns, tableLayout) {
+    if (tableLayout === "per_class") {
+        // Remove class column in per-class mode
+        return columns.filter(col => col.key !== "class");
+    }
+    return columns;
 }

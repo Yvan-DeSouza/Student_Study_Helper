@@ -1,22 +1,4 @@
-"""
-
-Builds a single assignment row end-to-end.
-
-Responsibilities:
-    - Iterates visible columns
-    - Returns placeholders for locked columns
-    - Dispatches assignment-level eligibility with correct per-column arguments
-    - Calls computation only when both user eligibility (locked) AND
-      assignment eligibility pass
-    - Wraps results in a uniform cell shape
-
-Does NOT:
-    - Decide eligibility rules
-    - Contain threshold constants
-    - Know about UI
-"""
-
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime, timezone
 
 from app.services.analytics.column_orchestration.column_state_resolver import ColumnState
@@ -66,8 +48,6 @@ LOCKED_PLACEHOLDER = "—"
 # -------------------------
 # Context builder
 # -------------------------
-# These are computed ONCE per row, then reused by whichever column needs them.
-
 def _compute_same_type_graded_count(
     target_assignment: dict,
     all_assignments: List[dict],
@@ -90,10 +70,6 @@ def _compute_same_type_graded_count(
 # -------------------------
 # Assignment eligibility dispatch
 # -------------------------
-# Each column's assignment check has a DIFFERENT signature.
-# This function routes to the correct one with the correct args.
-# Returns True if the column applies to this assignment, False if not.
-
 def _check_assignment_eligibility(
     *,
     key: str,
@@ -101,42 +77,36 @@ def _check_assignment_eligibility(
     now: datetime,
     same_type_graded_count: int,
     has_estimation_fallback: bool,
-) -> bool:
+) -> Tuple[Optional[bool], Optional[dict]]:
     """
     Dispatches the assignment-level eligibility check for `key`.
 
     Returns:
-        True  → column applies, proceed to computation
-        False → column does not apply, cell = None
-        None  → column has no assignment eligibility check at all (proceed to computation)
+        (True, None)  → column applies, proceed to computation
+        (False, reason_dict) → column does not apply, cell is locked with reason
+        (None, None)  → column has no assignment eligibility check
     """
 
     if key == "risk_score":
-        # signature: check_risk_score_assignment_eligibility(assignment) -> bool
         return check_risk_score_assignment_eligibility(assignment)
 
     elif key == "deadline_sensitivity":
-        # signature: check_deadline_sensitivity_assignment_eligibility(assignment, now, req=default) -> bool
         return check_deadline_sensitivity_assignment_eligibility(assignment, now)
 
     elif key == "effort_efficiency":
-        # signature: check_effort_efficiency_assignment_eligibility(assignment, has_estimation_fallback) -> bool
         return check_effort_efficiency_assignment_eligibility(assignment, has_estimation_fallback)
 
     elif key == "volatility":
-        # signature: check_volatility_assignment_eligibility(assignment, same_type_history_count, req=default) -> bool
         return check_volatility_assignment_eligibility(assignment, same_type_graded_count)
 
     else:
-        # No assignment eligibility for this column (e.g. predictability_confidence).
-        # Returning None signals "skip this check, go straight to computation."
-        return None
+        # No assignment eligibility for this column
+        return None, None
 
 
 # -------------------------
 # Row Builder
 # -------------------------
-
 
 def build_assignment_row(
     *,
@@ -176,23 +146,21 @@ def build_assignment_row(
             continue
 
         # -------------------------
-        # Locked column → placeholder
+        # Locked column (user-level) → placeholder
         # -------------------------
         if state.locked:
             row[key] = {
                 "value": LOCKED_PLACEHOLDER,
                 "locked": True,
-                "reason": (
-                    state.lock_reason.unlock_hint
-                    if state.lock_reason else None
-                ),
+                "lock_reason": {
+                    "message": state.lock_reason.unlock_hint if state.lock_reason else "Requirements not met",
+                    "blocking_reasons": state.lock_reason.blocking_reasons if state.lock_reason else []
+                }
             }
             continue
 
         # -------------------------
         # Core / Simple / Computed-simple columns
-        # These are already present in the assignment dict
-        # (title, grade, study_minutes, days_until_due, etc.)
         # -------------------------
         if key in assignment:
             row[key] = {
@@ -206,12 +174,10 @@ def build_assignment_row(
         # -------------------------
         compute_fn = COMPUTATION_MAP.get(key)
         if compute_fn is None:
-            # Column exists in registry but has no computation adapter
-            # and wasn't in the assignment dict. Skip it.
             continue
 
         # --- Assignment eligibility check (row-level applicability) ---
-        assignment_eligible = _check_assignment_eligibility(
+        assignment_eligible, assignment_lock_reason = _check_assignment_eligibility(
             key=key,
             assignment=assignment,
             now=now,
@@ -220,9 +186,13 @@ def build_assignment_row(
         )
 
         # None = no assignment eligibility exists for this column → proceed
-        # False = column does not apply to this assignment → cell is empty
+        # False = column does not apply to this assignment → cell is locked
         if assignment_eligible is False:
-            row[key] = {"value": None, "locked": False}
+            row[key] = {
+                "value": LOCKED_PLACEHOLDER,
+                "locked": True,
+                "lock_reason": assignment_lock_reason
+            }
             continue
 
         # --- Execute computation ---
@@ -248,7 +218,7 @@ def build_assignment_row(
             }
 
         except Exception:
-            # Computation failed — return empty cell, do not crash the row.
+            # Computation failed — return empty cell
             row[key] = {
                 "value": None,
                 "locked": False,

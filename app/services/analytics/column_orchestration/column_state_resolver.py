@@ -75,9 +75,7 @@ def resolve_column_states(
         else:
             visible = user_column_prefs.get(key, col.default_shown)
 
-        # Locked columns may still be visible (metadata controls this)
-        if locked and not col.capabilities.visible_when_locked:
-            visible = False
+
 
         # -------------------------
         # Capability resolution

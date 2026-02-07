@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Tuple, Optional
 from ..base import EligibilityResult, eligible_result, blocked_result
 from ..user_stats import UserStats
 
@@ -47,5 +48,18 @@ def check_volatility_assignment_eligibility(
     assignment: dict,
     same_type_history_count: int,
     req: VolatilityReq = VolatilityReq(),
-) -> bool:
-    return same_type_history_count >= req.min_same_type_history
+) -> Tuple[bool, Optional[dict]]:
+    """
+    Returns (eligible, reason_dict)
+    """
+    if same_type_history_count < req.min_same_type_history:
+        return False, {
+            "message": f"Volatility requires {req.min_same_type_history} similar graded assignments",
+            "blocking_reasons": [{
+                "metric": "same_type_graded_assignments",
+                "current": same_type_history_count,
+                "required": req.min_same_type_history
+            }]
+        }
+    
+    return True, None

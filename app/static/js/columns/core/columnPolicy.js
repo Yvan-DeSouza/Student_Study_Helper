@@ -2,7 +2,18 @@
 export function shouldRenderLockedColumn(columnState) {
     return columnState.visible;
 }
+// Columns that should NOT show hint icons (self-explanatory)
+export const COLUMNS_WITHOUT_HINTS = new Set([
+    "title",
+    "grade", 
+    "due_at",
+    "is_completed",
+    "class"
+]);
 
+export function shouldShowHintIcon(columnKey) {
+    return !COLUMNS_WITHOUT_HINTS.has(columnKey);
+}
 export function lockedCellDisplayMode(columnState) {
     // future-proofing: blur, placeholder, tooltip, etc.
     return "placeholder"; // currently always placeholder
@@ -107,8 +118,14 @@ export function buildDiagnosticsHint(columnKey, diagnostics) {
         },
         
         "effort_efficiency": (d) => {
-            if (d.ratio == null) return null;
-            return `Actual vs Expected: ${d.ratio}x`;
+            const parts = [];
+            if (d.ratio != null) parts.push(`Effort ratio: ${d.ratio}x`);
+            if (d.actual != null) parts.push(`Actual time: ${d.actual} min`);
+            if (d.expected != null){
+                if (d.is_guess) parts.push(`Expected time: ${d.expected} min (estimated)`);
+                else parts.push(`Expected time: ${d.expected} min`);
+            };
+            return parts.length ? parts.join("\n") : null;
         },
         
         "volatility": (d) => {
