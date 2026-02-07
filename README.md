@@ -1,6 +1,10 @@
 
 
 Student Study Analytics & Planning Platform
+
+TL;DR: 
+This project is a backend-first data analytics platform that models and transforms raw student activity data (assignments, study sessions, grades) into explainable workload, effort, difficulty, and risk metrics. It is designed like a production analytics system: data is normalized via SQLAlchemy models, aggregated through pure, stateless analytics services, gated by backend-owned eligibility rules, and exposed through clean, chart-ready APIs. The frontend acts strictly as a renderer, while all business logic, feature computation, and data sufficiency validation live in the backend. The project emphasizes data engineering, backend architecture, explainable analytics, and correctness over UI polish, closely mirroring real-world backend and analytics engineering work.
+
 Overview
 This project is a backend-first data analytics platform for modeling, aggregating, and exposing academic workload and study behavior.
 Rather than focusing on UI-first dashboards, the system is designed as a production-style analytics backend that ingests raw, messy student activity data and transforms it into explainable, decision-ready signals such as workload, difficulty, effort, and risk.
@@ -275,6 +279,7 @@ It is intentionally structured to resemble real backend and analytics work, not 
 Status
 🚀 Active development
 The system is evolving incrementally, with a strong focus on backend correctness, clarity, and maintainability.
+
 
 
 
