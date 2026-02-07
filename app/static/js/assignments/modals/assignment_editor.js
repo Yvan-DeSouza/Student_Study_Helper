@@ -3,6 +3,23 @@ import { showModal } from "../modals.js";
 let currentAssignmentId = null;
 
 
+function toDatetimeLocal(value) {
+  if (!value) return "";
+
+  const d = new Date(value);
+  if (isNaN(d)) return "";
+
+  // Convert to YYYY-MM-DDTHH:MM
+  const pad = n => String(n).padStart(2, "0");
+
+  return (
+    d.getFullYear() + "-" +
+    pad(d.getMonth() + 1) + "-" +
+    pad(d.getDate()) + "T" +
+    pad(d.getHours()) + ":" +
+    pad(d.getMinutes())
+  );
+}
 
 export function openEditAssignmentModal(assignment) {
   currentAssignmentId = assignment.id;
@@ -11,8 +28,8 @@ export function openEditAssignmentModal(assignment) {
   document.getElementById("edit-title").value = assignment.title;
   document.getElementById("edit-class").value = assignment.class_id;
   document.getElementById("edit-type").value = assignment.assignment_type;
-  document.getElementById("edit-due-at").value = assignment.due_at || "";
-  document.getElementById("edit-finished-at").value = assignment.finished_at || "";
+  document.getElementById("edit-due-at").value = toDatetimeLocal(assignment.due_at) || "";
+  document.getElementById("edit-finished-at").value = toDatetimeLocal(assignment.finished_at) || "";
 
   const gradedCheckbox = document.getElementById("edit-is-graded");
   const graded = assignment.is_graded;

@@ -2,6 +2,7 @@ import { updateAssignment } from "../../domain/assignment_api.js";
 import { showModal, closeModal } from "../../core/modalManager.js";
 import { emitRefresh } from "../../core/refreshBus.js";
 
+
 export function initEditAssignmentSubmit() {
     const form = document.getElementById("editAssignmentForm");
     if (!form) return;

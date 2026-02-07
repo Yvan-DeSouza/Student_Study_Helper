@@ -68,9 +68,8 @@ def compute_assignment_overlap_global(
 
     if global_max <= 0 or global_avg <= 0:
         return 0.0
-    print("GLOBAL MAX/AVG:", global_max, ':' ,global_avg)
     daily_counts = compute_daily_active_assignments(all_assignments, now)
-    print(daily_counts)
+
 
     start, end = assignment_active_window(target_assignment, now)
 

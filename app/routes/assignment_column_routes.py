@@ -26,7 +26,7 @@ from app.services.analytics.column_orchestration.assignment_row_builder import (
     build_assignment_row,
 )
 from app.services.analytics.column_eligibility import compute_all_eligibility
-from app.models.user import ShownAssignmentColumn
+from app.models.user import ShownAssignmentColumn, AssignmentViewPreferences
 
 
 assignment_columns = Blueprint("assignment_columns", __name__)
@@ -121,6 +121,28 @@ def build_assignment_columns():
         user_column_prefs=user_column_prefs,
         eligibility_results=eligibility_results,
     )
+    view_prefs = AssignmentViewPreferences.query.filter_by(
+        user_id=current_user.user_id
+    ).first()
+
+    table_layout = view_prefs.table_layout
+    # -------------------------
+    # Layout-based visibility override (DO NOT persist)
+    # -------------------------
+    if "class" in column_states:
+        state = column_states["class"]
+
+        if table_layout == "per_class":
+            column_states["class"] = state.__class__(
+                **{**state.__dict__, "visible": False}
+            )
+        else:
+            column_states["class"] = state.__class__(
+                **{**state.__dict__, "visible": True}
+            )
+
+
+
 
     # -------------------------
     # Build rows (assignment-level eligibility + computation live here)
@@ -232,6 +254,27 @@ def get_column_eligibility():
         user_column_prefs=user_column_prefs,
         eligibility_results=eligibility_results,
     )
+    view_prefs = AssignmentViewPreferences.query.filter_by(
+        user_id=current_user.user_id
+    ).first()
+
+    table_layout = view_prefs.table_layout if view_prefs else "per_class"
+    # -------------------------
+    # Layout-based visibility override (DO NOT persist)
+    # -------------------------
+    if "class" in column_states:
+        state = column_states["class"]
+
+        if table_layout == "per_class":
+            column_states["class"] = state.__class__(
+                **{**state.__dict__, "visible": False}
+            )
+        else:
+            column_states["class"] = state.__class__(
+                **{**state.__dict__, "visible": True}
+            )
+
+
     
     # Return column metadata (just the states, no rows)
     columns = [
