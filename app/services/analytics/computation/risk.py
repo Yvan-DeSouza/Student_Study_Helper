@@ -310,7 +310,9 @@ def compute_assignment_risk_column(
         "overlap": overlap,
     }
     risk = compute_assignment_risk(components)
-
+    risk_breakdown = risk["breakdown"]
+    for key, value in risk_breakdown.items():
+        risk_breakdown[key] = value / risk['total_risk'] if risk['total_risk'] > 0 else 0.0
     return ComputationResult(
         value=risk["total_risk"],
         diagnostics={

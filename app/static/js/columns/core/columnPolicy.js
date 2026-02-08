@@ -8,7 +8,8 @@ export const COLUMNS_WITHOUT_HINTS = new Set([
     "grade", 
     "due_at",
     "is_completed",
-    "class"
+    "class",
+    "assignment_type"
 ]);
 
 export function shouldShowHintIcon(columnKey) {
@@ -110,10 +111,17 @@ export function buildDiagnosticsHint(columnKey, diagnostics) {
         "risk_score": (d) => {
             if (!d.breakdown) return null;
             const parts = [];
-            if (d.breakdown.time_pressure != null) parts.push(`Time pressure: ${(d.breakdown.time_pressure * 100).toFixed(0)}%`);
-            if (d.breakdown.difficulty != null) parts.push(`Difficulty: ${(d.breakdown.difficulty * 100).toFixed(0)}%`);
-            if (d.breakdown.history != null) parts.push(`Historical risk: ${(d.breakdown.history * 100).toFixed(0)}%`);
-            if (d.breakdown.overlap != null) parts.push(`Workload overlap: ${(d.breakdown.overlap * 100).toFixed(0)}%`);
+            const normalized = normalizePercentages(d.breakdown);
+
+            if (normalized.time_pressure != null)
+                parts.push(`Time pressure: ${normalized.time_pressure.toFixed(2)}%`);
+            if (normalized.difficulty != null)
+                parts.push(`Difficulty: ${normalized.difficulty.toFixed(2)}%`);
+            if (normalized.history != null)
+                parts.push(`Historical risk: ${normalized.history.toFixed(2)}%`);
+            if (normalized.overlap != null)
+                parts.push(`Workload overlap: ${normalized.overlap.toFixed(2)}%`);
+
             return parts.length ? parts.join("\n") : null;
         },
         
@@ -157,4 +165,49 @@ export function buildDiagnosticsHint(columnKey, diagnostics) {
     
     const builder = hints[columnKey];
     return builder ? builder(diagnostics) : null;
+}
+
+
+/**
+ * Rounds percentages to 2 decimals while guaranteeing the total is exactly 100.00
+ * Works for 1+ components.
+ *
+ * @param {Object<string, number>} values - normalized values that sum to ~1
+ * @returns {Object<string, number>} percentages summing to exactly 100
+ */
+function normalizePercentages(values) {
+    const entries = Object.entries(values)
+        .filter(([, v]) => typeof v === "number" && isFinite(v));
+
+    if (entries.length === 0) return {};
+
+    // Convert to integer hundredths
+    const raw = entries.map(([key, value]) => ({
+        key,
+        raw: value * 10000 // 100.00% = 10000
+    }));
+
+    const floored = raw.map(item => ({
+        key: item.key,
+        value: Math.floor(item.raw),
+        remainder: item.raw - Math.floor(item.raw)
+    }));
+
+    let total = floored.reduce((s, x) => s + x.value, 0);
+    let remaining = 10000 - total;
+
+    // Distribute remaining hundredths cyclically
+    floored.sort((a, b) => b.remainder - a.remainder);
+
+    let i = 0;
+    while (remaining > 0) {
+        floored[i % floored.length].value += 1;
+        remaining--;
+        i++;
+    }
+
+    // Convert back to percentages with 2 decimals
+    return Object.fromEntries(
+        floored.map(x => [x.key, x.value / 100])
+    );
 }
