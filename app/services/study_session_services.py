@@ -1,7 +1,6 @@
 # app/services/study_session_service.py
 from app.models.study_session import StudySession
 from datetime import datetime, timezone
-from sqlalchemy import and_
 
 
 def get_active_session(user_id: int) -> StudySession | None:
@@ -30,8 +29,8 @@ def get_due_scheduled_session(user_id: int) -> StudySession | None:
         is_completed=False
     ).filter(
         StudySession.cancelled_at.is_(None),
-        StudySession.expected_started_at <= now
-    ).order_by(StudySession.expected_started_at.asc()).first()
+        StudySession.scheduled_start_at  <= now
+    ).order_by(StudySession.scheduled_start_at .asc()).first()
 
 
 def has_active_session(user_id: int) -> bool:

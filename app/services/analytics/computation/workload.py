@@ -9,7 +9,7 @@ def assignment_active_window(assignment: dict, now: datetime):
     start = (
         assignment.get("created_at")
         or assignment.get("started_at")
-        or assignment.get("expected_started_at")
+        or assignment.get("scheduled_start_at")
         or now
     )
 

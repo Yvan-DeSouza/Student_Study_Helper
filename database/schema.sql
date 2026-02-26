@@ -7,7 +7,8 @@ CREATE TABLE users (
     username TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-	created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+	timezone TEXT NOT NULL DEFAULT 'UTC';
 );
 
 CREATE TABLE user_preferences (
@@ -32,8 +33,6 @@ CREATE TABLE classes (
     ), 
     class_code TEXT NOT NULL,
 	UNIQUE(user_id, class_code),
-	UNIQUE(user_id, class_name),
-
 	
     color TEXT NOT NULL,
 	
@@ -55,8 +54,6 @@ CREATE TABLE classes (
 		   (is_finished = FALSE AND finished_at IS NULL)
 		OR (is_finished = TRUE AND finished_at IS NOT NULL)
 	)
-
-
 );
 
 -- ASSIGNMENTS
@@ -80,6 +77,7 @@ CREATE TABLE assignments (
     is_completed BOOLEAN DEFAULT FALSE,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	finished_at TIMESTAMPTZ,
+	show_on_calendar BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (class_id) REFERENCES classes(class_id)
         ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users(user_id) 
@@ -114,13 +112,14 @@ CREATE TABLE study_sessions (
     ),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     started_at TIMESTAMPTZ,
-    expected_started_at TIMESTAMPTZ,
+    scheduled_start_at TIMESTAMPTZ,
+	scheduled_end_at TIMESTAMPTZ,
     session_end TIMESTAMPTZ,
     cancelled_at TIMESTAMPTZ,
 	rescheduled_count INT NOT NULL DEFAULT 0,
     is_completed BOOLEAN NOT NULL DEFAULT FALSE,
     is_active BOOLEAN NOT NULL DEFAULT FALSE,
-
+	show_on_calendar BOOLEAN NOT NULL DEFAULT TRUE,
     FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
     FOREIGN KEY (assignment_id) REFERENCES assignments(assignment_id) ON DELETE SET NULL, 
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
@@ -146,13 +145,34 @@ CREATE TABLE study_sessions (
             AND is_completed = FALSE
             AND session_end IS NULL
         )
+    ),
+	 -- Scheduled consistency
+    CHECK (
+        scheduled_end_at IS NULL
+        OR scheduled_start_at IS NOT NULL
+    ),
+
+    CHECK (
+        scheduled_end_at IS NULL
+        OR scheduled_start_at <= scheduled_end_at
+    ),
+
+    -- Completed session must have end and duration
+    CHECK (
+        is_completed = FALSE
+        OR (session_end IS NOT NULL AND duration_minutes IS NOT NULL)
+    ),
+
+    -- Active session cannot be completed
+    CHECK (
+        NOT (is_active = TRUE AND is_completed = TRUE)
     )
 );
 
 
 CREATE UNIQUE INDEX one_active_session_per_user
 ON study_sessions(user_id)
-WHERE is_active IS NULL;
+WHERE is_active = TRUE;
 
 CREATE TABLE class_expected_grades (
     id SERIAL PRIMARY KEY,
@@ -313,7 +333,7 @@ CREATE TABLE assignment_view_preferences (
     table_layout TEXT NOT NULL DEFAULT 'per_class' CHECK (
         table_layout IN ('single', 'per_class')
     ),
-    risk_filter_mode TEXT NOT NULL DEFAULT 'none' CHECK (
+	risk_filter_mode TEXT NOT NULL DEFAULT 'none' CHECK (
 		risk_filter_mode IN ('none', 'under', 'over')
 	),
     risk_threshold NUMERIC(3,2),
@@ -326,47 +346,6 @@ CREATE TABLE assignment_view_preferences (
         REFERENCES users(user_id)
         ON DELETE CASCADE
 );
-
-
-CREATE TABLE shown_assignment_columns (
-    assignment_column_id SERIAL PRIMARY KEY,
-
-    user_id INT NOT NULL,
-    page_name TEXT NOT NULL,
-
-    -- stable registry key (e.g. risk_score)
-    column_key TEXT NOT NULL,
-
-    -- preference only, not permission
-    is_shown BOOLEAN NOT NULL DEFAULT true,
-
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-    UNIQUE (user_id, page_name, column_key),
-
-    FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
-        ON DELETE CASCADE
-);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

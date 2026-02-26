@@ -35,7 +35,12 @@ class Assignment(db.Model):
         server_default=func.now()
     )
     finished_at = db.Column(db.DateTime(timezone=True), nullable=True)
-
+    show_on_calendar = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default=text("true")
+    )
     # Relationships
     class_ = db.relationship("Class", back_populates="assignments")
     study_sessions = db.relationship(
@@ -136,9 +141,9 @@ class Assignment(db.Model):
             "study_minutes": self.study_minutes,
             "study_session_count": self.study_session_count,
             "started_at": self.started_at,
-            "expected_started_at": (
+            "scheduled_start_at ": (
                 min(
-                    (s.expected_started_at for s in self.study_sessions if s.expected_started_at),
+                    (s.scheduled_start_at  for s in self.study_sessions if s.scheduled_start_at ),
                     default=None
                 )
             ),

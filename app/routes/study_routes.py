@@ -52,14 +52,14 @@ def add_session():
 
         if start_option == "now":
             started_at = now
-            expected_started_at = None
+            scheduled_start_at = None
             is_active = True
         else:
             if not started_at_input:
                 return jsonify({"success": False, "error": "MISSING_STARTED_AT"}), 400
 
 
-            expected_started_at = datetime.fromisoformat(started_at_input).astimezone(timezone.utc)
+            scheduled_start_at = datetime.fromisoformat(started_at_input).astimezone(timezone.utc)
             started_at = None
             is_active = False
 
@@ -71,7 +71,7 @@ def add_session():
             session_type=session_type,
             expected_duration_minutes=expected_duration,
             started_at=started_at,
-            expected_started_at=expected_started_at,
+            scheduled_start_at=scheduled_start_at,
             is_active=is_active
         )
 
@@ -90,25 +90,6 @@ def add_session():
         Assignment.class_id.in_([c.class_id for c in classes])
     ).all()
 
-    return render_template(
-        "new_study.html",
-        classes=classes,
-        assignments=assignments
-    )
-
-
-
-
-    # GET request: render form
-    # Get all classes for the current user
-    classes = Class.query.filter_by(user_id=current_user.user_id).all()
-
-    # Get all assignments for these classes
-    assignments = Assignment.query.filter(
-        Assignment.class_id.in_([c.class_id for c in classes])
-    ).all()
-
-    # Render the form template and pass the data
     return render_template(
         "new_study.html",
         classes=classes,

@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
+from wtforms import StringField
 from app.extensions import db
 from app.forms import RegisterForm, LoginForm
 from app.services.columns.registry import COLUMN_REGISTRY
 from app.services.defaults.classes import CLASS_TYPE_COLORS, CLASS_TYPES, IMPORTANCE_LEVELS
 from app.services.defaults.assignments import ASSIGNMENT_TYPE_COLORS, ASSIGNMENT_TYPES
-
 from app.models.user import (
     User,
     UserPreferences,
@@ -15,6 +15,7 @@ from app.models.user import (
     AssignmentViewPreferences,
     ShownAssignmentColumn
 )
+import pytz
 
 auth = Blueprint('auth', __name__)
 
@@ -27,15 +28,23 @@ auth = Blueprint('auth', __name__)
 def register():
     form = RegisterForm()
 
+
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data).first():
             flash('Email already exists!')
             return redirect(url_for('auth.register'))
+        
+        # Get timezone from the submitted form
+        tz = form.timezone.data or "UTC"
+        # Validate the timezone is in pytz
+        if tz not in pytz.all_timezones:
+            tz = "UTC"
 
         new_user = User(
             username=form.username.data,
             email=form.email.data,
-            user_type='student'
+            user_type='student',
+            timezone=tz
         )
         new_user.set_password(form.password.data)
         db.session.add(new_user)

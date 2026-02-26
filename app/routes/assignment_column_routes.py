@@ -154,7 +154,7 @@ def build_assignment_columns():
             "class_id": a_obj.class_id,  # Add class_id to row
             **build_assignment_row(
                 assignment=a_dict,
-                all_assignments=visible_assignment_dicts,
+                all_assignments=all_assignment_dicts,
                 column_states=column_states,
                 eligibility_results=eligibility_results,
                 now=now,

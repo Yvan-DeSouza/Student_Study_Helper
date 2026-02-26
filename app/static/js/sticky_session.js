@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch(`/study/${currentRescheduleSessionId}/reschedule`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-CSRFToken": csrfToken },
-        body: JSON.stringify({ expected_started_at: newTime })
+        body: JSON.stringify({ scheduled_start_at : newTime })
       });
       const data = await response.json();
       if (!response.ok || !data.success) {

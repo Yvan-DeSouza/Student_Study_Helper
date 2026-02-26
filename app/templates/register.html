@@ -44,6 +44,15 @@
             <div class="auth-actions">
                 {{ form.submit(class_="btn full-btn") }}
             </div>
+            <div style="display:none;">
+                {{ form.timezone(id="timezone") }}
+            </div>
+
+            <script>
+                // Set the value dynamically from the browser
+                document.getElementById("timezone").value =
+                    Intl.DateTimeFormat().resolvedOptions().timeZone;
+            </script>
 
         </form>
 
