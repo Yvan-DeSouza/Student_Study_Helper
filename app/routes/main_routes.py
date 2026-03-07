@@ -10,8 +10,6 @@ main = Blueprint("main", __name__)
 @main.route("/main")
 @login_required
 def home():
-
-
     classes = Class.query.filter_by(user_id=current_user.user_id).all()
     assignments = Assignment.query.join(Class).filter(
         Class.user_id == current_user.user_id

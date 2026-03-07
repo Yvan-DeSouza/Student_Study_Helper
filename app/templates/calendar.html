@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | StudyMate{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flip_card.css') }}">
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar card">
+    <div class="nav-left">
+        <img src="{{ url_for('static', filename='images/study_logo.png') }}"
+             class="nav-logo"
+             alt="StudyMate logo">
+        <span class="brand-name">StudyMate</span>
+    </div>
+
+    <div class="nav-center">
+        <a href="{{ url_for('main.home') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('classes.list_classes') }}" class="nav-link">Classes</a>
+        <a href="{{ url_for('assignment.list_assignments') }}" class="nav-link">Assignments</a>
+        <a href="{{ url_for('study.study_sessions') }}" class="nav-link">Study Sessions</a>
+        <a href="{{ url_for('dashboard.graphs') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('calendar.enter') }}" class="nav-link active">Calendar</a>
+    </div>
+
+    <div class="nav-right">
+        <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+        <div class="user-avatar">
+            <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User avatar">
+        </div>
+        <button class="theme-toggle" aria-label="Toggle theme">
+            <span class="toggle-icon">☀️</span>
+        </button>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+    <header>
+        <h1>Your calendar</h1>
+    </header>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/flip_card.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/constants.js') }}"></script>
+<script src="{{ url_for('static', filename='js/upcoming_deadlines.js') }}"></script>
+{% endblock %}
