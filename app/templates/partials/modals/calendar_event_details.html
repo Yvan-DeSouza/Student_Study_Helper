@@ -1,0 +1,69 @@
+{# templates/partials/modals/calendar_event_details.html
+   Read-only event details modal. Hidden by default.
+   Populated and shown by modals/calendar_event_details.js.
+   
+   Never rendered server-side with event data — all fields are filled by JS.
+#}
+<div class="modal-overlay hidden" id="calendarEventDetailsModal">
+  <div class="modal card calendar-event-modal">
+
+    {# Colored top accent bar — background set by JS #}
+    <div id="cal-modal-color-bar" class="cal-modal-color-bar"></div>
+
+    {# Header: title + close button #}
+    <div class="cal-modal-header">
+      <h2 id="cal-modal-title" class="cal-modal-title">Event</h2>
+      <button
+        class="cal-modal-close-btn"
+        data-close-modal
+        type="button"
+        aria-label="Close"
+      >&times;</button>
+    </div>
+
+    {# Body #}
+    <div class="cal-modal-body">
+
+      {# Type + Status badges #}
+      <div class="cal-modal-badges">
+        <span id="cal-modal-type"         class="cal-modal-type-badge"></span>
+        <span id="cal-modal-entity-type"  class="cal-modal-entity-badge"></span>
+        <span id="cal-modal-status"       class="cal-modal-status-badge"></span>
+      </div>
+
+      {# Date #}
+      <div class="cal-modal-info-row">
+        <span class="cal-modal-icon" aria-hidden="true">📅</span>
+        <span id="cal-modal-date" class="cal-modal-info-text"></span>
+      </div>
+
+      {# Time #}
+      <div class="cal-modal-info-row">
+        <span class="cal-modal-icon" aria-hidden="true">🕐</span>
+        <span id="cal-modal-time" class="cal-modal-info-text"></span>
+      </div>
+
+      {# Class #}
+      <div class="cal-modal-info-row">
+        <span class="cal-modal-icon" aria-hidden="true">📚</span>
+        <span id="cal-modal-class-color" class="cal-modal-class-dot"></span>
+        <span id="cal-modal-class"       class="cal-modal-info-text"></span>
+      </div>
+
+    </div>
+
+    {# Actions #}
+    <div class="modal-actions cal-modal-actions">
+      {# Edit button: shown only when event.editable = true (set by JS) #}
+      <button
+        id="cal-modal-edit-btn"
+        class="btn full-btn"
+        type="button"
+        style="display: none;"
+      >Edit</button>
+
+      <button class="btn ghost-btn" data-close-modal type="button">Close</button>
+    </div>
+
+  </div>
+</div>

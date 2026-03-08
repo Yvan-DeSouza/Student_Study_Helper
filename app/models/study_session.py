@@ -27,6 +27,8 @@ class StudySession(db.Model):
     is_completed = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
     started_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    show_on_calendar = db.Column(db.Boolean, nullable=False, default=True, server_default=text('true'))
+
     scheduled_start_at = db.Column(db.DateTime(timezone=True), nullable=True)
     scheduled_end_at = db.Column(db.DateTime(timezone=True), nullable=True)
     session_end = db.Column(db.DateTime(timezone=True), nullable=True)

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Calendar | StudyMate{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
+{% endblock %}
+
+{# ── Navbar ── Same pattern as your other pages ──────────────── #}
+{% block navbar %}
+<nav class="navbar card">
+  <div class="nav-left">
+    <img src="{{ url_for('static', filename='images/study_logo.png') }}"
+         class="nav-logo" alt="StudyMate logo">
+    <span class="brand-name">StudyMate</span>
+  </div>
+
+  <div class="nav-center">
+    <a href="{{ url_for('main.home') }}"                    class="nav-link">Home</a>
+    <a href="{{ url_for('classes.list_classes') }}"         class="nav-link">Classes</a>
+    <a href="{{ url_for('assignment.list_assignments') }}"  class="nav-link">Assignments</a>
+    <a href="{{ url_for('study.study_sessions') }}"         class="nav-link">Study Sessions</a>
+    <a href="{{ url_for('dashboard.graphs') }}"             class="nav-link">Dashboard</a>
+    <a href="{{ url_for('calendar.enter') }}"               class="nav-link active">Calendar</a>
+  </div>
+
+  <div class="nav-right">
+    <a href="{{ url_for('auth.logout') }}" class="logout-link">Logout</a>
+    <div class="user-avatar">
+      <img src="{{ url_for('static', filename='images/user_avatar.png') }}" alt="User avatar">
+    </div>
+    <button class="theme-toggle" aria-label="Toggle theme">
+      <span class="toggle-icon">☀️</span>
+    </button>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+{#
+  calendar-root is the mount point for the entire calendar JS system.
+  The two data attributes are the ONLY server-rendered calendar values.
+  Everything else (events, colors, filters) comes via API.
+
+  user_timezone:   IANA string, e.g. "America/New_York"
+  user_created_at: ISO 8601 UTC string, used to clamp the earliest navigable date
+#}
+<div
+  id="calendar-root"
+  data-user-timezone="{{ user_timezone }}"
+  data-user-created-at="{{ user_created_at }}"
+>
+
+  {# ── Toolbar ──────────────────────────────────────────────── #}
+  {% include "partials/calendar/calendar_toolbar.html" %}
+
+  {# ── Loading indicator ───────────────────────────────────── #}
+  <div id="calendar-loading" class="calendar-loading hidden" aria-live="polite">
+    <div class="calendar-loading-spinner"></div>
+    <span>Loading events…</span>
+  </div>
+
+  {# ── Calendar body ─────────────────────────────────────────
+     gridRenderer.js builds the grid skeleton here.
+     eventRenderer.js places event chips inside it.
+  #}
+  <div id="calendar-body" class="calendar-body"></div>
+
+</div>
+
+{# ── Modals ────────────────────────────────────────────────── #}
+{% include "partials/modals/calendar_event_details.html" %}
+
+{#
+  Phase 6: Add drag confirmation modal here
+  {% include "partials/modals/calendar_confirm_change.html" %}
+#}
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script type="module" src="{{ url_for('static', filename='js/calendar/calendar.js') }}"></script>
+{% endblock %}

@@ -23,6 +23,8 @@ class Assignment(db.Model):
     due_at = db.Column(db.DateTime(timezone=True), nullable=True)
     estimated_minutes = db.Column(db.Integer)
     is_graded = db.Column(db.Boolean, nullable=False, default=False, server_default=text('false'))
+    show_on_calendar = db.Column(db.Boolean, nullable=False, default=True, server_default=text('true'))
+
     ponderation = db.Column(db.Integer)
     is_completed = db.Column(db.Boolean, default=False, server_default=text('false'), nullable=False)
     grade = db.Column(db.Numeric(5, 2))

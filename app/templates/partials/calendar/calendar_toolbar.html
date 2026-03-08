@@ -1,0 +1,26 @@
+{# templates/partials/calendar/calendar_toolbar.html
+   Navigation toolbar for the calendar page.
+   Click listeners are attached by interaction/navigation.js — not inline.
+#}
+<div class="calendar-toolbar card">
+
+  <div class="toolbar-left">
+    <button id="btn-today" class="btn-cal-today" type="button">Today</button>
+    <button id="btn-prev"  class="btn-cal-nav"   type="button" aria-label="Previous">&#8249;</button>
+    <button id="btn-next"  class="btn-cal-nav"   type="button" aria-label="Next">&#8250;</button>
+  </div>
+
+  <div class="toolbar-center">
+    <span id="calendar-date-label" class="calendar-date-label">Loading…</span>
+  </div>
+
+  <div class="toolbar-right">
+    <div class="cal-view-selector" role="group" aria-label="Calendar view">
+      <button class="btn-view active" data-view="month" type="button">Month</button>
+      <button class="btn-view"        data-view="week"  type="button">Week</button>
+      <button class="btn-view"        data-view="day"   type="button">Day</button>
+      <button class="btn-view"        data-view="year"  type="button">Year</button>
+    </div>
+  </div>
+
+</div>

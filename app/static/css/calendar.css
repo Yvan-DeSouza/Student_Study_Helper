@@ -1,0 +1,512 @@
+/* =========================================================
+   static/css/calendar.css
+   Calendar-specific styles. Relies on style.css for global
+   variables, card styles, modal-overlay, and button base styles.
+   ========================================================= */
+
+
+/* ── Root container ──────────────────────────────────────── */
+#calendar-root {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+
+/* =========================================================
+   TOOLBAR
+   ========================================================= */
+
+.calendar-toolbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  gap: 1rem;
+  border-radius: 16px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.toolbar-center {
+  text-align: center;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Today button */
+.btn-cal-today {
+  background: none;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-cal-today:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* Prev / Next arrows */
+.btn-cal-nav {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+.btn-cal-nav:hover {
+  background: rgba(0,0,0,0.06);
+  color: #333;
+}
+:root[data-theme="dark"] .btn-cal-nav:hover {
+  background: rgba(255,255,255,0.1);
+  color: #eee;
+}
+
+/* Date label */
+.calendar-date-label {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333;
+}
+:root[data-theme="dark"] .calendar-date-label {
+  color: #f0f0f0;
+}
+
+/* View selector */
+.cal-view-selector {
+  display: flex;
+  background: rgba(0,0,0,0.06);
+  border-radius: 12px;
+  padding: 3px;
+  gap: 2px;
+}
+:root[data-theme="dark"] .cal-view-selector {
+  background: rgba(255,255,255,0.08);
+}
+
+.btn-view {
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-view:hover {
+  background: rgba(0,0,0,0.06);
+  color: #333;
+}
+.btn-view.active {
+  background: white;
+  color: var(--primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+:root[data-theme="dark"] .btn-view.active {
+  background: rgba(255,255,255,0.12);
+  color: var(--primary);
+}
+
+
+/* =========================================================
+   LOADING INDICATOR
+   ========================================================= */
+
+.calendar-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.calendar-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e0e0e0;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: cal-spin 0.7s linear infinite;
+}
+
+@keyframes cal-spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* =========================================================
+   CALENDAR BODY
+   ========================================================= */
+
+.calendar-body {
+  flex: 1;
+}
+
+
+/* =========================================================
+   MONTH VIEW GRID
+   ========================================================= */
+
+.cal-month-wrapper {
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+:root[data-theme="dark"] .cal-month-wrapper {
+  background: rgba(30, 30, 50, 0.85);
+}
+
+/* Day-of-week header row */
+.cal-day-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.cal-day-header-cell {
+  padding: 0.6rem 0;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #999;
+}
+:root[data-theme="dark"] .cal-day-header-cell {
+  color: #777;
+}
+
+/* Day cells grid */
+.cal-month-cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.cal-day-cell {
+  min-height: 110px;
+  padding: 6px 6px 4px;
+  border-right: 1px solid rgba(0,0,0,0.04);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: default;
+  transition: background 0.1s;
+}
+
+.cal-day-cell:nth-child(7n) {
+  border-right: none;
+}
+
+/* Day number */
+.cal-date-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+:root[data-theme="dark"] .cal-date-number {
+  color: #ccc;
+}
+
+/* Today highlight */
+.cal-day-cell.today .cal-date-number {
+  background: var(--primary);
+  color: white;
+}
+
+/* Selected date */
+.cal-day-cell.selected:not(.today) .cal-date-number {
+  background: rgba(242, 113, 75, 0.15);
+  color: var(--primary);
+}
+
+/* Days from adjacent months */
+.cal-day-cell.other-month {
+  opacity: 0.4;
+}
+
+/* Days before account creation */
+.cal-day-cell.disabled {
+  opacity: 0.25;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Events slot */
+.cal-day-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   EVENT CHIPS
+   ========================================================= */
+
+.cal-event-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: filter 0.15s, transform 0.1s;
+  position: relative;
+  /* --event-color is set inline by eventRenderer.js */
+}
+
+.cal-event-chip:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Title truncates if too long */
+.cal-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* Time shown in lighter weight after title */
+.cal-event-time {
+  opacity: 0.8;
+  font-weight: 400;
+  font-size: 0.68rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* State modifiers */
+.cal-event-chip.is-completed {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.cal-event-chip.is-cancelled {
+  opacity: 0.35;
+  filter: grayscale(1);
+  text-decoration: line-through;
+}
+.cal-event-chip.is-active::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  animation: cal-pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes cal-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+/* Overflow indicator */
+.cal-event-overflow {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #888;
+  padding: 1px 4px;
+  cursor: pointer;
+}
+.cal-event-overflow:hover {
+  color: var(--primary);
+}
+
+
+/* =========================================================
+   EVENT DETAILS MODAL
+   ========================================================= */
+
+.calendar-event-modal {
+  position: relative;
+  max-width: 440px;
+  width: 92%;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+/* Colored accent bar at the top */
+.cal-modal-color-bar {
+  height: 6px;
+  width: 100%;
+  border-radius: 20px 20px 0 0;
+  background: var(--primary);
+}
+
+/* Header */
+.cal-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 0.75rem;
+  gap: 0.5rem;
+}
+
+.cal-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0;
+  line-height: 1.3;
+  flex: 1;
+}
+:root[data-theme="dark"] .cal-modal-title {
+  color: #f0f0f0;
+}
+
+.cal-modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #aaa;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.cal-modal-close-btn:hover {
+  background: rgba(0,0,0,0.06);
+  color: #555;
+}
+
+/* Body */
+.cal-modal-body {
+  padding: 0.25rem 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Badges row */
+.cal-modal-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.cal-modal-type-badge,
+.cal-modal-entity-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.07);
+  color: #555;
+}
+:root[data-theme="dark"] .cal-modal-type-badge,
+:root[data-theme="dark"] .cal-modal-entity-badge {
+  background: rgba(255,255,255,0.1);
+  color: #ccc;
+}
+
+.cal-modal-status-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.cal-modal-status-badge.status-due       { background: rgba(239,68,68,0.12);  color: #ef4444; }
+.cal-modal-status-badge.status-scheduled { background: rgba(99,102,241,0.12); color: #6366f1; }
+.cal-modal-status-badge.status-active    { background: rgba(34,197,94,0.12);  color: #16a34a; }
+.cal-modal-status-badge.status-completed { background: rgba(34,197,94,0.12);  color: #16a34a; }
+.cal-modal-status-badge.status-cancelled { background: rgba(0,0,0,0.06);      color: #999; }
+.cal-modal-status-badge.status-created   { background: rgba(99,102,241,0.1);  color: #6366f1; }
+.cal-modal-status-badge.status-finished  { background: rgba(34,197,94,0.12);  color: #16a34a; }
+
+/* Info rows */
+.cal-modal-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+:root[data-theme="dark"] .cal-modal-info-row {
+  color: #bbb;
+}
+
+.cal-modal-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  width: 1.4rem;
+  text-align: center;
+}
+
+.cal-modal-info-text {
+  font-weight: 500;
+}
+
+/* Class color dot */
+.cal-modal-class-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ccc;
+  flex-shrink: 0;
+}
+
+/* Modal actions */
+.cal-modal-actions {
+  padding: 0 1.5rem 1.25rem;
+  margin-top: 0.25rem;
+}
+
+/* Make modal visible via .visible class (consistent with modalManager.js) */
+.modal-overlay.visible {
+  display: flex;
+}

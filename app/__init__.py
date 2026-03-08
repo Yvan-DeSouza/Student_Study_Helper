@@ -1,4 +1,5 @@
 from flask import Flask
+
 from .config import Config
 from .extensions import db, migrate, login_manager
 from flask_wtf.csrf import CSRFProtect
@@ -81,13 +82,13 @@ def create_app():
         study_routes,
         dashboard_routes,
         main_routes,
-        calendar_routes,
         selector_routes,
         upcoming_deadlines_routes,
         assignment_column_routes
     )
     from .routes.charts import charts as charts_routes
     from app.routes.preferences import preferences
+    from app.routes.calendar import calendar_page_routes, calendar_api_routes
 
 
     app.register_blueprint(charts_routes, url_prefix="/charts")
@@ -97,7 +98,8 @@ def create_app():
     app.register_blueprint(study_routes.study)
     app.register_blueprint(dashboard_routes.dashboard)
     app.register_blueprint(main_routes.main)
-    app.register_blueprint(calendar_routes.calendar)
+    app.register_blueprint(calendar_page_routes.calendar)
+    app.register_blueprint(calendar_api_routes.calendar_api)
     app.register_blueprint(assignment_column_routes.assignment_columns)
     app.register_blueprint(preferences)
     app.register_blueprint(upcoming_deadlines_routes.upcoming_deadlines)
