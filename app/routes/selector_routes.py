@@ -59,6 +59,10 @@ def select_classes_v2():
         "name_desc": Class.class_name.desc(),
         "importance_high_low": importance_order.desc().nullslast(),
         "importance_low_high": importance_order.asc().nullslast(),
+        "difficulty_high_low": Class.difficulty.desc().nullslast(),
+        "difficulty_low_high": Class.difficulty.asc().nullslast(),
+        "grade_high_low": Class.grade.desc().nullslast(),
+        "grade_low_high": Class.grade.asc().nullslast(),
         "created_newest": Class.created_at.desc(),
         "created_oldest": Class.created_at.asc(),
     }

@@ -199,7 +199,7 @@ def start_scheduled_session(session_id):
     if existing_active:
         return {"success": False, "error": "Active session already exists"}, 400
 
-    if session.expected_started_at and session.expected_started_at > now:
+    if session.scheduled_start_at and session.scheduled_start_at > now:
         return {"success": False, "error": "Session is not due yet"}, 400
 
     # 3️⃣ Start the session
@@ -223,11 +223,11 @@ def reschedule_session(session_id):
     ).first_or_404()
 
     data = request.get_json()
-    if not data or "expected_started_at" not in data:
-        return {"success": False, "error": "Missing expected_started_at"}, 400
+    if not data or "scheduled_start_at" not in data:
+        return {"success": False, "error": "Missing scheduled_start_at"}, 400
 
     try:
-        new_time = datetime.fromisoformat(data["expected_started_at"]).astimezone(timezone.utc)
+        new_time = datetime.fromisoformat(data["scheduled_start_at"]).astimezone(timezone.utc)
     except ValueError:
         return {"success": False, "error": "Invalid datetime format"}, 400
 
@@ -236,7 +236,7 @@ def reschedule_session(session_id):
         return {"success": False, "error": "New time must be in the future"}, 400
 
     # Update session
-    session.expected_started_at = new_time
+    session.scheduled_start_at = new_time
     session.rescheduled_count += 1
 
     db.session.commit()
