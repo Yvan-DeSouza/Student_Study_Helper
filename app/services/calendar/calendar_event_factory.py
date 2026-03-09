@@ -7,6 +7,7 @@ CalendarEvent dict. NO database calls. NO side effects. NO filters.
 This is the contract between the backend pipeline and the frontend.
 Every object the frontend ever renders passes through this function.
 """
+from datetime import timezone
 
 # Default colors when no user preference exists.
 # Matches the frontend constants.js for consistency.
@@ -25,6 +26,13 @@ DEFAULT_ASSIGNMENT_COLORS = {
 
 DEFAULT_CLASS_COLOR = "#6366f1"
 
+def _to_utc_iso(dt):
+    if not dt:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    dt = dt.astimezone(timezone.utc)
+    return dt.isoformat().replace("+00:00", "Z")
 
 def build(projection: dict) -> dict:
     """
@@ -46,14 +54,8 @@ def build(projection: dict) -> dict:
     start = projection["start"]
     end   = projection.get("end")
 
-    start_iso = start.isoformat() if start else None
-    end_iso   = end.isoformat()   if end   else None
-
-    # Ensure UTC suffix is present
-    if start_iso and not start_iso.endswith("Z") and "+" not in start_iso:
-        start_iso = start_iso.replace("+00:00", "") + "Z"
-    if end_iso and not end_iso.endswith("Z") and "+" not in end_iso:
-        end_iso = end_iso.replace("+00:00", "") + "Z"
+    start_iso = _to_utc_iso(start)
+    end_iso   = _to_utc_iso(end)
 
     return {
         "id":             event_id,
