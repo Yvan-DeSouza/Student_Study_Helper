@@ -33,7 +33,7 @@ def register():
         if User.query.filter_by(email=form.email.data).first():
             flash('Email already exists!')
             return redirect(url_for('auth.register'))
-        
+       
         # Get timezone from the submitted form
         tz = form.timezone.data or "UTC"
         # Validate the timezone is in pytz
@@ -68,7 +68,7 @@ def register():
 
         # ---------------- CLASS VIEW PREFERENCES ----------------
 
-        for page in ("classes", "assignments"):
+        for page in ("classes", "assignments", "calendar"):
             db.session.add(ClassViewPreferences(
                 user_id=new_user.user_id,
                 page_name=page,
@@ -82,11 +82,20 @@ def register():
 
 
 
-        # ---------------- ASSIGNMENT VIEW PREFERENCES ----------------
-        db.session.add(AssignmentViewPreferences(
-            user_id=new_user.user_id,
-            filter_assignment_types=ASSIGNMENT_TYPES     
-        ))
+
+        for page in ("assignments", "calendar"):
+            db.session.add(AssignmentViewPreferences(
+                user_id=new_user.user_id,
+                page_name=page,
+                due_status_filter="all",
+                completion_filter="all",
+
+                # IMPORTANT: JSONB arrays
+                filter_assignment_types=ASSIGNMENT_TYPES,
+                risk_threshold=0.00,
+                risk_filter_mode="none"
+            ))
+
 
         # ---------------- CLASS TYPE COLORS ----------------
         for class_type, color in CLASS_TYPE_COLORS.items():
@@ -124,7 +133,7 @@ def login():
         if not user or not user.check_password(form.password.data):
             flash('Invalid email or password')
             return redirect(url_for('auth.login'))
-
+        
         login_user(user, remember=form.remember.data)
         flash(f'Welcome back, {user.username}!')
         return redirect(url_for('main.home'))

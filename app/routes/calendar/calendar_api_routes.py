@@ -79,6 +79,7 @@ def get_calendar_events():
     # ── Fetch events through the pipeline ─────────────────────
     try:
         events = get_events(current_user.user_id, start, end, filters)
+        print(events)
         return jsonify({"success": True, "events": events})
     except Exception as e:
         import traceback
@@ -126,7 +127,7 @@ def move_calendar_event(event_id):
     #
     # try:
     #     from app.services.calendar.calendar_update_service import move_event
-    #     updated = move_event(event_id, new_start, new_end, timezone, current_user.user_id)
+    #     updated = move_event(event_type, event_id, new_start, new_end, timezone, current_user.user_id)
     #     return jsonify({"success": True, "updated_event": updated})
     # except PermissionError:
     #     return jsonify({"success": False, "error": "Event not draggable"}), 403

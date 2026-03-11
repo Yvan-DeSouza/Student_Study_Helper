@@ -46,4 +46,4 @@ CLASS_SORT_OPTIONS = [
 CLASS_STATUS_VALUES = ["all", "in_progress", "finished"]
 
 # ---------- PAGES ----------
-CLASS_PREF_PAGES = {"classes", "assignments"}
+CLASS_PREF_PAGES = {"classes", "assignments", "calendar"}

@@ -8,7 +8,7 @@ CREATE TABLE users (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-	timezone TEXT NOT NULL DEFAULT 'UTC';
+	timezone TEXT NOT NULL DEFAULT 'UTC'
 );
 
 CREATE TABLE user_preferences (
@@ -125,7 +125,7 @@ CREATE TABLE study_sessions (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
 
     -- Ensure at least one start time is set
-    CHECK (started_at IS NOT NULL OR expected_started_at IS NOT NULL),
+    CHECK (started_at IS NOT NULL OR scheduled_start_at IS NOT NULL),
 
     -- Session consistency checks
     CHECK (
@@ -262,7 +262,7 @@ CREATE TABLE class_view_preferences (
     user_id INT NOT NULL,
 
     page_name TEXT NOT NULL CHECK (
-        page_name IN ('classes', 'assignments')
+        page_name IN ('classes', 'assignments', 'calendar')
     ),
 
     sort_by TEXT NOT NULL DEFAULT 'name_asc' CHECK (
@@ -310,6 +310,9 @@ CREATE TABLE assignment_view_preferences (
 
     user_id INT NOT NULL,
 
+	page_name TEXT NOT NULL DEFAULT 'assignments' CHECK (
+		page_name IN ('calendar', 'assignments')
+	),
     due_status_filter TEXT NOT NULL DEFAULT 'all' CHECK (
         due_status_filter IN ('all', 'overdue', 'not_due')
     ),
@@ -340,49 +343,31 @@ CREATE TABLE assignment_view_preferences (
 
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    UNIQUE (user_id),
+    UNIQUE (user_id, page_name),
 
     FOREIGN KEY (user_id)
         REFERENCES users(user_id)
         ON DELETE CASCADE
 );
 
+CREATE TABLE shown_assignment_columns (
+    assignment_column_id SERIAL PRIMARY KEY,
 
+    user_id INT NOT NULL,
+    page_name TEXT NOT NULL,
 
+    -- stable registry key (e.g. risk_score)
+    column_key TEXT NOT NULL,
 
+    -- preference only, not permission
+    is_shown BOOLEAN NOT NULL DEFAULT true,
 
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
+    UNIQUE (user_id, page_name, column_key),
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);

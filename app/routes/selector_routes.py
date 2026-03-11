@@ -86,7 +86,7 @@ def select_assignments_v2():
     layout = data.get("layout", "per_class")
 
     query = Assignment.query.filter(
-        Assignment.user_id == current_user.user_id
+        Assignment.user_id == current_user.user_id,
     )
 
     now = datetime.now(timezone.utc)

@@ -170,6 +170,10 @@ class AssignmentViewPreferences(db.Model):
         nullable=False,
         unique=True
     )
+    page_name = db.Column(
+        db.Text,
+        nullable=False
+    )
 
     due_status_filter = db.Column(db.Text, nullable=False, default="all", server_default="all")
     completion_filter = db.Column(db.Text, nullable=False, default="all", server_default="all")

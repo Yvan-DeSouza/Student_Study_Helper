@@ -36,4 +36,6 @@ CREATED_FILTERS = ["all", "last_7_days", "last_30_days"]
 
 # ---------- RISK ----------
 RISK_FILTER_MODES = ["none", "under", "over"]
+ASSIGNMENT_PREF_PAGES = {"assignments", "calendar"}
+
 DEFAULT_RISK_THRESHOLD = None

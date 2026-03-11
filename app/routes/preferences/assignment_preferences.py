@@ -7,13 +7,18 @@ from app.models.user import AssignmentViewPreferences
 from app.services.defaults.assignments import (
     ASSIGNMENT_TYPES,
     DEFAULT_RISK_THRESHOLD,
+    ASSIGNMENT_PREF_PAGES
 )
 
 @preferences.route("/api/preferences/assignments", methods=["GET"])
 @login_required
 def get_assignment_preferences():
+    page_name = request.args.get("page", "assignments")
+    if page_name not in ASSIGNMENT_PREF_PAGES:
+        return jsonify({"error": "Invalid page_name"}), 400
     pref = AssignmentViewPreferences.query.filter_by(
-        user_id=current_user.user_id
+        user_id=current_user.user_id,
+        page_name=page_name
     ).first()
 
     if not pref:
