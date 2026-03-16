@@ -1,0 +1,26 @@
+{# templates/partials/modals/calendar_events_overflow.html
+   Shows the list of events hidden by the "+N more" overflow indicator.
+   Populated by calendar_overflow_modal.js.
+   Clicking any event opens the event details modal.
+#}
+<div class="modal-overlay hidden" id="calendarEventsOverflowModal">
+  <div class="modal card calendar-overflow-modal">
+
+    <div class="cal-modal-header">
+      <h2 class="cal-modal-title">
+        Events —
+        <span id="overflow-modal-label" class="overflow-modal-label"></span>
+      </h2>
+      <button class="cal-modal-close-btn" data-close-modal type="button" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="cal-modal-body">
+      <div id="overflow-modal-list" class="overflow-event-list"></div>
+    </div>
+
+    <div class="cal-modal-actions" style="padding: 0 1.5rem 1.25rem;">
+      <button class="btn ghost-btn" data-close-modal type="button">Close</button>
+    </div>
+
+  </div>
+</div>

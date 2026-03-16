@@ -1,0 +1,92 @@
+{# templates/partials/calendar/calendar_filter_panel.html
+   Phase 5 — Filter panel for the calendar.
+   Hidden by default; toggled by #btn-filter-toggle via calendar.js.
+   All filter state is read by calendar.js → _readFilterState().
+#}
+<div id="calendar-filter-panel" class="calendar-filter-panel hidden" aria-label="Calendar filters">
+
+  <div class="filter-panel-inner">
+
+    {# ── Entity type toggles ────────────────────────────── #}
+    <div class="filter-section">
+      <span class="filter-section-title">Show</span>
+      <div class="filter-checks">
+        <label class="filter-check">
+          <input type="checkbox" id="filter-show-assignments" checked>
+          Assignments
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" id="filter-show-sessions" checked>
+          Study Sessions
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" id="filter-show-classes" checked>
+          Classes
+        </label>
+      </div>
+    </div>
+
+    {# ── Assignment lifecycle ────────────────────────────── #}
+    <div class="filter-section">
+      <span class="filter-section-title">Assignment events</span>
+      <div class="filter-checks">
+        <label class="filter-check">
+          <input type="checkbox" name="filter-assignment-lifecycle" value="due" checked>
+          Due dates
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" name="filter-assignment-lifecycle" value="created" checked>
+          Added
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" name="filter-assignment-lifecycle" value="finished" checked>
+          Completed
+        </label>
+      </div>
+    </div>
+
+    {# ── Session states ──────────────────────────────────── #}
+    <div class="filter-section">
+      <span class="filter-section-title">Session states</span>
+      <div class="filter-checks">
+        <label class="filter-check">
+          <input type="checkbox" name="filter-session-state" value="scheduled" checked>
+          Scheduled
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" name="filter-session-state" value="active" checked>
+          Active
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" name="filter-session-state" value="completed" checked>
+          Completed
+        </label>
+        <label class="filter-check">
+          <input type="checkbox" name="filter-session-state" value="cancelled" checked>
+          Cancelled
+        </label>
+      </div>
+    </div>
+
+    {# ── Assignment types ────────────────────────────────── #}
+    <div class="filter-section">
+      <span class="filter-section-title">Assignment types</span>
+      <div class="filter-checks filter-checks-grid">
+        {% for t in ["homework","project","quiz","writing","test","exam","lab_report","presentation","reading","other"] %}
+        <label class="filter-check">
+          <input type="checkbox" name="filter-assignment-type" value="{{ t }}" checked>
+          {{ t | replace("_"," ") | title }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# ── Actions ─────────────────────────────────────────── #}
+    <div class="filter-actions">
+      <button id="btn-filter-apply" class="btn full-btn" type="button">Apply</button>
+      <button id="btn-filter-reset" class="btn ghost-btn" type="button">Reset</button>
+    </div>
+
+  </div>
+
+</div>

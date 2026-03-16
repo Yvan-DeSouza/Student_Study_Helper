@@ -1,0 +1,73 @@
+{# templates/partials/modals/calendar_edit_session.html
+   Edit study session modal for the calendar page.
+   Fields populated by JS (_openSessionEdit in calendar_event_details.js).
+   Only editable if session is not active/completed/cancelled.
+#}
+<div class="modal-overlay hidden" id="calendarEditSessionModal">
+  <div class="modal card">
+
+    <h2>Edit Study Session</h2>
+
+    <form id="calendarEditSessionForm">
+      <input type="hidden" id="cal-edit-session-id">
+
+
+      {# Title #}
+      <label for="cal-edit-session-title" class="input-label">Session Title</label>
+      <input
+        id="cal-edit-session-title"
+        type="text"
+        class="input-field"
+        required
+      >
+
+      {# Type #}
+      <label for="cal-edit-session-type" class="input-label">Session Type</label>
+      <select id="cal-edit-session-type" class="input-field" required>
+        <option value="homework">Homework</option>
+        <option value="project">Project</option>
+        <option value="quiz">Quiz</option>
+        <option value="writing">Writing</option>
+        <option value="test">Test</option>
+        <option value="exam">Exam</option>
+        <option value="lab_report">Lab Report</option>
+        <option value="presentation">Presentation</option>
+        <option value="reading">Reading</option>
+        <option value="other">Other</option>
+      </select>
+
+      {# Scheduled start #}
+      <label for="cal-edit-session-sched-start" class="input-label">Scheduled Start</label>
+      <input
+        id="cal-edit-session-sched-start"
+        type="datetime-local"
+        class="input-field"
+      >
+
+      {# Scheduled end #}
+      <label for="cal-edit-session-sched-end" class="input-label">Scheduled End <span class="hint">(optional)</span></label>
+      <input
+        id="cal-edit-session-sched-end"
+        type="datetime-local"
+        class="input-field"
+      >
+
+      {# Expected duration #}
+      <label for="cal-edit-session-duration" class="input-label">Expected Duration (min) <span class="hint">(optional)</span></label>
+      <input
+        id="cal-edit-session-duration"
+        type="number"
+        class="input-field"
+        min="1"
+        placeholder="e.g. 60"
+      >
+
+      <div class="modal-actions">
+        <button type="submit" class="btn full-btn">Save Changes</button>
+        <button type="button" class="btn ghost-btn" data-close-modal>Cancel</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>

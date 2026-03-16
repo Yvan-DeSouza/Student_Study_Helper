@@ -1,30 +1,14 @@
 """
-routes/calendar/calendar_page_routes.py
-
-Role: Serve the calendar HTML page. This is intentionally the thinnest
-      possible route file.
-
-What it does:
-  - One route: GET /calendar
-  - Authenticates user
-  - Reads user.timezone and user.created_at
-  - Passes these as Jinja context (NOT event data — events come via API)
-  - Renders and returns calendar/calendar.html
-
-What it must NEVER do:
-  - Query assignments, sessions, or classes
-  - Apply any calendar business logic
-  - Return JSON
-  - Compute date ranges
-
-Why timezone + created_at are baked into HTML:
-  These are configuration values, not event data. The frontend needs
-  them immediately to initialize state before making its first event fetch.
-  Injecting them into data attributes avoids an extra round-trip.
+app/routes/calendar/calendar_page_routes.py
+Passes classes, assignments, and has_active_session so modals can be
+rendered fully server-side (required by add_assignment.html Jinja loop).
 """
-
 from flask import Blueprint, render_template
 from flask_login import current_user, login_required
+
+from app.models.course import Class
+from app.models.assignment import Assignment
+from app.models.study_session import StudySession
 
 calendar = Blueprint("calendar", __name__)
 
@@ -32,8 +16,25 @@ calendar = Blueprint("calendar", __name__)
 @calendar.route("/calendar")
 @login_required
 def enter():
+    classes = Class.query.filter_by(user_id=current_user.user_id).all()
+
+    assignments = (
+        Assignment.query
+        .join(Class, Assignment.class_id == Class.class_id)
+        .filter(Class.user_id == current_user.user_id)
+        .all()
+    )
+
+    has_active_session = StudySession.query.filter_by(
+        user_id=current_user.user_id,
+        is_active=True,
+    ).first() is not None
+
     return render_template(
         "calendar/calendar.html",
         user_timezone=current_user.timezone or "UTC",
         user_created_at=current_user.created_at.isoformat(),
+        classes=classes,
+        assignments=assignments,
+        has_active_session=has_active_session,
     )

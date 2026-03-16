@@ -1,7 +1,4 @@
-{# templates/partials/calendar/calendar_toolbar.html
-   Navigation toolbar for the calendar page.
-   Click listeners are attached by interaction/navigation.js — not inline.
-#}
+{# templates/partials/calendar/calendar_toolbar.html #}
 <div class="calendar-toolbar card">
 
   <div class="toolbar-left">
@@ -21,6 +18,16 @@
       <button class="btn-view"        data-view="day"   type="button">Day</button>
       <button class="btn-view"        data-view="year"  type="button">Year</button>
     </div>
+
+    {# Phase 5: Filter toggle #}
+    <button
+      id="btn-filter-toggle"
+      class="btn-cal-filter"
+      type="button"
+      aria-expanded="false"
+      aria-controls="calendar-filter-panel"
+      title="Filters"
+    >⚙ Filters</button>
   </div>
 
 </div>

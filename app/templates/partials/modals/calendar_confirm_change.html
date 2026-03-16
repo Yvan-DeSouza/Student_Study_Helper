@@ -1,0 +1,45 @@
+{# templates/partials/modals/calendar_confirm_change.html
+   Phase 6 — Drag confirmation modal.
+   Shown by interaction/dragDrop.js before any move is saved.
+   Rule: No drag saves without user confirmation. No exceptions.
+   All text fields are populated by JS before the modal is shown.
+#}
+<div class="modal-overlay hidden" id="calendarConfirmChangeModal">
+  <div class="modal card calendar-confirm-modal">
+
+    <div class="cal-modal-header">
+      <h2 class="cal-modal-title">Move Event?</h2>
+      <button class="cal-modal-close-btn" data-close-modal type="button" aria-label="Cancel">&times;</button>
+    </div>
+
+    <div class="cal-modal-body">
+
+      <p class="cal-confirm-event-title" id="drag-confirm-event-title"></p>
+
+      <div class="cal-confirm-time-row">
+        <div class="cal-confirm-time-block">
+          <span class="cal-confirm-time-label">From</span>
+          <span class="cal-confirm-time-val" id="drag-confirm-old-time"></span>
+        </div>
+        <span class="cal-confirm-arrow">→</span>
+        <div class="cal-confirm-time-block">
+          <span class="cal-confirm-time-label">To</span>
+          <span class="cal-confirm-time-val" id="drag-confirm-new-time"></span>
+        </div>
+      </div>
+
+      {# Conflict warning — shown/hidden by JS #}
+      <p id="drag-confirm-conflict-warning"
+         class="cal-confirm-conflict"
+         style="display:none;">
+      </p>
+
+    </div>
+
+    <div class="modal-actions cal-modal-actions">
+      <button id="btn-confirm-drag" class="btn full-btn"   type="button">Confirm Move</button>
+      <button id="btn-cancel-drag"  class="btn ghost-btn"  type="button" data-close-modal>Cancel</button>
+    </div>
+
+  </div>
+</div>
