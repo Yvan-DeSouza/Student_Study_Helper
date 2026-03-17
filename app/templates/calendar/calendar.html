@@ -4,7 +4,6 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/calendar.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
-
 {% endblock %}
 
 {% block navbar %}
@@ -35,11 +34,13 @@
 {% endblock %}
 
 {% block content %}
+
 <div
   id="calendar-root"
   data-user-timezone="{{ user_timezone }}"
   data-user-created-at="{{ user_created_at }}"
 >
+
   {% include "partials/calendar/calendar_toolbar.html" %}
   {% include "partials/calendar/calendar_filter_panel.html" %}
 
@@ -47,29 +48,39 @@
     <aside id="mini-month-container" aria-label="Mini month picker"></aside>
 
     <section id="calendar-main">
-      {# FIX: inline style="display:none" avoids CSS specificity fight with display:flex #}
+
+      {#
+        FIX: use inline style="display:none" instead of class="hidden".
+        The global .hidden selector has the same specificity as .calendar-loading
+        (which sets display:flex), so whichever rule appears LAST in the CSS wins.
+        Since calendar.css loads after style.css, .calendar-loading always wins
+        and .hidden has no effect. Inline style has the highest specificity and
+        always works correctly.
+        JS toggles this with: el.style.display = loading ? "flex" : "none";
+      #}
       <div id="calendar-loading" class="calendar-loading" style="display:none;" aria-live="polite">
         <div class="calendar-loading-spinner"></div>
         <span>Loading events…</span>
       </div>
 
       <div id="calendar-body" class="calendar-body"></div>
+
     </section>
   </div>
+
 </div>
 
-{# ── All calendar modals ──────────────────────────────────────── #}
-{% include "partials/modals/calendar_event_details.html" %}
-{% include "partials/modals/calendar_confirm_change.html" %}
-{% include "partials/modals/calendar_create_choice.html" %}
-{% include "partials/modals/calendar_add_session.html" %}
-{% include "partials/modals/calendar_edit_session.html" %}
-{% include "partials/modals/calendar_events_overflow.html" %}
- 
-{# ── Existing assignment modals (need classes context — now passed from route) #}
+{# ── Calendar-specific modals ────────────────────────────── #}
+{% include "partials/modals/calendar/calendar_event_details.html" %}
+{% include "partials/modals/calendar/calendar_confirm_change.html" %}
+{% include "partials/modals/calendar/calendar_create_choice.html" %}
+{% include "partials/modals/calendar/calendar_add_session.html" %}
+{% include "partials/modals/calendar/calendar_edit_session.html" %}
+{% include "partials/modals/calendar/calendar_events_overflow.html" %}
+
+{# ── Assignment modals (need classes/assignments from route context) ── #}
 {% include "partials/modals/assignments/add_assignment.html" %}
 {% include "partials/modals/assignments/edit_assignment.html" %}
-
 
 {% endblock %}
 

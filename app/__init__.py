@@ -88,7 +88,7 @@ def create_app():
     )
     from .routes.charts import charts as charts_routes
     from app.routes.preferences import preferences
-    from app.routes.calendar import calendar_page_routes, calendar_api_routes
+    from app.routes.calendar import calendar_page_routes, calendar_api_routes, calendar_data_routes
 
 
     app.register_blueprint(charts_routes, url_prefix="/charts")
@@ -100,6 +100,7 @@ def create_app():
     app.register_blueprint(main_routes.main)
     app.register_blueprint(calendar_page_routes.calendar)
     app.register_blueprint(calendar_api_routes.calendar_api)
+    app.register_blueprint(calendar_data_routes.cal_data)
     app.register_blueprint(assignment_column_routes.assignment_columns)
     app.register_blueprint(preferences)
     app.register_blueprint(upcoming_deadlines_routes.upcoming_deadlines)

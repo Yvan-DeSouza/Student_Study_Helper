@@ -1,28 +1,31 @@
 /**
  * static/js/calendar/modals/calendar_overflow_modal.js
  *
- * Shared overflow modal for both month and week views.
- * Shows the list of hidden events with type info.
- * Clicking any event in the list opens the event details modal.
+ * Shared "hidden events" modal — opened by both the month "+N more" link
+ * and the week view overflow badge.
+ *
+ * Shows event title, entity type, lifecycle state, and time.
+ * Clicking any item closes this modal and opens the details modal.
  */
 
+import { formatTime } from "../utils/timeUtils.js";
 import { userTimezone } from "../domain/time.js";
-import { formatTime }   from "../utils/timeUtils.js";
+
 // ─────────────────────────────────────────────────────────────
 // PUBLIC
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Open the overflow modal with a list of hidden events.
+ * Open the overflow list modal.
  *
- * @param {CalendarEvent[]} events  Events NOT shown on the grid
- * @param {string}          label   Context label, e.g. "March 22" or "Tuesday 3 PM"
+ * @param {CalendarEvent[]} events  The hidden events to list
+ * @param {string}          label   Context label, e.g. "Tuesday, March 3"
  */
 export function openOverflowModal(events, label) {
   const modal = document.getElementById("calendarEventsOverflowModal");
   if (!modal) return;
 
-  _setText("overflow-modal-label", label || "Hidden events");
+  _setText("overflow-modal-label", label || "");
   _buildList(events);
 
   modal.classList.remove("hidden");
@@ -30,7 +33,7 @@ export function openOverflowModal(events, label) {
 }
 
 /**
- * Wire close-button listeners. Call once on page load.
+ * Initialise close-button listeners. Call once from calendar.js.
  */
 export function initOverflowModal() {
   const modal = document.getElementById("calendarEventsOverflowModal");
@@ -38,12 +41,6 @@ export function initOverflowModal() {
 
   modal.addEventListener("click", e => {
     if (e.target === modal || e.target.closest("[data-close-modal]")) {
-      _close(modal);
-    }
-  });
-
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && !modal.classList.contains("hidden")) {
       _close(modal);
     }
   });
@@ -58,53 +55,52 @@ function _buildList(events) {
   if (!list) return;
   list.innerHTML = "";
 
-  const ENTITY_LABELS = {
+  const ENTITY = {
     assignment:    "Assignment",
-    study_session: "Session",
+    study_session: "Study Session",
     class:         "Class",
   };
-  const LIFECYCLE_LABELS = {
+  const LIFECYCLE = {
     due:       "Due",
     scheduled: "Scheduled",
     active:    "Active",
     completed: "Completed",
     cancelled: "Cancelled",
     created:   "Added",
-    finished:  "Done",
+    finished:  "Completed",
   };
 
   events.forEach(event => {
     const item = document.createElement("div");
     item.className = "overflow-event-item";
 
-    // Coloured dot
     const dot = document.createElement("span");
-    dot.className = "overflow-event-dot";
-    dot.style.background = event.color || "#6366f1";
+    dot.className          = "overflow-event-dot";
+    dot.style.background   = event.color || "#6366f1";
 
-    // Event info
-    const info = document.createElement("div");
+    const info  = document.createElement("div");
     info.className = "overflow-event-info";
 
-    const titleEl = document.createElement("span");
+    const titleEl       = document.createElement("span");
     titleEl.className   = "overflow-event-title";
     titleEl.textContent = event.title;
 
-    const metaEl = document.createElement("span");
-    metaEl.className   = "overflow-event-meta";
-    const entityLabel  = ENTITY_LABELS[event.entity_type] || event.entity_type;
-    const stateLabel   = LIFECYCLE_LABELS[event.lifecycle_type] || "";
-    const timeLabel    = (!event.all_day && event.start)
-      ? formatTime(event.start, userTimezone)
-      : "";
-    metaEl.textContent = [entityLabel, stateLabel, timeLabel].filter(Boolean).join(" · ");
+    const metaEl   = document.createElement("span");
+    metaEl.className = "overflow-event-meta";
+    const parts      = [
+      ENTITY[event.entity_type]          || event.entity_type,
+      LIFECYCLE[event.lifecycle_type]    || "",
+      (!event.all_day && event.start)
+        ? formatTime(event.start, userTimezone)
+        : "",
+    ].filter(Boolean);
+    metaEl.textContent = parts.join(" · ");
 
     info.appendChild(titleEl);
     info.appendChild(metaEl);
     item.appendChild(dot);
     item.appendChild(info);
 
-    // Click → open details modal
     item.addEventListener("click", async () => {
       _close(document.getElementById("calendarEventsOverflowModal"));
       const { openEventDetailsModal } = await import("./calendar_event_details.js");
@@ -123,5 +119,5 @@ function _close(modal) {
 
 function _setText(id, text) {
   const el = document.getElementById(id);
-  if (el) el.textContent = text;
+  if (el) el.textContent = text || "";
 }

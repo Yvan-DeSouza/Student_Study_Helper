@@ -2,79 +2,100 @@
  * static/js/calendar/calendar.js
  *
  * Entry point and controller for the calendar system.
- * Fixed:
- *   - Loading spinner (uses inline style, not class toggle)
- *   - Create request opens choice modal instead of navigating
- *   - Add-assignment form wired for calendar context
- *   - Add-session form wired for calendar context
- *   - Overflow modal initialised
+ *
+ * Changes:
+ *   - All modal open/close uses modalManager.showModal / closeModal
+ *   - All calendar reloads use refreshBus.emitRefresh("calendar:reload")
+ *   - Filter "Apply" persists preferences via POST /api/calendar/filters/save
  */
 
-import { calendarState }           from "./calendar_state.js";
-import { loadEvents }              from "./calendar_service.js";
-import { render }                  from "./render/calendarRenderer.js";
-import { initNavigationListeners } from "./interaction/navigation.js";
-import { initEventDetailsModal }   from "./modals/calendar_event_details.js";
-import { init, init as initMiniPicker }  from "./components/miniMonthPicker.js";
-import { initOverflowModal }       from "./modals/calendar_overflow_modal.js";
-import { initModalEvents } from "../core/modalManager.js";
-import { initEditAssignmentModal } from "../assignments/modals/edit_assignment_init.js";
-import { initAddAssignmentSubmit } from "../assignments/modals/add_assignment_submit.js";
-import { initEditAssignmentSubmit } from "../assignments/modals/assignment_editor_submit.js";
-import { initEditAssignmentGradedToggle } from "../assignments/modals/assignment_editor.js";
+import { calendarState }                         from "./calendar_state.js";
+import { loadEvents }                            from "./calendar_service.js";
+import { render }                                from "./render/calendarRenderer.js";
+import { initNavigationListeners }               from "./interaction/navigation.js";
+import { initEventDetailsModal }                 from "./modals/calendar_event_details.js";
+import { init as initMiniPicker }                from "./components/miniMonthPicker.js";
+import { initOverflowModal }                     from "./modals/calendar_overflow_modal.js";
+import { showModal, closeModal, initModalEvents } from "../core/modalManager.js";
+import { registerRefresh, emitRefresh }          from "../core/refreshBus.js";
+import { saveFilters }                           from "./calendar_api.js";
+
 // ─────────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  // Global modal delegation (data-close-modal, overlay click)
   initModalEvents();
+
+  // Calendar-specific module init
   initNavigationListeners();
   initEventDetailsModal();
   initMiniPicker();
   initOverflowModal();
 
+  // Register the calendar reload function with refreshBus.
+  // Any module can now call emitRefresh("calendar:reload") to refresh.
+  registerRefresh("calendar:reload", async () => {
+    await loadEvents();
+    render();
+  });
+
+  // Filter panel
   _initFilterPanel();
+
+  // Create-choice flow
   _initCreateChoiceModal();
   _initAddAssignmentForm();
   _initAddSessionForm();
 
-  // State subscriptions
+  // ── State subscriptions ────────────────────────────────────
+
   calendarState.subscribe("viewChanged",    _onStateChange);
   calendarState.subscribe("dateChanged",    _onStateChange);
+
+  // Filters: in-memory re-render (no API call)
   calendarState.subscribe("filtersChanged", () => render());
 
-  // FIX: use inline style so CSS specificity can't fight us
+  // Loading spinner — use inline style (CSS specificity-safe)
   calendarState.subscribe("loadingChanged", ({ loading }) => {
-    const loader = document.getElementById("calendar-loading");
-    if (loader) loader.style.display = loading ? "flex" : "none";
+    const el = document.getElementById("calendar-loading");
+    if (el) el.style.display = loading ? "flex" : "none";
   });
-  _closeModal("editAssignmentModal");
-  _closeModal("addAssignmentModal");
 
-  // ESC closes any open calendar modal
+  // ESC closes any open calendar overlay
   document.addEventListener("keydown", e => {
-    console.log("Keydown:", e.key)
     if (e.key !== "Escape") return;
-    ["calendarEventDetailsModal", "calendarConfirmChangeModal",
-     "calendarCreateChoiceModal", "calendarAddSessionModal",
-     "calendarEditSessionModal",  "calendarEventsOverflowModal", 
-     "addAssignmentModal", "editAssignmentModal"]
-      .forEach(_closeModal);
+    [
+      "calendarEventDetailsModal",
+      "calendarConfirmChangeModal",
+      "calendarCreateChoiceModal",
+      "calendarAddSessionModal",
+      "calendarEditSessionModal",
+      "calendarEventsOverflowModal",
+      "addAssignmentModal",
+      "editAssignmentModal",
+    ].forEach(id => closeModal(id));
     document.getElementById("calendar-filter-panel")?.classList.add("hidden");
   });
 
-  // Click on empty slot / day cell
+  // Empty cell/slot click → create-choice modal
   document.addEventListener("calendar:createRequest", ({ detail }) => {
     _handleCreateRequest(detail.date, detail.time);
   });
 
-  // Re-fetch after any entity changes
-  document.addEventListener("assignment:changed",  _onEntityChanged);
-  document.addEventListener("assignment:updated",  _onEntityChanged);
-  document.addEventListener("session:updated",     _onEntityChanged);
-  document.addEventListener("session:created",     _onEntityChanged);
+  // Domain entity changes → calendar reload via refreshBus
+  document.addEventListener("assignment:changed",  () => emitRefresh("calendar:reload"));
+  document.addEventListener("assignment:updated",  () => emitRefresh("calendar:reload"));
+  document.addEventListener("session:updated",     () => emitRefresh("calendar:reload"));
+  document.addEventListener("session:created",     () => emitRefresh("calendar:reload"));
 
-  // Initial render then load
+  // Start hidden
+  closeModal("addAssignmentModal");
+  closeModal("editAssignmentModal");
+
+  // Initial render + load
   render();
   _onStateChange();
 });
@@ -84,11 +105,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // ─────────────────────────────────────────────────────────────
 
 async function _onStateChange() {
-  await loadEvents();
-  render();
-}
-
-async function _onEntityChanged() {
   await loadEvents();
   render();
 }
@@ -108,9 +124,20 @@ function _initFilterPanel() {
     toggleBtn.setAttribute("aria-expanded", String(!isOpen));
   });
 
-  document.getElementById("btn-filter-apply")?.addEventListener("click", () => {
-    calendarState.setFilters(_readFilterState());
+  document.getElementById("btn-filter-apply")?.addEventListener("click", async () => {
+    const filterState = _readFilterState();
+
+    // 1. Apply immediately (client-side, no round-trip)
+    calendarState.setFilters(filterState);
     panel.classList.add("hidden");
+    toggleBtn.setAttribute("aria-expanded", "false");
+
+    // 2. Persist to backend (fire-and-forget, table wired later)
+    try {
+      await saveFilters(filterState);
+    } catch (err) {
+      console.warn("[Calendar] Could not save filter preferences:", err);
+    }
   });
 
   document.getElementById("btn-filter-reset")?.addEventListener("click", () => {
@@ -118,6 +145,7 @@ function _initFilterPanel() {
       .forEach(cb => { cb.checked = true; });
     calendarState.setFilters(null);
     panel.classList.add("hidden");
+    toggleBtn.setAttribute("aria-expanded", "false");
   });
 }
 
@@ -127,13 +155,13 @@ function _readFilterState() {
     showAssignments:     get("filter-show-assignments")?.checked ?? true,
     showSessions:        get("filter-show-sessions")?.checked    ?? true,
     showClasses:         get("filter-show-classes")?.checked     ?? true,
-    assignmentLifecycle: _checkedValues("filter-assignment-lifecycle") || null,
-    sessionStates:       _checkedValues("filter-session-state")       || null,
-    assignmentTypes:     _checkedValues("filter-assignment-type")      || null,
+    assignmentLifecycle: _checkedVals("filter-assignment-lifecycle") || null,
+    sessionStates:       _checkedVals("filter-session-state")        || null,
+    assignmentTypes:     _checkedVals("filter-assignment-type")       || null,
   };
 }
 
-function _checkedValues(name) {
+function _checkedVals(name) {
   const vals = [...document.querySelectorAll(`input[name="${name}"]:checked`)]
     .map(cb => cb.value);
   return vals.length ? vals : null;
@@ -143,81 +171,59 @@ function _checkedValues(name) {
 // CREATE CHOICE MODAL
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Open the "Create" choice modal with the clicked date/time pre-stored.
- * The actual assignment / session modal opens when the user picks one.
- */
 function _handleCreateRequest(dateStr, time) {
   const modal = document.getElementById("calendarCreateChoiceModal");
   if (!modal) return;
 
-  // Store context so button handlers can use it
   modal.dataset.prefillDate = dateStr || "";
   modal.dataset.prefillTime = time    || "";
 
-  // Show the chosen date in the modal header
-  _setText("cal-create-choice-date", dateStr || "");
-
-  // Disable "Add Session" if a session is already active
-  const hasActive  = !!document.getElementById("active-session-bar");
-  const sessionBtn = document.getElementById("btn-create-session");
-  if (sessionBtn) {
-    sessionBtn.disabled = hasActive;
-    sessionBtn.title    = hasActive ? "Cannot add a session while one is active" : "";
+  if (dateStr) {
+    const d   = new Date(dateStr + "T00:00:00");
+    const lbl = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    _setText("cal-create-choice-date", lbl);
+  } else {
+    _setText("cal-create-choice-date", "");
   }
 
-  modal.classList.remove("hidden");
-  modal.classList.add("visible", "modal-top");
+  const sessionBtn = document.getElementById("btn-create-session");
+  if (sessionBtn) {
+    const hasActive     = !!document.getElementById("active-session-bar");
+    sessionBtn.disabled = hasActive;
+    sessionBtn.title    = hasActive ? "End your current session first." : "";
+  }
+
+  showModal("calendarCreateChoiceModal");
 }
 
 function _initCreateChoiceModal() {
-  const modal = document.getElementById("calendarCreateChoiceModal");
-  if (!modal) return;
-
-  // Close on overlay click or close button
-  modal.addEventListener("click", e => {
-    if (e.target === modal || e.target.closest("[data-close-modal]")) {
-      _closeModal("calendarCreateChoiceModal");
-    }
-  });
-
-  // "Add Assignment" button
   document.getElementById("btn-create-assignment")?.addEventListener("click", () => {
-    _closeModal("calendarCreateChoiceModal");
-    _openAddAssignmentPrefilled(modal.dataset.prefillDate, modal.dataset.prefillTime);
+    const modal = document.getElementById("calendarCreateChoiceModal");
+    closeModal("calendarCreateChoiceModal");
+    _openAddAssignment(modal?.dataset.prefillDate, modal?.dataset.prefillTime);
   });
 
-  // "Add Study Session" button
   document.getElementById("btn-create-session")?.addEventListener("click", () => {
-    _closeModal("calendarCreateChoiceModal");
-    _openAddSessionPrefilled(modal.dataset.prefillDate, modal.dataset.prefillTime);
+    const modal = document.getElementById("calendarCreateChoiceModal");
+    if (document.getElementById("btn-create-session")?.disabled) return;
+    closeModal("calendarCreateChoiceModal");
+    _openAddSession(modal?.dataset.prefillDate, modal?.dataset.prefillTime);
   });
 }
 
 // ─────────────────────────────────────────────────────────────
-// ADD ASSIGNMENT  (open existing global modal, pre-fill due date)
+// ADD ASSIGNMENT
 // ─────────────────────────────────────────────────────────────
 
-function _openAddAssignmentPrefilled(dateStr, time) {
-  // Pre-fill due_at input if we have a date
-  const dueAtInput = document.getElementById("due_at");
-  if (dueAtInput && dateStr) {
-    // datetime-local format: YYYY-MM-DDTHH:MM
-    const timeStr = time || "23:59";
-    // Ensure HH:MM format
-    const safeTime = timeStr.length === 5 ? timeStr : timeStr.substring(0, 5);
-    dueAtInput.value = `${dateStr}T${safeTime}`;
+function _openAddAssignment(dateStr, time) {
+  const dueInput = document.getElementById("due_at");
+  if (dueInput && dateStr) {
+    const t     = (time || "23:59").substring(0, 5);
+    dueInput.value = `${dateStr}T${t}`;
   }
-
-  const modal = document.getElementById("addAssignmentModal");
-  if (modal) {
-    modal.classList.remove("hidden");
-    modal.classList.add("visible", "modal-top");
-  }
+  showModal("addAssignmentModal");
 }
 
-// Wire the add-assignment form for calendar context
-// (add_assignment_submit.js is not loaded on this page)
 function _initAddAssignmentForm() {
   const form = document.querySelector('form[action="/assignment"]');
   if (!form || form.dataset.calendarInit) return;
@@ -230,17 +236,19 @@ function _initAddAssignmentForm() {
     if (btn) btn.disabled = true;
 
     try {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
-      const resp      = await fetch("/assignment", {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content || "";
+      const resp = await fetch("/assignment", {
         method:  "POST",
-        headers: { Accept: "application/json", "X-CSRFToken": csrfToken },
+        headers: { Accept: "application/json", "X-CSRFToken": csrf },
         body:    new FormData(form),
       });
       if (!resp.ok) throw new Error("Failed to create assignment");
 
       form.reset();
-      _closeModal("addAssignmentModal");
-      document.dispatchEvent(new CustomEvent("assignment:changed"));
+      closeModal("addAssignmentModal");
+
+      // Reload calendar via refreshBus
+      await emitRefresh("calendar:reload");
     } catch (err) {
       console.error(err);
       alert("Failed to create assignment. Please try again.");
@@ -254,38 +262,29 @@ function _initAddAssignmentForm() {
 // ADD SESSION
 // ─────────────────────────────────────────────────────────────
 
-function _openAddSessionPrefilled(dateStr, time) {
-  // Pre-fill scheduled start
-  const schedStart = document.getElementById("cal-add-session-sched-start");
-  if (schedStart && dateStr) {
-    const safeTime = (time || "09:00").substring(0, 5);
-    schedStart.value = `${dateStr}T${safeTime}`;
+function _openAddSession(dateStr, time) {
+  const startInput = document.getElementById("cal-add-session-sched-start");
+  if (startInput && dateStr) {
+    const t = (time || "09:00").substring(0, 5);
+    startInput.value = `${dateStr}T${t}`;
   }
 
-  // Populate class dropdown from /classes/json if empty
-  const classSelect = document.getElementById("cal-add-session-class");
-  if (classSelect && classSelect.options.length === 0) {
-    fetch("/classes/json")
+  // Populate class dropdown if empty
+  const classEl = document.getElementById("cal-add-session-class");
+  if (classEl && classEl.options.length === 0) {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || "";
+    fetch("/classes/json", { headers: { Accept: "application/json", "X-CSRFToken": csrf } })
       .then(r => r.json())
       .then(classes => {
-        classes.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value       = c.class_id;
-          opt.textContent = c.class_name;
-          classSelect.appendChild(opt);
-        });
-        _refreshSessionAssignments(classSelect.value);
+        classes.forEach(c => classEl.appendChild(new Option(c.class_name, c.class_id)));
+        _refreshSessionAssignments(classEl.value);
       })
       .catch(() => {});
   } else {
-    _refreshSessionAssignments(classSelect?.value);
+    _refreshSessionAssignments(classEl?.value);
   }
 
-  const modal = document.getElementById("calendarAddSessionModal");
-  if (modal) {
-    modal.classList.remove("hidden");
-    modal.classList.add("visible", "modal-top");
-  }
+  showModal("calendarAddSessionModal");
 }
 
 function _initAddSessionForm() {
@@ -293,9 +292,8 @@ function _initAddSessionForm() {
   if (!form || form.dataset.calendarInit) return;
   form.dataset.calendarInit = "1";
 
-  // Refresh assignments when class changes
-  const classSelect = document.getElementById("cal-add-session-class");
-  classSelect?.addEventListener("change", () => _refreshSessionAssignments(classSelect.value));
+  document.getElementById("cal-add-session-class")
+    ?.addEventListener("change", e => _refreshSessionAssignments(e.target.value));
 
   form.addEventListener("submit", async e => {
     e.preventDefault();
@@ -304,67 +302,50 @@ function _initAddSessionForm() {
     if (btn) btn.disabled = true;
 
     try {
-      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content || "";
       const resp = await fetch("/study/new", {
-        method: "POST",
-        headers: { "X-CSRFToken": csrfToken },
-        body:   new FormData(form),
+        method:  "POST",
+        headers: { "X-CSRFToken": csrf },
+        body:    new FormData(form),
       });
       const data = await resp.json();
       if (!resp.ok || !data.success) throw new Error(data.error || "Failed");
 
       form.reset();
-      _closeModal("calendarAddSessionModal");
-      document.dispatchEvent(new CustomEvent("session:created"));
+      closeModal("calendarAddSessionModal");
+
+      // Reload calendar via refreshBus
+      await emitRefresh("calendar:reload");
     } catch (err) {
-      console.error(err);
-      alert("Failed to create study session. " + (err.message || ""));
+      const msg = err.message === "ACTIVE_SESSION_EXISTS"
+        ? "You already have an active session running."
+        : `Failed to schedule session. ${err.message || ""}`;
+      alert(msg);
     } finally {
       if (btn) btn.disabled = false;
-    }
-  });
-
-  // Close on overlay click
-  const modal = document.getElementById("calendarAddSessionModal");
-  modal?.addEventListener("click", e => {
-    if (e.target === modal || e.target.closest("[data-close-modal]")) {
-      _closeModal("calendarAddSessionModal");
     }
   });
 }
 
 async function _refreshSessionAssignments(classId) {
-  const assignSelect = document.getElementById("cal-add-session-assignment");
-  if (!assignSelect) return;
-
-  assignSelect.innerHTML = '<option value="">None</option>';
+  const sel = document.getElementById("cal-add-session-assignment");
+  if (!sel) return;
+  sel.innerHTML = '<option value="">None</option>';
   if (!classId) return;
 
   try {
-    const resp = await fetch("/assignments/json");
-    if (!resp.ok) return;
-    const assignments = await resp.json();
-    assignments
+    const r = await fetch("/assignments/json");
+    if (!r.ok) return;
+    const list = await r.json();
+    list
       .filter(a => String(a.class_id) === String(classId))
-      .forEach(a => {
-        const opt = document.createElement("option");
-        opt.value       = a.assignment_id;
-        opt.textContent = a.title;
-        assignSelect.appendChild(opt);
-      });
+      .forEach(a => sel.appendChild(new Option(a.title, a.assignment_id)));
   } catch (_) {}
 }
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────
-
-function _closeModal(id) {
-  const modal = document.getElementById(id);
-  if (!modal || modal.classList.contains("hidden")) return;
-  modal.classList.remove("visible", "modal-top");
-  modal.classList.add("hidden");
-}
 
 function _setText(id, text) {
   const el = document.getElementById(id);

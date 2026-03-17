@@ -1,8 +1,10 @@
 """
 app/routes/calendar/calendar_page_routes.py
-Passes classes, assignments, and has_active_session so modals can be
-rendered fully server-side (required by add_assignment.html Jinja loop).
+
+Serves the calendar HTML page. Passes template context needed for
+server-side modal rendering (class dropdowns, active session flag).
 """
+
 from flask import Blueprint, render_template
 from flask_login import current_user, login_required
 
@@ -16,12 +18,19 @@ calendar = Blueprint("calendar", __name__)
 @calendar.route("/calendar")
 @login_required
 def enter():
-    classes = Class.query.filter_by(user_id=current_user.user_id).all()
+    classes = (
+        Class.query
+        .filter_by(user_id=current_user.user_id)
+        .order_by(Class.class_name)
+        .all()
+    )
 
     assignments = (
         Assignment.query
         .join(Class, Assignment.class_id == Class.class_id)
         .filter(Class.user_id == current_user.user_id)
+        .filter(Assignment.is_completed == False)
+        .order_by(Assignment.title)
         .all()
     )
 

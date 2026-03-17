@@ -1,11 +1,8 @@
 /**
  * static/js/calendar/calendar_api.js
  *
- * Pure HTTP transport layer. ONE job: make requests and return structured data.
- * Never stores data. Never renders. Never retries (retry logic lives in service).
- *
- * Always returns: { success: bool, data: any, error: string|null }
- * so callers always handle both success and failure the same way.
+ * Pure HTTP transport layer. One job: make requests and return structured data.
+ * Added: saveFilters() — persists filter preferences to the backend.
  */
 
 function getCsrfToken() {
@@ -16,15 +13,6 @@ function getCsrfToken() {
 // FETCH EVENTS
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Fetch CalendarEvents for a date range.
- *
- * @param {string} start   "YYYY-MM-DD"
- * @param {string} end     "YYYY-MM-DD"
- * @param {Object} filters optional filter config (Phase 5)
- *
- * @returns {{ success: bool, data: CalendarEvent[]|null, error: string|null }}
- */
 export async function fetchEvents(start, end, filters = null) {
   try {
     let url = `/api/calendar/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`;
@@ -34,7 +22,7 @@ export async function fetchEvents(start, end, filters = null) {
 
     const response = await fetch(url, {
       headers: {
-        Accept: "application/json",
+        Accept:        "application/json",
         "X-CSRFToken": getCsrfToken(),
       },
     });
@@ -54,29 +42,18 @@ export async function fetchEvents(start, end, filters = null) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// MOVE EVENT (Phase 6 — drag & drop)
+// MOVE EVENT (drag & drop)
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Move a calendar event to a new time via drag & drop.
- * Phase 6 only — not called in MVP.
- *
- * @param {string} eventId   full CalendarEvent ID, e.g. "assignment_42_due"
- * @param {string} newStart  local ISO datetime string
- * @param {string} newEnd    local ISO datetime string or null
- * @param {string} timezone  IANA timezone string
- *
- * @returns {{ success: bool, data: CalendarEvent|null, error: string|null }}
- */
 export async function moveEvent(eventId, newStart, newEnd, timezone) {
   try {
     const response = await fetch(
       `/api/calendar/events/${encodeURIComponent(eventId)}/move`,
       {
-        method: "PATCH",
+        method:  "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": getCsrfToken(),
+          "X-CSRFToken":  getCsrfToken(),
         },
         body: JSON.stringify({ new_start: newStart, new_end: newEnd, timezone }),
       }
@@ -92,5 +69,43 @@ export async function moveEvent(eventId, newStart, newEnd, timezone) {
 
   } catch (err) {
     return { success: false, data: null, error: err.message };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// SAVE FILTERS
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Persist the user's calendar filter preferences to the backend.
+ *
+ * The UserCalendarFilter table does not yet exist — the backend stub
+ * returns { success: true } immediately. This call is fire-and-forget;
+ * the UI updates optimistically regardless of the response.
+ *
+ * @param {Object} filters — the filter config from _readFilterState()
+ * @returns {{ success: bool, error: string|null }}
+ */
+export async function saveFilters(filters) {
+  try {
+    const response = await fetch("/api/calendar/filters/save", {
+      method:  "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken":  getCsrfToken(),
+      },
+      body: JSON.stringify({ filters }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      return { success: false, error: err.error || "Save failed" };
+    }
+
+    const data = await response.json();
+    return { success: data.success, error: null };
+
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }

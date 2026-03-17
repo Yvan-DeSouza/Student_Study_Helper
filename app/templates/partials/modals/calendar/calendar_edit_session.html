@@ -1,7 +1,7 @@
 {# templates/partials/modals/calendar_edit_session.html
-   Edit study session modal for the calendar page.
-   Fields populated by JS (_openSessionEdit in calendar_event_details.js).
-   Only editable if session is not active/completed/cancelled.
+   Edit a scheduled study session from the calendar details modal.
+   Class is read-only (displayed, not editable from calendar).
+   Form handled by calendar_event_details.js → PATCH /api/calendar/sessions/<id>
 #}
 <div class="modal-overlay hidden" id="calendarEditSessionModal">
   <div class="modal card">
@@ -11,9 +11,10 @@
     <form id="calendarEditSessionForm">
       <input type="hidden" id="cal-edit-session-id">
 
+      <label class="input-label">Class</label>
+      <div id="cal-edit-session-class" class="input-field input-field-readonly"></div>
 
-      {# Title #}
-      <label for="cal-edit-session-title" class="input-label">Session Title</label>
+      <label for="cal-edit-session-title" class="input-label">Session Title <span class="required-star">*</span></label>
       <input
         id="cal-edit-session-title"
         type="text"
@@ -21,8 +22,7 @@
         required
       >
 
-      {# Type #}
-      <label for="cal-edit-session-type" class="input-label">Session Type</label>
+      <label for="cal-edit-session-type" class="input-label">Session Type <span class="required-star">*</span></label>
       <select id="cal-edit-session-type" class="input-field" required>
         <option value="homework">Homework</option>
         <option value="project">Project</option>
@@ -36,7 +36,6 @@
         <option value="other">Other</option>
       </select>
 
-      {# Scheduled start #}
       <label for="cal-edit-session-sched-start" class="input-label">Scheduled Start</label>
       <input
         id="cal-edit-session-sched-start"
@@ -44,16 +43,18 @@
         class="input-field"
       >
 
-      {# Scheduled end #}
-      <label for="cal-edit-session-sched-end" class="input-label">Scheduled End <span class="hint">(optional)</span></label>
+      <label for="cal-edit-session-sched-end" class="input-label">
+        Scheduled End <span class="hint">(optional)</span>
+      </label>
       <input
         id="cal-edit-session-sched-end"
         type="datetime-local"
         class="input-field"
       >
 
-      {# Expected duration #}
-      <label for="cal-edit-session-duration" class="input-label">Expected Duration (min) <span class="hint">(optional)</span></label>
+      <label for="cal-edit-session-duration" class="input-label">
+        Expected Duration <span class="hint">(minutes, optional)</span>
+      </label>
       <input
         id="cal-edit-session-duration"
         type="number"
