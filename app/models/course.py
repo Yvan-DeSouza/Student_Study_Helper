@@ -1,8 +1,9 @@
 from app.extensions import db
 from datetime import datetime, timezone
-from sqlalchemy import func, text
+from sqlalchemy import select, func, text
 from app.models.study_session import StudySession
 from app.models.assignment import Assignment
+from sqlalchemy.ext.hybrid import hybrid_property
 
 class Class(db.Model):
     __tablename__ = "classes"
@@ -28,27 +29,59 @@ class Class(db.Model):
     study_sessions = db.relationship("StudySession", back_populates="class_", cascade="all, delete-orphan")
     expected_grades = db.relationship("ClassExpectedGrade", back_populates="class_", cascade="all, delete-orphan")
 
-    @property
+    @hybrid_property
     def total_assignments(self):
-        return Assignment.query.filter_by(class_id=self.class_id).count()
+        return len(self.assignments)
 
-    @property
+    @total_assignments.expression
+    def total_assignments(cls):
+        return (
+            select(func.count(Assignment.assignment_id))
+            .where(Assignment.class_id == cls.class_id)
+            .scalar_subquery()
+        )
+
+    @hybrid_property
     def completed_assignments(self):
-        return Assignment.query.filter_by(
-            class_id=self.class_id,
-            is_completed=True
-        ).count()
+        return sum(1 for a in self.assignments if a.is_completed)
 
-    @property
+    @completed_assignments.expression
+    def completed_assignments(cls):
+        return (
+            select(func.count(Assignment.assignment_id))
+            .where(
+                (Assignment.class_id == cls.class_id) &
+                (Assignment.is_completed == True)
+            )
+            .scalar_subquery()
+        )
+
+
+    @hybrid_property
     def total_study_sessions(self):
         return StudySession.query.filter_by(class_id=self.class_id).count()
 
-    @property
+    @total_study_sessions.expression
+    def total_study_sessions(cls):
+        return (
+            select(func.count(StudySession.session_id))
+            .where(
+                (StudySession.class_id == cls.class_id)
+            )
+            .scalar_subquery()
+        )
+    
+    @hybrid_property
     def total_study_time(self):
-        total = db.session.query(
-            db.func.coalesce(db.func.sum(StudySession.duration_minutes), 0)
-        ).filter_by(class_id=self.class_id).scalar()
-        return f"{total} min"
+        return sum(s.duration_minutes or 0 for s in self.study_sessions)
+
+    @total_study_time.expression
+    def total_study_time(cls):
+        return (
+            select(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+            .where(StudySession.class_id == cls.class_id)
+            .scalar_subquery()
+        )
 
 class ClassExpectedGrade(db.Model):
     __tablename__ = "class_expected_grades"

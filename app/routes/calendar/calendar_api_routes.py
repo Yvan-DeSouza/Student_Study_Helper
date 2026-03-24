@@ -143,3 +143,11 @@ def move_calendar_event(event_id):
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": "Server error moving event"}), 500
+    
+
+
+
+@calendar_api.route("/api/calendar/filters/save", methods=["POST"])
+@login_required
+def save_filters():
+  return jsonify({"success": True})

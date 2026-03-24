@@ -38,14 +38,12 @@ class StudySession(db.Model):
     class_ = db.relationship("Class", back_populates="study_sessions")
     assignment = db.relationship("Assignment", back_populates="study_sessions")
     user = db.relationship("User")
-    # Optional properties for convenience
     @property
     def total_time(self):
         """Returns the duration in minutes if available."""
         return self.duration_minutes
 
 
-    # Optional: consistency check
     def is_valid(self):
         if self.is_active and self.is_completed:
             return False

@@ -263,26 +263,3 @@ def _build_session_projection(
     return None
 
 
-# ─────────────────────────────────────────────────────────────
-# CLASS LIFECYCLE EXPANSION (Phase 1+ — scaffold ready)
-# ─────────────────────────────────────────────────────────────
-
-# def _fetch_class_projections(user_id, start_utc, end_utc):
-#     """
-#     Generates class_created and class_finished events.
-#     Uncomment when class events are needed on the calendar.
-#     """
-#     projections = []
-#     classes = Class.query.filter(
-#         Class.user_id == user_id,
-#         or_(
-#             Class.created_at.between(start_utc, end_utc),
-#             Class.finished_at.between(start_utc, end_utc),
-#         )
-#     ).all()
-#     for cls in classes:
-#         if cls.created_at and start_utc <= cls.created_at <= end_utc:
-#             projections.append({...})
-#         if cls.finished_at and start_utc <= cls.finished_at <= end_utc:
-#             projections.append({...})
-#     return projections
