@@ -2,9 +2,6 @@
 app/routes/calendar/calendar_api_routes.py
 
 All JSON API endpoints for the calendar frontend.
-
-Phase 2+:  GET  /api/calendar/events
-Phase 6:   PATCH /api/calendar/events/<event_id>/move
 """
 
 import json
@@ -74,7 +71,7 @@ def get_calendar_events():
 
 
 # ─────────────────────────────────────────────────────────────
-# PATCH /api/calendar/events/<event_id>/move  (Phase 6)
+# PATCH /api/calendar/events/<event_id>/move  
 # ─────────────────────────────────────────────────────────────
 
 @calendar_api.route("/api/calendar/events/<event_id>/move", methods=["PATCH"])

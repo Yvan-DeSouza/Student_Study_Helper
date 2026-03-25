@@ -10,7 +10,7 @@ from flask_login import current_user, login_required
 
 from app.models.course import Class
 from app.models.assignment import Assignment
-from app.models.study_session import StudySession
+from app.services.study_session_services import has_active_session
 
 calendar = Blueprint("calendar", __name__)
 
@@ -33,11 +33,8 @@ def enter():
         .order_by(Assignment.title)
         .all()
     )
+    has_active = has_active_session(current_user.user_id)
 
-    has_active_session = StudySession.query.filter_by(
-        user_id=current_user.user_id,
-        is_active=True,
-    ).first() is not None
 
     return render_template(
         "calendar/calendar.html",
@@ -45,5 +42,5 @@ def enter():
         user_created_at=current_user.created_at.isoformat(),
         classes=classes,
         assignments=assignments,
-        has_active_session=has_active_session,
+        has_active_session=has_active,
     )

@@ -1,31 +1,6 @@
-# ADD THIS ROUTE to your existing assignment_routes.py
-# Place it alongside the other assignment routes.
 
-# ── Fetch single assignment for calendar edit ────────────────────────────────
-# @assignment.route("/assignments/<int:assignment_id>/detail", methods=["GET"])
-# @login_required
-# def get_assignment_detail(assignment_id):
-#     a = Assignment.query.filter_by(
-#         assignment_id=assignment_id,
-#         user_id=current_user.user_id
-#     ).first_or_404()
-#     return jsonify({
-#         "id":                  a.assignment_id,
-#         "title":               a.title,
-#         "assignment_type":     a.assignment_type,
-#         "class_id":            a.class_id,
-#         "due_at":              a.due_at.isoformat()       if a.due_at       else None,
-#         "finished_at":         a.finished_at.isoformat()  if a.finished_at  else None,
-#         "is_graded":           a.is_graded,
-#         "expected_grade":      float(a.expected_grade)    if a.expected_grade else None,
-#         "pass_grade":          float(a.pass_grade)        if a.pass_grade    else None,
-#         "ponderation":         a.ponderation,
-#         "difficulty":          a.difficulty,
-#         "estimated_minutes":   a.estimated_minutes,
-#     })
 
-# ─── ACTUAL PYTHON (copy-paste ready) ───────────────────────────────────────
-from flask import Blueprint, request, jsonify, redirect, url_for, render_template, abort, flash
+from flask import Blueprint, request, jsonify, render_template
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.assignment import Assignment, AssignmentExpectedGrade
@@ -136,8 +111,6 @@ def list_assignments():
         "class_is_finished": cf, "created_at": cat, "study_minutes": sm,
     } for a, cn, ci, ct, cf, cat, sm in assignments]
 
-    if request.args.get("partial") == "table":
-        return render_template("partials/assignments_table.html", rows=rows, show_class_column=True)
 
     prefs        = UserPreferences.query.filter_by(user_id=current_user.user_id).first()
     deadline_count = prefs.default_upcoming_deadlines_count if prefs else 3

@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
-from wtforms import StringField
 from app.extensions import db
 from app.forms import RegisterForm, LoginForm
 from app.services.columns.registry import COLUMN_REGISTRY

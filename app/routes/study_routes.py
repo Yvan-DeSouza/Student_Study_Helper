@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, render_template, jsonify, flash
+from flask import Blueprint, request, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.study_session import StudySession
@@ -16,7 +16,6 @@ def study_sessions():
     return redirect(url_for("main.home"))
 
 
-# ── Create session (POST only — the GET bug is removed) ──────────────────────
 @study.route("/study/new", methods=["POST"])
 @login_required
 def add_session():
@@ -82,7 +81,6 @@ def add_session():
     return jsonify({"success": True, "session_id": session.session_id})
 
 
-# ── Detail (read) ─────────────────────────────────────────────────────────────
 @study.route("/study/<int:session_id>/detail", methods=["GET"])
 @login_required
 def get_session_detail(session_id):
@@ -141,7 +139,7 @@ def update_session(session_id):
     return jsonify({"success": True})
 
 
-# ── End / cancel / start / reschedule (unchanged) ─────────────────────────────
+# ── End / cancel / start / reschedule ─────────────────────────────
 @study.route("/study/<int:session_id>/end", methods=["POST"])
 @login_required
 def end_session(session_id):

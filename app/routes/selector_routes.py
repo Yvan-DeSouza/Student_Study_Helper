@@ -1,9 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from sqlalchemy import and_, or_, func, false, case
+from sqlalchemy import or_, false, case
 from datetime import datetime, timedelta, timezone
 
-from app.extensions import db
 from app.models.course import Class
 from app.models.assignment import Assignment
 

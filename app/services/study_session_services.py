@@ -1,4 +1,3 @@
-# app/services/study_session_service.py
 from app.models.study_session import StudySession
 from datetime import datetime, timezone
 

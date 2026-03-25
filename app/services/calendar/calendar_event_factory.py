@@ -111,9 +111,6 @@ def _compute_editable(entity_type: str, lifecycle_type: str) -> bool:
     Non-editable lifecycles are historical facts: created, finished,
     completed, cancelled, active. Class events are never editable from
     the calendar (they have their own page).
-
-    Phase 4 wires the edit button to the actual modal.
-    For MVP, editable is set but the button does nothing yet.
     """
     if entity_type == "class":
         return False

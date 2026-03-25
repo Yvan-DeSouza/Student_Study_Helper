@@ -1,10 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, current_app, jsonify, abort, flash
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, abort, flash
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.course import Class
-from app.models.assignment import Assignment
 from sqlalchemy import and_
-from datetime import datetime, timezone
 from dateutil import parser
 
 
@@ -157,7 +155,6 @@ def update_class(class_id):
                 "message": f"The {new_name} is already taken for your class with a code of {existing_name.class_code}, please choose another name."
             }), 400
 
-    # Check for duplicate code if changed
     if new_code != cls.class_code:
         existing_code = Class.query.filter(
             and_(
@@ -221,7 +218,7 @@ def toggle_class_completion(class_id):
         c.finished_at = None
 
     db.session.commit()
-    return {"status": "ok"}, 200
+    return {"success": True}, 200
 
 
 

@@ -127,7 +127,7 @@ def build_assignment_columns():
 
     table_layout = view_prefs.table_layout
     # -------------------------
-    # Layout-based visibility override (DO NOT persist)
+    # Layout-based visibility override 
     # -------------------------
     if "class" in column_states:
         state = column_states["class"]

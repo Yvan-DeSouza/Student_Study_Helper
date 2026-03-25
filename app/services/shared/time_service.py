@@ -1,11 +1,9 @@
 """
-services/shared/time_service.py
 
 THE single authoritative location for all time-related operations.
 Nothing in the calendar may convert, compare, or manipulate datetimes
 without going through this file.
 
-Uses zoneinfo (Python 3.9+). Install backports.zoneinfo for older Python.
 """
 
 import calendar as cal_module

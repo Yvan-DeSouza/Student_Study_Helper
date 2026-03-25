@@ -16,13 +16,10 @@ This service never queries the assignments or sessions tables directly —
 it delegates to domain services that own those tables.
 """
 
-from datetime import timezone
 
 from app.services.shared.time_service         import local_to_utc
 from app.services.calendar.calendar_event_factory   import build
 from app.services.calendar.calendar_permission_service import validate_draggable
-from app.models.assignment    import Assignment
-from app.models.study_session import StudySession
 from app.models.user          import UserAssignmentTypeColor
 
 

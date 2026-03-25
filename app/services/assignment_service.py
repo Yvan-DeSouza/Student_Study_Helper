@@ -1,5 +1,4 @@
 """
-app/services/assignment_service.py
 
 Business-logic wrapper for assignment operations called by the calendar.
 

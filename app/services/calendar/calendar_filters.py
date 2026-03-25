@@ -4,7 +4,6 @@ app/services/calendar/calendar_filters.py
 Apply visibility filters to a list of CalendarEvents.
 Pure function — receives a list and a config dict, returns a filtered list.
 
-This is the Phase 5 implementation.
 The filter config mirrors what the frontend sends in the "filters" query param.
 """
 

@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify
 from flask_login import login_required, current_user
 from app.routes.charts import charts
 from app.models.course import Class

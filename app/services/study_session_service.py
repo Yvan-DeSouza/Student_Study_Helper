@@ -1,6 +1,4 @@
 """
-app/services/study_session_service.py
-
 Business-logic wrapper for study session operations called by the calendar.
 
 Functions exposed to calendar_update_service:

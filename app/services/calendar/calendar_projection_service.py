@@ -44,8 +44,6 @@ def fetch_range(user_id: int, start_utc: datetime, end_utc: datetime) -> list:
     projections = []
     projections.extend(_fetch_assignment_projections(user_id, start_utc, end_utc, user_colors))
     projections.extend(_fetch_session_projections(user_id, start_utc, end_utc, user_colors))
-    # Phase 1+: add class projections here when needed
-    # projections.extend(_fetch_class_projections(user_id, start_utc, end_utc))
 
     return projections
 

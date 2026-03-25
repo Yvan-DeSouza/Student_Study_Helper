@@ -1,4 +1,3 @@
-# app/services/defaults/assignments.py
 
 # ---------- ASSIGNMENT TYPES ----------
 ASSIGNMENT_TYPES = [

@@ -3,7 +3,6 @@ from app.extensions import db
 from app.models.course import Class
 from app.models.assignment import Assignment
 from app.models.study_session import StudySession
-from sqlalchemy import func, cast, Date
 from .requirements import (
     GradeVsStudyTimeReq,
     ClassHealthReq

@@ -2,7 +2,6 @@
 app/services/calendar/calendar_permission_service.py
 
 Authoritative source for draggability / editability flags.
-Phase 6 active: drag rules fully enabled.
 """
 
 

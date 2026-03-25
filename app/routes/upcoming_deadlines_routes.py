@@ -1,5 +1,5 @@
 # routes/upcoming_deadlines_routes.py
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
 from app.extensions import db
 from app.models.assignment import Assignment
@@ -7,7 +7,7 @@ from app.models.course import Class
 from app.models.user import UserPreferences, UserAssignmentTypeColor
 from app.services.analytics.computation.expected import estimate_expected_minutes
 from datetime import datetime, timezone
-from sqlalchemy import func, case
+from sqlalchemy import case
 
 upcoming_deadlines = Blueprint("upcoming_deadlines", __name__)
 
