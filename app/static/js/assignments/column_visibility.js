@@ -1,4 +1,3 @@
-// static/js/assignments/column_visibility.js
 
 import { emitRefresh } from '../core/refreshBus.js';
 import { getColumnDescription, buildRequirementExplanation } from '../columns/core/columnPolicy.js';
@@ -52,7 +51,7 @@ async function checkRiskFilterEligibility() {
             hintDiv.style.border = "1px solid rgba(255, 152, 0, 0.3)";
             
             const hintTitle = document.createElement("strong");
-            hintTitle.textContent = "🔒 Risk filter disabled";
+            hintTitle.textContent = "Risk filter disabled";
             hintTitle.style.display = "block";
             hintTitle.style.marginBottom = "6px";
             

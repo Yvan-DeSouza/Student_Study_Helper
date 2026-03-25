@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (noIncomplete && !hasWithoutDue) {
             return `
                 <div class="chart-empty">
-                    <p><strong>🎉 You have no due assignments!</strong></p>
+                    <p><strong>You have no due assignments!</strong></p>
                 </div>
             `;
         }
@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (noIncomplete && hasWithoutDue) {
             return `
                 <div class="chart-empty">
-                    <p><strong>🎉 You have no due assignments!</strong></p>
-                    <p><em>⚠️ However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
+                    <p><strong>You have no due assignments!</strong></p>
+                    <p><em> However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
                 </div>
             `;
         }
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </ul>
                 ${
                     hasWithoutDue
-                        ? `<p><em>⚠️ Warning: You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>`
+                        ? `<p><em>Warning: You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>`
                         : ''
                 }
             </div>
@@ -63,14 +63,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         let html = `
             <p><strong>Tips for using this chart:</strong></p>
             <ul>
-                <li>🧠 Switch between days and weeks to zoom in/out on your workload</li>
-                <li>🏷️ Use class filters to isolate workload sources</li>
+                <li>Switch between days and weeks to zoom in/out on your workload</li>
+                <li>Use class filters to isolate workload sources</li>
             </ul>
         `;
 
         if (ineligibleAssignments && ineligibleAssignments.length > 0) {
             html += `
-                <p><strong>⚠️ Hidden assignments (${ineligibleAssignments.length}):</strong></p>
+                <p><strong>Hidden assignments (${ineligibleAssignments.length}):</strong></p>
                 <p>The following assignments are not shown because they don't have due dates:</p>
                 <ul>
                     ${ineligibleAssignments
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!hasAssignments) {
             return `
                 <div class="chart-empty">
-                    <p><strong>📝 No assignments yet</strong></p>
+                    <p><strong> No assignments yet</strong></p>
                     <p>Once you add assignments, this chart will show how your workload is distributed.</p>
                 </div>
             `;
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (hasAssignments && !hasStudyTime && metric === 'study_time') {
             return `
                 <div class="chart-empty">
-                    <p><strong>📊 You have assignments, but no study time logged yet</strong></p>
+                    <p><strong>You have assignments, but no study time logged yet</strong></p>
                     <p>Start a study session to see time-based breakdowns.</p>
                     <p><em>Tip: Switch to "Count" mode to see assignment distribution.</em></p>
                 </div>
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (noIncomplete && !hasWithoutDue) {
             return `
                 <div class="chart-empty">
-                    <p><strong>🎉 No upcoming assignments to track right now</strong></p>
+                    <p><strong>No upcoming assignments to track right now</strong></p>
                 </div>
             `;
         }
@@ -180,8 +180,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (noIncomplete && hasWithoutDue) {
             return `
                 <div class="chart-empty">
-                    <p><strong>🎉 No upcoming assignments to track right now</strong></p>
-                    <p><em>⚠️ However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
+                    <p><strong>No upcoming assignments to track right now</strong></p>
+                    <p><em>However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
                 </div>
             `;
         }
@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </ul>
                 ${
                     hasWithoutDue
-                        ? `<p><em>⚠️ Warning: You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>`
+                        ? `<p><em>Warning: You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>`
                         : ''
                 }
             </div>
@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (ineligibleAssignments && ineligibleAssignments.length > 0) {
             html += `
-                <p><strong>⚠️ ${ineligibleAssignments.length} assignment(s) not shown due to missing due dates:</strong></p>
+                <p><strong>${ineligibleAssignments.length} assignment(s) not shown due to missing due dates:</strong></p>
                 <ul>
                     ${ineligibleAssignments
                         .slice(0, 5)

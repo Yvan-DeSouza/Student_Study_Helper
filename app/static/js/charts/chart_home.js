@@ -84,7 +84,7 @@ function setAssignmentToggleVisibility(visible) {
         if (noIncomplete && !hasWithoutDue) {
             return `
                 <div class="chart-empty">
-                    <p><strong>🎉 You have no due assignments!</strong></p>
+                    <p><strong>You have no due assignments!</strong></p>
                 </div>
             `;
         }
@@ -92,8 +92,8 @@ function setAssignmentToggleVisibility(visible) {
         if (noIncomplete && hasWithoutDue) {
             return `
                 <div class="chart-empty">
-                    <p><strong>🎉 You have no due assignments!</strong></p>
-                    <p><em>⚠️ However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
+                    <p><strong>You have no due assignments!</strong></p>
+                    <p><em>However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
                 </div>
             `;
         }
@@ -116,7 +116,7 @@ function setAssignmentToggleVisibility(visible) {
     function renderAssignmentLoadBack(progress) {
         if (progress.incomplete_assignments_without_due.current > 0) {
             return `
-                <p><strong>⚠️ Note:</strong></p>
+                <p><strong>Note:</strong></p>
                 <p>You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date that are not shown.</p>
             `;
         }

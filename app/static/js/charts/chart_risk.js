@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (noIncomplete && !hasWithoutDue) {
       return `
         <div class="chart-empty">
-          <p><strong>🎉 You have no due assignments!</strong></p>
+          <p><strong>You have no due assignments!</strong></p>
         </div>
       `;
     }
@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (noIncomplete && hasWithoutDue) {
       return `
         <div class="chart-empty">
-          <p><strong>🎉 You have no due assignments!</strong></p>
-          <p><em>⚠️ However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
+          <p><strong> You have no due assignments!</strong></p>
+          <p><em> However, you have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>
         </div>
       `;
     }
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ${progress.incomplete_assignments_with_due.current >= progress.incomplete_assignments_with_due.required ? "✅" : "❌"}
           </li>
         </ul>
-        ${hasWithoutDue ? `<p><em>⚠️ Warning: You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>` : ''}
+        ${hasWithoutDue ? `<p><em>Warning: You have ${progress.incomplete_assignments_without_due.current} incomplete assignment(s) with no due date</em></p>` : ''}
       </div>
     `;
   }

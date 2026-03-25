@@ -1,4 +1,3 @@
-// static/js/assignments/modals/delete_assignment.js
 import { showModal, closeModal } from "../../core/modalManager.js";
 import { deleteAssignmentAPI } from "../../domain/assignment_api.js"; 
 
