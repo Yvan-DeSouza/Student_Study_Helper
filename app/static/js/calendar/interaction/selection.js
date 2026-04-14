@@ -1,5 +1,4 @@
 /**
- * static/js/calendar/interaction/selection.js
  *
  * Handles clicks on empty time slots (week/day view) and empty day cells (month view).
  * Opens the creation flow with the date/time pre-filled.
@@ -9,7 +8,6 @@
  */
 
 import { calendarState }    from "../calendar_state.js";
-import { toDateString }     from "../logic/dateMath.js";
 import { navigateToDate }   from "./navigation.js";
 
 // ─────────────────────────────────────────────────────────────

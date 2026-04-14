@@ -1,5 +1,4 @@
 /**
- * static/js/calendar/logic/collisionEngine.js
  *
  * Detects scheduling conflicts between events.
  * Used informally before saving a drag move — shows a warning if

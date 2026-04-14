@@ -1,5 +1,4 @@
 /**
- * static/js/calendar/logic/dateMath.js
  *
  * Pure functions for date arithmetic.
  * NO DOM access. NO state. NO side effects.

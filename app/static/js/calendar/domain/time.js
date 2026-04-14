@@ -1,5 +1,4 @@
 /**
- * static/js/calendar/domain/time.js
  *
  * Frontend timezone configuration. Read ONCE from the HTML data attributes
  * that calendar_page_routes.py injected, then exported as module-level

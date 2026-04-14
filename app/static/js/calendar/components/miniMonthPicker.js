@@ -1,7 +1,6 @@
 /**
  * static/js/calendar/components/miniMonthPicker.js
  *
- * Phase 7: Mini Month Picker.
  *
  * A small, standalone month grid displayed in the calendar sidebar.
  * Lets users jump to any date without switching calendar views.

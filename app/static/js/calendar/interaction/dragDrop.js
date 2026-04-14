@@ -1,14 +1,6 @@
 /**
- * static/js/calendar/interaction/dragDrop.js
  *
- * FIX: Pixel-to-time calculation in week/day view.
- *
- * ROOT CAUSE of wrong times:
- *   getBoundingClientRect().top is ALREADY viewport-relative,
- *   meaning it already reflects the current scroll position.
- *   The old code added scrollArea.scrollTop on top of that,
- *   doubling the scroll offset and pushing every drop time
- *   later than it should be (by exactly scrollTop minutes).
+
  *
  * FIX:
  *   pixelY = e.clientY - colRect.top - offsetY
@@ -17,10 +9,9 @@
 
 import { calendarState }                          from "../calendar_state.js";
 import { userTimezone }                           from "../domain/time.js";
-import { pixelToTime, timeToPixel, PIXELS_PER_HOUR } from "../utils/pixelUtils.js";
+import { pixelToTime,  PIXELS_PER_HOUR } from "../utils/pixelUtils.js";
 import { formatDateTime }                         from "../utils/timeUtils.js";
 import { findConflicts }                          from "../logic/collisionEngine.js";
-import { toDateString }                           from "../logic/dateMath.js";
 import { showModal, closeModal }                  from "../../core/modalManager.js";
 
 // ─────────────────────────────────────────────────────────────

@@ -12,7 +12,6 @@
 
 import { calendarState } from "../calendar_state.js";
 import { shiftDate }     from "../logic/dateMath.js";
-import { render }        from "../render/calendarRenderer.js";
 // ─────────────────────────────────────────────────────────────
 // NAVIGATION ACTIONS
 // ─────────────────────────────────────────────────────────────
