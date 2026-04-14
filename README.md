@@ -1,287 +1,73 @@
-
-
-Student Study Analytics & Planning Platform
-
-TL;DR: 
-This project is a backend-first data analytics platform that models and transforms raw student activity data (assignments, study sessions, grades) into explainable workload, effort, difficulty, and risk metrics. It is designed like a production analytics system: data is normalized via SQLAlchemy models, aggregated through pure, stateless analytics services, gated by backend-owned eligibility rules, and exposed through clean, chart-ready APIs. The frontend acts strictly as a renderer, while all business logic, feature computation, and data sufficiency validation live in the backend. The project emphasizes data engineering, backend architecture, explainable analytics, and correctness over UI polish, closely mirroring real-world backend and analytics engineering work.
-
-Overview
-This project is a backend-first data analytics platform for modeling, aggregating, and exposing academic workload and study behavior.
-Rather than focusing on UI-first dashboards, the system is designed as a production-style analytics backend that ingests raw, messy student activity data and transforms it into explainable, decision-ready signals such as workload, difficulty, effort, and risk.
-The project emphasizes data engineering principles:
-schema design and normalization
-deterministic transformations
-explicit aggregation layers
-backend-owned eligibility and correctness
-clean, chart-ready APIs
-The frontend acts strictly as a consumer of backend analytics, not a decision-maker.
-
-Core Objectives
-Design a robust backend analytics system for academic workload modeling
-Apply data engineering and backend engineering practices to real-world user data
-Build explainable, decomposable metrics (effort, difficulty, risk)
-Serve API-driven, visualization-ready datasets
-Create a strong foundation for future ML augmentation without dependency
-The project intentionally prioritizes correctness, transparency, and backend quality over visual complexity.
-
-Key Features (Current)
-📊 Study & Assignment Analytics
-Track raw study sessions (timestamps, duration, completion state)
-Normalize and aggregate actual time spent vs expected effort
-Compute workload at multiple granularities:
-per assignment
-per class
-over time
-Expose backend-prepared datasets optimized for analytical charts
-This layer mirrors real analytics pipelines: ingestion → transformation → aggregation → exposure.
-
-⏱️ Effort & Difficulty Estimation
-Assignments are enriched with estimated effort and difficulty using:
-Assignment-type baselines
-Class-type similarity
-Historical student behavior
-Estimation is performed via weighted similarity scoring, ensuring outputs are:
-stable over time
-explainable
-bounded and interpretable
-No black-box models are used; all estimations can be traced to concrete inputs.
-
-⚠️ Risk Analytics
-Compute normalized risk scores (0–1) per assignment
-Risk is derived from multiple independent signals:
-Historical grades
-Time pressure
-Workload overlap
-Estimated difficulty
-Each component is retained and exposed for explanation
-Risk is treated as a composed analytical feature, not a monolithic score.
-
-📈 Dashboard-Ready Analytics
-Backend endpoints are explicitly designed for analytics consumption, not raw CRUD access:
-Time spent vs expected effort
-Study distribution across classes
-Performance and risk indicators
-Trend and comparative views
-Chart Eligibility & Data Sufficiency Gating
-To prevent misleading or statistically weak analytics, the platform implements a backend-driven chart eligibility system located in:
-app/services/analytics/chart_eligibility
-
-Each dashboard defines explicit, versioned data requirements (e.g. minimum number of assignments, graded items, or distinct deadlines). Eligibility services evaluate user data against these thresholds and return:
-whether a chart may be shown
-why it cannot be shown
-what data is missing
-concrete progress toward eligibility
-When requirements are not met, the backend returns structured explanations and representative exclusions (e.g. assignments missing due dates).
-The frontend never decides eligibility — it renders either the chart or a clear, actionable explanation.
-This treats insufficient data as a first-class analytical state, ensuring analytics are only displayed when they are meaningful and trustworthy.
-
-🧱 Backend-Driven Column System (Assignments Table)
-The assignments table is powered by a column-oriented analytics system inspired by BI and data platform design rather than traditional UI tables.
-Columns are treated as first-class analytical entities, not frontend decorations.
-The backend is the single source of truth for:
-Which columns exist
-When a column may appear
-Whether a column is visible, hidden, or locked
-Whether a column is sortable, filterable, or interactive
-The frontend renders only what the backend authoritatively returns.
-
-Column Registry (Foundational Metadata)
-All columns are defined centrally in a Column Registry:
-app/services/columns/
-
-This registry defines column existence independently of UI or user state.
-Each column declares:
-Stable column_key
-Display label
-Category (core / simple / computed / advanced)
-Capabilities (sortable, filterable, selectable)
-Eligibility requirements
-Default visibility and hideability
-If a column is not registered, it does not exist anywhere in the system.
-This prevents:
-stringly-typed logic
-UI-defined analytics
-accidental metric exposure
-
-Column Eligibility Engine (Data Sufficiency & Gating)
-Computed and advanced columns are gated by a backend eligibility engine.
-Eligibility checks:
-Operate purely on backend data
-Are independent of UI state
-Return structured explanations describing:
-why a column is locked
-what data is missing
-how close the user is to unlocking it
-Each column owns its own eligibility rules, making the system modular and extensible.
-Eligibility is evaluated globally, not per-table filter, ensuring consistency and fairness.
-
-Analytics Computation (Pure & Stateless)
-All analytical values (effort, risk, volatility, confidence, deadline sensitivity) are computed in dedicated services:
-app/services/analytics/computation/
-
-These modules are:
-Pure
-Deterministic
-Stateless
-Independently testable
-They:
-Never check eligibility
-Never handle visibility
-Never reference UI concerns
-This enforces clean separation between feature computation and feature exposure.
-
-Column Orchestration (Core Engine)
-The orchestration layer assembles the final column state.
-Located in:
-app/services/analytics/column_orchestration/
-
-It:
-Merges registry metadata
-Applies user preferences
-Enforces eligibility
-Produces authoritative column states:
-visible
-hidden
-locked
-The assignment_row_builder constructs rows end-to-end:
-Executes analytics only when permitted
-Injects placeholders for locked columns
-Attaches explanations and metadata
-HTTP routes only orchestrate services and return JSON — no business logic lives in controllers.
-
-Minimal, Intent-Only Database Role
-The database stores user intent only, not derived analytics state.
-Relevant tables:
-shown_assignment_columns
-assignment_view_preferences
-All eligibility and analytics are recomputed, ensuring correctness as data evolves.
-
-Frontend as a Renderer, Not a Decision Maker
-The frontend functions strictly as a renderer.
-It:
-Requests assignment IDs and ordering
-Fetches column metadata and rows
-Renders cells and explanations
-It never:
-Computes analytics
-Determines eligibility
-Hardcodes column behavior
-Infers metric meaning
-This allows the same backend to support tables, dashboards, or future consumers without duplication.
-
-End-to-End Flow
-User interaction triggers reload
-Backend:
-Loads column registry
-Computes eligibility
-Resolves column states
-Builds rows
-Frontend:
-Renders backend output verbatim
-The result is a predictable, explainable analytics surface.
-
-Architecture Overview
-student-study-dashboard/
-├── app/
-│   ├── models/        # SQLAlchemy ORM models
-│   ├── routes/        # Thin Flask API routes
-│   ├── services/      # Analytics & business logic
-│   │   ├── analytics/
-│   │   │  ├── chart_eligibility/
-│   │   │  ├── column_eligibility/
-│   │   │  ├── column_orchestration/
-│   │   │  ├── computation/
-│   │   ├── columns/
-│   ├── static/
-│   │   ├── css/
-│   │   └── js/
-│   └── templates/
-└── extensions.py
-
-Design Principles
-Business logic isolated from HTTP
-Analytics centralized and reusable
-Explicit separation between:
-data access
-eligibility
-transformation
-aggregation
-presentation
-This mirrors real backend service architectures.
-
-Tech Stack
-Backend
-Python
-Flask
-Flask-Login
-SQLAlchemy
-PostgreSQL
-Data & Analytics
-Relational schema design
-SQL and Python aggregation
-Weighted similarity scoring
-Normalization and bounded metrics
-Pandas / NumPy for analytics
-Frontend (Lightweight)
-HTML / Jinja
-Vanilla JavaScript
-Chart.js
-CSS
-
-Data Engineering Focus
-This project emphasizes data engineering fundamentals:
-Schema design and normalization
-Feature construction
-Historical aggregation
-Deterministic transformations
-Backend-owned analytics
-Examples:
-Aggregating raw study sessions into effort metrics
-Estimating missing metadata from historical behavior
-Composing risk from multiple independent signals
-Preparing chart-ready datasets in backend services
-
-Current Development Status
-✅ Implemented
-Core data models
-Study session ingestion and aggregation
-Effort, difficulty, and risk computation
-Analytics service layer
-Dashboard APIs
-Backend-driven charts
-🚧 In Progress
-Calendar integration
-Planning views
-Scheduling interfaces
-Time-based workload forecasting
-
-Planned Enhancements
-Near-Term
-Calendar workload visualization
-Planning suggestions
-Deeper trend analytics
-Finer-grained performance metrics
-Long-Term
-Classical ML (regression, clustering)
-ML used only to enhance estimation accuracy
-User-specific training only
-Fully modular and optional ML layer
-
-Why This Project Exists
-This project was built to demonstrate:
-Backend system design
-Data engineering fundamentals
-Analytical reasoning under uncertainty
-Explainable, defensible logic
-Production-style architecture
-It is intentionally structured to resemble real backend and analytics work, not a UI-heavy student project.
-
-Status
-🚀 Active development
-The system is evolving incrementally, with a strong focus on backend correctness, clarity, and maintainability.
-
-
-
-
-
-
+# StudyMate — Student Study Analytics Platform
+ 
+A backend-first data analytics platform that models and transforms raw student activity data into explainable workload, effort, difficulty, and risk metrics. Built to mirror real production analytics systems: normalized data, stateless computation, backend-owned business logic, and clean chart-ready APIs.
+ 
+---
+ 
+## What This Project Is
+ 
+StudyMate is not a typical student CRUD app. The focus is on **data engineering and backend systems design**, taking messy raw inputs (assignment deadlines, study session logs, grades) and transforming them into defensible, explainable analytical signals. The frontend is deliberately kept thin. It renders what the backend tells it to render, and makes no analytical decisions of its own.
+ 
+The project was built to demonstrate backend system design, feature engineering, and the kind of architectural reasoning that shows up in real analytics and data platform work.
+ 
+---
+ 
+## Core Philosophy
+ 
+**The backend owns all logic.** Eligibility rules, metric computation, column visibility, chart data sufficiency — none of this lives in the frontend. The frontend receives structured JSON and renders it. This separation means the same backend could serve a table, a dashboard, a mobile app, or a future API consumer without any logic duplication.
+ 
+**Correctness over convenience.** Analytics are only shown when they are statistically meaningful. A risk score computed from two graded assignments would be noise. The system tracks whether the user has accumulated enough data for each metric and blocks display until they have, explaining concretely what is missing and how close they are to unlocking it.
+ 
+**Explainability over black boxes.** Every metric is decomposable. Risk is not a single number — it is a weighted combination of time pressure, difficulty, historical performance, and workload overlap, each of which is retained and exposed. The user can always see why a value is what it is.
+ 
+**Intent in the database, derived state in memory.** The database stores only what the user chose: which columns to show, what their filter preferences are, their raw study sessions and grades. All analytical output (risk scores, effort efficiency, volatility) is recomputed on every request from that raw data. There is no stale cache to invalidate.
+ 
+---
+ 
+## System Overview
+ 
+### Assignments Table — Column System
+ 
+The assignments table is driven by a **column registry** , a backend-defined catalog of every column that can possibly exist in the system. Columns are classified into four tiers: core (always visible), simple (user-togglable raw fields), computed (derived from raw data), and advanced (analytically complex, gated by eligibility).
+ 
+The backend resolves the final state of each column on every request by merging three inputs: the registry definition, the user's saved visibility preferences, and the current eligibility evaluation. The frontend receives column metadata and row data as JSON and renders exactly what it receives — it never decides which columns to show or whether a cell should be locked.
+ 
+Advanced columns (risk score, effort efficiency, volatility, deadline sensitivity, predictability confidence) have a two-level lock system. The column itself is locked if the user doesn't have enough historical data globally. Individual cells within an unlocked column can still be locked if that specific assignment doesn't qualify — for example, risk score is meaningless on a completed assignment.
+ 
+### Analytics Computation
+ 
+All metric computation lives in stateless, pure Python functions that take assignment data and return values with structured diagnostics. Computations never touch the database and never check eligibility — they simply perform math.
+ 
+The core analytical primitive is **weighted similarity scoring**: when estimating expected effort, computing historical risk, or measuring volatility, the system weighs past assignments by how similar they are to the current one (same class type, same assignment type, same class) and how recent they are. This produces stable, explainable estimates without any machine learning.
+ 
+Risk is composed from four independent signals: time pressure (exponential urgency curve based on days until deadline), difficulty (normalized from user input or estimated from history), historical performance (similarity-weighted average of past grades), and workload overlap (how many other assignments are active in the same window, normalized against the student's own workload baseline).
+ 
+### Chart Eligibility System
+ 
+Charts follow the same philosophy as columns: they are only shown when the underlying data is sufficient to make them meaningful. Each chart has a formally defined set of minimum requirements (number of graded assignments, number of classes, days of history, etc.) evaluated by the backend before the chart data is computed.
+ 
+When requirements are not met, the backend returns a structured explanation — what is missing, what the current count is, and what threshold needs to be reached. The frontend renders this explanation instead of the chart. The frontend never decides whether a chart should be shown; it only decides how to render the backend's verdict.
+ 
+### Calendar System
+ 
+The calendar is a **projection layer**, not a separate data store. It reads from the existing assignments and study sessions tables and renders their timestamps as calendar events. There are no new database tables. An assignment with a due date, a creation date, and a finish date can produce up to three distinct calendar events from a single database row.
+ 
+Each event goes through a transformation chain: raw ORM data → lifecycle projection → normalized CalendarEvent dict → permission flags → filter application → JSON. The frontend knows nothing about assignments or study sessions — it only knows about CalendarEvents, a fixed shape with an entity type and lifecycle type. This means the rendering layer is completely immune to domain changes; adding a new event type only requires implementing the factory step.
+ 
+Drag-and-drop reschedules use optimistic updates — the event moves immediately in the UI, then the API call confirms it. On failure the event snaps back. All permission validation (whether an event is actually draggable) is enforced server-side on every mutation, independent of what the frontend sends.
+ 
+---
+ 
+## Tech Stack
+ 
+**Backend:** Python, Flask, SQLAlchemy, PostgreSQL
+ 
+**Analytics:** Pure Python computation (NumPy, Pandas for specific aggregations), weighted similarity scoring, normalized risk composition
+ 
+**Frontend:** Vanilla JavaScript (ES modules), Jinja2 templates, Chart.js, CSS
+ 
+---
+ 
+## Project Status
+ 
+Active development. Core systems (column engine, analytics computation, eligibility gating, calendar, chart system) are implemented. Planning and scheduling views are in progress.
